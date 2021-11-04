@@ -108,6 +108,8 @@ spec:
 ![Replication Controllers](./Replication%20Controllers.png)
   
 ## Replica Set Manifest (YAML)
+
+Replica Set is rarely used in its own. It's commonly used with Deployment object.
   
 ```yaml
 apiVersion: apps/v1
