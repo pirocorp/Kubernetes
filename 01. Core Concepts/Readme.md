@@ -132,3 +132,5 @@ spec:
         ports:
         - containerPort: 80
 ```
+
+  ![Replica Set](./Replica%20Set.png)
