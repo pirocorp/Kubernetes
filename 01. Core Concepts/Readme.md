@@ -64,9 +64,12 @@ spec:
   # Specifies service type.
   type: NodePort
   ports:
+  # On which port (target port) request will be send to pod (pods).
   - port: 80
+  # On which port (source port) the service object will listen for requests.
     nodePort: 30001
     protocol: TCP
+  # Pods which have these labels and label values will be targeted (load balanced).
   selector:
     app: appa
     ver: v1
