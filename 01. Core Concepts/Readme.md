@@ -143,6 +143,8 @@ spec:
   
 ## Deployment Manifest (YAML)
 
+Deployment creates ReplicaSet
+  
 ```yaml
 apiVersion: apps/v1
 # Deployment simplifies updates and rollbacks, self documenting, suitable for versioning 
