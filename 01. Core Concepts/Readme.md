@@ -192,3 +192,5 @@ spec:
 # Overal Architecture
 
 ![Architecture Overview](./Architecture%20Overview.png)
+  
+![Namespaces vs Clusters vs Data Centers](./Namespaces%20vs%20Clusters%20vs%20Data%20Centers.png)
