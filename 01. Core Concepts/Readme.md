@@ -6,6 +6,7 @@
 # Service information
 apiVersion: v1
 # Kubernetes object type
+# Pod contains one or more containers.
 kind: Pod
 metadata:
   name: appa-pod
@@ -27,3 +28,25 @@ spec:
 ```
 
 ![Pod Comunication](./Pod%20Comunication.png)
+
+
+## Simple Service Manifest (YAML)
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: appa-svc
+  labels:
+    app: appa
+    ver: v1
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30001
+    protocol: TCP
+  selector:
+    app: appa
+    ver: v1
+```
