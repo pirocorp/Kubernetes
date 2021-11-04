@@ -53,7 +53,7 @@ maps the Service to the contents of the **externalName** field (e.g. foo.bar.exa
   
 ```yaml
 apiVersion: v1
-# Expose pods to the outside world. Provide reliable network endpoint
+# Service object expose pods to the outside world. Provide reliable network endpoint
 kind: Service
 metadata:
   name: appa-svc
