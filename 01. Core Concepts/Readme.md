@@ -3,7 +3,7 @@
 ## Simple Pod Manifest (YAML)
 
 ```yaml
-# Service information
+# Service information (Object version)
 apiVersion: v1
 # Kubernetes object type
 # Pod contains one or more containers.
