@@ -76,3 +76,27 @@ spec:
 ```
 
 ![Service Comunication](./Services.png)
+  
+## Replication Controller Manifest (YAML)
+
+```yaml
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: appa-rc
+spec:
+  replicas: 3
+  selector:
+    app: appa
+  template:
+    metadata:
+      labels:
+        app: appa
+        ver: v1
+    spec:
+      containers:
+      - name: appa-container
+        image: shekeriev/k8s-appa:v1
+        ports:
+        - containerPort: 80
+```
