@@ -22,3 +22,4 @@ spec:
     - containerPort: 80
 ```
 
+![Pod Comunication](./Pod%20Comunication.png)
