@@ -29,6 +29,8 @@ spec:
 
 ![Pod Comunication](./Pod%20Comunication.png)
 
+![Namespaces vs Clusters vs Data Centers](./Namespaces%20vs%20Clusters%20vs%20Data%20Centers.png)
+
 
 ## Simple Service Manifest (YAML)
 
@@ -184,3 +186,11 @@ spec:
         ports:
         - containerPort: 80 
 ```
+
+  ![Deployment](./Deployment.png)
+  
+# Overal Architecture
+
+![Architecture Overview](./Architecture%20Overview.png)
+  
+![Namespaces vs Clusters vs Data Centers](./Namespaces%20vs%20Clusters%20vs%20Data%20Centers.png)
