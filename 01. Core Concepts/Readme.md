@@ -81,6 +81,7 @@ spec:
 
 ```yaml
 apiVersion: v1
+# Replication Controller looks after pod or set of pods scale up/down pods sets Desired State
 kind: ReplicationController
 metadata:
   name: appa-rc
