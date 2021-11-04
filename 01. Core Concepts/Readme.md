@@ -184,3 +184,5 @@ spec:
         ports:
         - containerPort: 80 
 ```
+
+  ![Deployment](./Deployment.png)
