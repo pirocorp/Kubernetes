@@ -86,7 +86,7 @@ kind: ReplicationController
 metadata:
   name: appa-rc
 spec:
-  # Desired number of pods
+  # Desired number of pods (Desired State)
   replicas: 3
   # Pods label selector
   selector:
