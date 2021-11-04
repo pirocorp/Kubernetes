@@ -86,9 +86,12 @@ kind: ReplicationController
 metadata:
   name: appa-rc
 spec:
+  # Desired number of pods
   replicas: 3
+  # Pods label selector
   selector:
     app: appa
+  # "Hidden" pod manifest
   template:
     metadata:
       labels:
