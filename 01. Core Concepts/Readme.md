@@ -29,6 +29,8 @@ spec:
 
 ![Pod Comunication](./Pod%20Comunication.png)
 
+![Namespaces vs Clusters vs Data Centers](./Namespaces%20vs%20Clusters%20vs%20Data%20Centers.png)
+
 
 ## Simple Service Manifest (YAML)
 
