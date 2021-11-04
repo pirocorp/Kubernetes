@@ -104,3 +104,5 @@ spec:
         ports:
         - containerPort: 80
 ```
+
+![Replication Controllers](./Replication%20Controllers.png)
