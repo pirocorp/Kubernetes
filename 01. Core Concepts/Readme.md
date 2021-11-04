@@ -122,6 +122,7 @@ spec:
   replicas: 3
   # Pods label selector
   selector:
+    # Replica Set label selector is more sophisticated than Replication Controller label selector
     matchLabels:
       app: appa
   # "Hidden" pod definition
