@@ -91,7 +91,7 @@ spec:
   # Pods label selector
   selector:
     app: appa
-  # "Hidden" pod manifest
+  # "Hidden" pod definition
   template:
     metadata:
       labels:
@@ -124,7 +124,7 @@ spec:
   selector:
     matchLabels:
       app: appa
-  # "Hidden" pod manifest
+  # "Hidden" pod definition
   template:
     metadata:
       labels:
@@ -138,4 +138,46 @@ spec:
         - containerPort: 80
 ```
 
-  ![Replica Set](./Replica%20Set.png)
+![Replica Set](./Replica%20Set.png)
+  
+  
+## Deployment Manifest (YAML)
+
+```yaml
+apiVersion: apps/v1
+# Deployment simplifies updates and rollbacks, self documenting, suitable for versioning 
+kind: Deployment
+metadata:
+  name: appa-deploy
+spec:
+  # Desired number of pods (Desired State)
+  replicas: 10
+  # Pods label selector
+  selector:
+    matchLabels: 
+      app: appa
+      ver: v1
+  # optional, default 0, how many seconds 
+  minReadySeconds: 15
+  # the whole block can be skipped
+  strategy:
+    # strategy to replace old pods, defaults to RollingUpdate
+    type: RollingUpdate
+    rollingUpdate:
+      # maximum number of unavailable pods, defaults to 25%
+      maxUnavailable: 1
+      # maximum number of pods that can be created in excess, defaults to 25%
+      maxSurge: 1
+  # "Hidden" pod definition
+  template:
+    metadata:
+      labels:
+        app: appa
+        ver: v1
+    spec:
+      containers:
+      - name: appa-container
+        image: shekeriev/k8s-appa:v1
+        ports:
+        - containerPort: 80 
+```
