@@ -34,6 +34,7 @@ spec:
 
 ```yaml
 apiVersion: v1
+# Expose pods to the outside world. Provide reliable network endpoint
 kind: Service
 metadata:
   name: appa-svc
@@ -50,3 +51,5 @@ spec:
     app: appa
     ver: v1
 ```
+
+
