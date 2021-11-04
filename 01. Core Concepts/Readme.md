@@ -3,19 +3,23 @@
 ## Simple Pod Manifest (YAML)
 
 ```yaml
-# service information
+# Service information
 apiVersion: v1
-# kubernetes object type
+# Kubernetes object type
 kind: Pod
 metadata:
   name: appa-pod
-# object specification
+  # Labels are key value pairs. They 
+  labels:
+    app: appa
+    ver: v1
+# Object specification
 spec:
-  # specifies containers in the object (pod)
+  # Specifies containers in the object (pod)
   containers:
-  # container name (first)
+  # Container name (first)
   - name: appa-container
-    # from which image container should be build (docker)
+    # From which image container should be build (docker image)
     image: shekeriev/k8s-appa:v1
     ports:
     # containerPort sets the port that container will expose.
