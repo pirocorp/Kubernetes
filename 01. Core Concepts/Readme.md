@@ -81,7 +81,7 @@ spec:
 
 ```yaml
 apiVersion: v1
-# Replication Controller looks after pod or set of pods scale up/down pods sets Desired State
+# Replication Controller looks after pod or set of pods, scale up/down pods, sets Desired State.
 kind: ReplicationController
 metadata:
   name: appa-rc
@@ -106,3 +106,29 @@ spec:
 ```
 
 ![Replication Controllers](./Replication%20Controllers.png)
+  
+## Replica Set Manifest (YAML)
+  
+```yaml
+apiVersion: apps/v1
+# Replica Set looks after pod or set of pods, scale up/down pods, sets desired state, preferred over Replication Controllers
+kind: ReplicaSet
+metadata:
+  name: appa-rs
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: appa
+  template:
+    metadata:
+      labels:
+        app: appa
+        ver: v1
+    spec:
+      containers:
+      - name: appa-container
+        image: shekeriev/k8s-appa:v1
+        ports:
+        - containerPort: 80
+```
