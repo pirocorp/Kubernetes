@@ -116,10 +116,13 @@ kind: ReplicaSet
 metadata:
   name: appa-rs
 spec:
+  # Desired number of pods (Desired State)
   replicas: 3
+  # Pods label selector
   selector:
     matchLabels:
       app: appa
+  # "Hidden" pod manifest
   template:
     metadata:
       labels:
