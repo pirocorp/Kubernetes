@@ -9,7 +9,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: appa-pod
-  # Labels are key value pairs. They 
+  # Labels are key value pairs. They can be used to target given objects
   labels:
     app: appa
     ver: v1
