@@ -1,0 +1,5 @@
+Task 2
+kubectl create -f .\homework-namespace.yaml
+kubectl create -f .\homework-1-pod.yaml
+kubectl create -f .\homework-2-pod.yaml
+kubectl create -f .\homework-svc.yaml
