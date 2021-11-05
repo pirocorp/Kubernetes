@@ -1,0 +1,1 @@
+kubectl create -f .\homework-namespace.yaml -f .\homework-1-pod.yaml -f .\homework-2-pod.yaml -f .\homework-svc.yaml
