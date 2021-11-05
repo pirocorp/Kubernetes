@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: listener-pod
+  labels:
+    app: listener
+spec:
+  containers:
+  - image: shekeriev/k8s-listener
+    name: listener-container
+    
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: speaker-pod
+  labels:
+    app: speaker
+spec:
+  containers:
+  - image: shekeriev/k8s-speaker
+    name: speaker-container
+    
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: listener
+  name: listener-svc
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 32000 
+    targetPort: 5500
+    protocol: TCP    
+  selector:
+    app: listener
+    
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: speaker
+  name: speaker-svc
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 32001 
+    targetPort: 5500
+    protocol: TCP    
+  selector:
+    app: speaker
