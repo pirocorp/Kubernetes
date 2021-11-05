@@ -1,0 +1,8 @@
+1.
+a. kubectl create ns homework
+b. kubectl run homework-1 --image shekeriev/k8s-oracle -n homework --labels="app=hw,tier=gold"
+c. kubectl label -n homework pod homework-1 tier-
+d. kubectl run homework-2 --image shekeriev/k8s-oracle -n homework
+e. kubectl label -n homework pod homework-2 app=hw
+f. kubectl annotate --overwrite -n homework pods -l="app=hw" purpose=homework
+g. kubectl create service nodeport homework-svc --node-port=32000 --tcp=80:80 -n homework -o yaml --dry-run=client | kubectl set selector --local -f - 'app=hw' -o yaml | kubectl create -f -
