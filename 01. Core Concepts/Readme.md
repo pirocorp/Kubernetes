@@ -66,9 +66,9 @@ spec:
   # Specifies service type.
   type: NodePort
   ports:
-  # On which port (target port) request will be send to pod (pods).
+  # Port exposed by the service.
   - port: 80
-  # On which port (source port) the service object will listen for requests.
+  # Port exposed by the service but in the k8s cluster.
     nodePort: 30001
     protocol: TCP
   # Pods which have these labels and label values will be targeted (load balanced).
