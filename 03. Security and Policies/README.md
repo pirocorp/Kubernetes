@@ -235,7 +235,7 @@ spec:
 
 ### Quotas
 
-ResourceQuota is for limiting the total resource consumption of a namespace
+ResourceQuota is for limiting the total resource consumption of a namespace.
 
 ```yaml
 apiVersion: v1
