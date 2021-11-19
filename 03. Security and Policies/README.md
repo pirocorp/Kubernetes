@@ -274,8 +274,8 @@ spec:
     - podSelector:
         matchLabels:
           access: "true"
-  ports:
-  - protocol: TCP
-    port: 6379
+  # ports:
+  # - protocol: TCP
+  #  port: 6379
   
 ```
