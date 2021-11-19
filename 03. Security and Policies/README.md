@@ -1,6 +1,8 @@
 # Manifest files explanations (YAML)
 
-## RoleBindings (jhon and jane)
+## Part 1
+
+### RoleBindings (jhon and jane)
 
 This manifest (john's role bindings) have two RoleBinding resources. Jhon have role edit in namespace demo-prod and role view in namespace demo-dev.
 
@@ -70,7 +72,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
-## Demo Role 
+### Demo Role 
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -100,7 +102,7 @@ rules:
   - create
 ```
 
-## Demo Service Acount
+### Demo Service Acount
 
 ```yaml
 apiVersion: v1
@@ -110,7 +112,7 @@ metadata:
   namespace: rbac-ns
 ```
 
-## Demo Role RoleBinding
+### Demo Role RoleBinding
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -131,7 +133,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
-## Demo Pod
+### Demo Pod
 
 ```yaml
 apiVersion: v1
