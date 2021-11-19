@@ -251,3 +251,31 @@ spec:
     limits.cpu: 2
     limits.memory: 2Gi
 ```
+
+## Part 3
+
+Network policies are defined on namespace level
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: access-oracle
+  namespace: basicnp
+spec:
+  # which pods will be affected by this policy in the namespace.
+  podSelector:
+    matchLabels:
+      app: oracle
+  # policy type (ingress - incomming communication, egress outgoing communication)
+  ingress:
+  # in egress policy section will be `to` (not from)
+  - from:
+    - podSelector:
+        matchLabels:
+          access: "true"
+  ports:
+  - protocol: TCP
+    port: 6379
+  
+```
