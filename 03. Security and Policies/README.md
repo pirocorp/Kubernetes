@@ -198,7 +198,7 @@ spec:
 
 ### LimitRange
 
-Applying limits on namespace level.
+Applying limits on namespace level. LimitRange can have requests. Pod requests must be conformed by LimitRange requests.
 
 ```yaml
 apiVersion: v1
