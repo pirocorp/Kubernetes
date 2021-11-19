@@ -143,7 +143,7 @@ spec:
   containers:
   - image: shekeriev/k8s-oracle
     name: demo-pod
-  # Explisit set of service account for this pod
+  # Explisit specification of service account for this pod
   serviceAccount: demo-sa
   serviceAccountName: demo-sa
 ```
