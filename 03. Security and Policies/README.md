@@ -149,3 +149,26 @@ spec:
   serviceAccount: demo-sa
   serviceAccountName: demo-sa
 ```
+
+## Part 2
+
+### Demo Pod (pod-2)
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-2
+  namespace: reslim
+spec:
+  containers:
+  - image: busybox
+    command: ["dd", "if=/dev/zero", "of=/dev/null", "bs=32M"]
+    name: main
+    # Manage resource on container (pod) level
+    resources:
+      # Resources reserved for pod in order for pod to run. If there are no such free (unreserved) resources the pod won't start
+      requests:
+        cpu: 250m
+        memory: 16Mi
+```
