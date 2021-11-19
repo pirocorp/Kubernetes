@@ -99,3 +99,19 @@ rules:
   - list
   - create
 ```
+
+## Demo Pod
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-pod
+  namespace: rbac-ns
+spec:
+  containers:
+  - image: shekeriev/k8s-oracle
+    name: demo-pod
+  serviceAccount: demo-sa
+  serviceAccountName: demo-sa
+```
