@@ -100,20 +100,14 @@ rules:
   - create
 ```
 
-## Demo Pod
+## Demo Service Acount
 
 ```yaml
 apiVersion: v1
-kind: Pod
+kind: ServiceAccount
 metadata:
-  name: demo-pod
+  name: demo-sa
   namespace: rbac-ns
-spec:
-  containers:
-  - image: shekeriev/k8s-oracle
-    name: demo-pod
-  serviceAccount: demo-sa
-  serviceAccountName: demo-sa
 ```
 
 ## Demo Role RoleBinding
@@ -135,4 +129,21 @@ roleRef:
   kind: Role
   name: demo-role
   apiGroup: rbac.authorization.k8s.io
+```
+
+## Demo Pod
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-pod
+  namespace: rbac-ns
+spec:
+  containers:
+  - image: shekeriev/k8s-oracle
+    name: demo-pod
+  # Explisit set of service account for this pod
+  serviceAccount: demo-sa
+  serviceAccountName: demo-sa
 ```
