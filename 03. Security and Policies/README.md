@@ -115,3 +115,24 @@ spec:
   serviceAccount: demo-sa
   serviceAccountName: demo-sa
 ```
+
+## Demo Role RoleBinding
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+# Specifies binding name and namespace
+metadata:
+  name: demo-role-binding
+  namespace: rbac-ns
+# Subjects which objects will be bound to the role
+subjects:
+- kind: ServiceAccount
+  name: demo-sa
+  namespace: rbac-ns
+# Role to which objects are bound
+roleRef:
+  kind: Role
+  name: demo-role
+  apiGroup: rbac.authorization.k8s.io
+```
