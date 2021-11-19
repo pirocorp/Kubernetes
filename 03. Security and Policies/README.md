@@ -40,7 +40,7 @@ roleRef:
 
 This manifest (jane's role bindings) have two RoleBinding resources. Jane have role view in namespace demo-prod and role edit is namespace demo-dev.
 
-```
+```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
