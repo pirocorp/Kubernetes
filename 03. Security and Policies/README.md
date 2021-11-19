@@ -1,6 +1,6 @@
 # Manifest files explanations (YAML)
 
-## RoleBindings (jhon)
+## RoleBindings (jhon and jane)
 
 This manifest (john's role bindings) have two RoleBinding resources. Jhon have role edit in namespace demo-prod and role view in namespace demo-dev.
 
