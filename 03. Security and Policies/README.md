@@ -198,7 +198,7 @@ spec:
 
 ### LimitRange
 
-Applying limits on namespace level. LimitRange can have requests. Pod requests must be conformed by LimitRange requests.
+LimitRangeis for managing constraints at a pod and container level within the project. LimitRanges can specify and requests (reservations).
 
 ```yaml
 apiVersion: v1
@@ -218,7 +218,7 @@ spec:
       memory: 16Mi
   # limist on container level
   - type: Container
-    # can be added requests in the range limits too
+    # default reserved resources
     defaultRequest:
       cpu: 100m
       memory: 16Mi
@@ -231,4 +231,23 @@ spec:
     min:
       cpu: 100m
       memory: 16Mi
+```
+
+### Quotas
+
+ResourceQuota is for limiting the total resource consumption of a namespace
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: quota
+  namespace: reslim
+spec:
+  hard:
+    pods: 3
+    requests.cpu: 1
+    requests.memory: 1Gi
+    limits.cpu: 2
+    limits.memory: 2Gi
 ```
