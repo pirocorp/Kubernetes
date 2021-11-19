@@ -173,7 +173,7 @@ spec:
         memory: 16Mi
 ```
 
-### (pod-3A)
+### (pod-3a)
 
 ```yaml
 apiVersion: v1
@@ -190,8 +190,45 @@ spec:
       requests:
         cpu: 250m
         memory: 16Mi
-      # limits the container (pod) how many resources it can consume.
+      # limits the container (pod) how many resources it can consume. If pod overconsume resources (ex. Memory leak in app) kubernetes will kill it and start a new instance.
       limits:
         cpu: 500m
         memory: 128Mi
+```
+
+### LimitRange
+
+Applying limits on namespace level.
+
+```yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: limits
+  namespace: reslim
+spec:
+  limits:
+  # limits on pod level
+  - type: Pod
+    max:
+      cpu: 1
+      memory: 1Gi
+    min:
+      cpu: 100m
+      memory: 16Mi
+  # limist on container level
+  - type: Container
+    # can be added requests in the range limits too
+    defaultRequest:
+      cpu: 100m
+      memory: 16Mi
+    default:
+      cpu: 200m
+      memory: 32Mi
+    max:
+      cpu: 1
+      memory: 1Gi
+    min:
+      cpu: 100m
+      memory: 16Mi
 ```
