@@ -190,7 +190,7 @@ spec:
       requests:
         cpu: 250m
         memory: 16Mi
-      # limits the container (pod) how many resources it can consume
+      # limits the container (pod) how many resources it can consume.
       limits:
         cpu: 500m
         memory: 128Mi
