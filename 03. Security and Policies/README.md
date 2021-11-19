@@ -172,3 +172,26 @@ spec:
         cpu: 250m
         memory: 16Mi
 ```
+
+### (pod-3A)
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-3a
+  namespace: reslim
+spec:
+  containers:
+  - image: busybox
+    command: ["dd", "if=/dev/zero", "of=/dev/null", "bs=64M"]
+    name: main
+    resources:
+      requests:
+        cpu: 250m
+        memory: 16Mi
+      # limits the container (pod) how many resources it can consume
+      limits:
+        cpu: 500m
+        memory: 128Mi
+```
