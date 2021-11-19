@@ -2,7 +2,7 @@
 
 ## RoleBindings (jhon)
 
-This manifest have two RoleBinding resources. 
+This manifest (john's role bindings) have two RoleBinding resources. Jhon have role edit in namespace demo-prod and role view in namespace demo-dev.
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -35,5 +35,37 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: view
+  apiGroup: rbac.authorization.k8s.io
+```
+
+This manifest (jane's role bindings) have two RoleBinding resources. Jane have role view in namespace demo-prod and role edit is namespace demo-dev.
+
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jane
+  namespace: demo-prod
+subjects:
+- kind: User
+  name: jane
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: view
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jane
+  namespace: demo-dev
+subjects:
+- kind: User
+  name: jane
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: edit
   apiGroup: rbac.authorization.k8s.io
 ```
