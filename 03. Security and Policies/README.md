@@ -69,3 +69,33 @@ roleRef:
   name: edit
   apiGroup: rbac.authorization.k8s.io
 ```
+
+## Demo Role 
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+# Metadata specifies role name and in which namespace role is defined
+metadata:
+  name: demo-role
+  namespace: rbac-ns
+# Role can have multiple resources (resource types) with different access rights (verbs)
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - create
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - create
+```
