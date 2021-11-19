@@ -125,7 +125,7 @@ kind: RoleBinding
 metadata:
   name: demo-role-binding
   namespace: rbac-ns
-# Subjects which objects will be bound to the role
+# Subjects (objects) which will be bound to the role
 subjects:
 - kind: ServiceAccount
   name: demo-sa
