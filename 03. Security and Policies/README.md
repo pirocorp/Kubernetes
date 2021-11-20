@@ -200,10 +200,10 @@ spec:
 
 LimitRangeis for managing constraints at a pod and container level within the project. LimitRanges can specify and requests (reservations).
 
-defaultRequest — is how much CPU/Memory will be given to Container, if it doesn't specify it's own value
-default — is default limit for amount of CPU/Memory for Container, if it doesn't specify it's own value
-max — is maximum limit for amount of CPU/Memory that Container can ask for. I.e. it can't set it's own limit more than that
-min — is minimum limit amount of CPU/Memory that Container can ask for. I.e. it can't set it's own limit less than that
+- defaultRequest — is **how much CPU/Memory will be reserved** to Container, if it doesn't specify it's own value
+- default — is **default limit** for amount of CPU/Memory for Container, if it doesn't specify it's own value
+- max — is maximum limit for amount of CPU/Memory that Container can ask for. I.e. it **can't set it's own limit more than that**
+- min — is minimum limit amount of CPU/Memory that Container can ask for. I.e. it **can't set it's own limit less than that**
 
 ```yaml
 apiVersion: v1
