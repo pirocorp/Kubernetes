@@ -242,6 +242,8 @@ spec:
 
 ResourceQuota is for limiting the total resource consumption of a namespace.
 
+An individual Pod or Container that requests resources outside of these LimitRange constraints will be rejected, whereas a ResourceQuota only applies to all of the namespace/project's objects in aggregate.
+
 ```yaml
 apiVersion: v1
 kind: ResourceQuota
