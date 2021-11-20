@@ -277,5 +277,5 @@ spec:
       namespaceSelector: {}
   # ports:
   # - protocol: TCP
-  #  port: 6379  
+  #   port: 6379  
 ```
