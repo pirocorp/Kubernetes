@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: consumer-producer-policy
+  namespace: projectx
+spec:
+  podSelector:
+    matchLabels:
+      role: producer
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: consumer
+    ports:
+    - protocol: TCP
+      port: 5000

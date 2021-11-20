@@ -1,0 +1,56 @@
+Prepare local users and their credentials
+
+create ivan
+
+useradd -m -s /bin/bash ivan 
+
+cd /home/ivan
+
+mkdir .certs && cd .certs
+
+openssl genrsa -out ivan.key 2048
+
+openssl req -new -key ivan.key -out ivan.csr -subj "/CN=ivan/O=Gurus" !!!!!
+
+openssl x509 -req -in ivan.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out ivan.crt -days 365
+
+
+create mariana
+
+useradd -m -s /bin/bash mariana 
+
+cd /home/mariana
+
+mkdir .certs && cd .certs
+
+openssl genrsa -out mariana.key 2048
+
+openssl req -new -key mariana.key -out mariana.csr -subj "/CN=mariana/O=Gurus" !!!!
+
+openssl x509 -req -in mariana.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out mariana.crt -days 365
+
+Create users in Kubernetes
+
+create ivan
+
+kubectl config set-credentials ivan --client-certificate=/home/ivan/.certs/ivan.crt --client-key=/home/ivan/.certs/ivan.key
+
+kubectl config set-context ivan-context --cluster=kubernetes --user=ivan
+
+mkdir /home/ivan/.kube
+
+create file in /home/ivan/.kube/config
+
+chown -R ivan: /home/ivan/
+
+create mariana
+
+kubectl config set-credentials mariana --client-certificate=/home/mariana/.certs/mariana.crt --client-key=/home/mariana/.certs/mariana.key
+
+kubectl config set-context mariana-context --cluster=kubernetes --user=mariana
+
+mkdir /home/mariana/.kube
+
+create file in /home/mariana/.kube/config
+
+chown -R mariana: /home/mariana/

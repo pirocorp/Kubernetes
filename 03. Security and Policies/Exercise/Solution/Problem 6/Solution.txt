@@ -1,0 +1,7 @@
+kubectl apply -f producer-svc.yml
+kubectl apply -f producer-deployment.yml
+kubectl apply -f consumer-svc.yml
+kubectl apply -f consumer-deployment.yml
+
+kubectl exec -n projectx -it tester -- sh
+apk add curl

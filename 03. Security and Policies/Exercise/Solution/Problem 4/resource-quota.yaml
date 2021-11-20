@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: quota
+  namespace: projectx
+spec:
+  hard:
+    pods: 10
+    services: 10
+    count/deployments.apps: 2
+    count/replicasets.apps: 2
+    requests.cpu: 2
+    requests.memory: 2Gi
+    limits.cpu: 2
+    limits.memory: 2Gi
