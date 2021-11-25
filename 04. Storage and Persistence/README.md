@@ -19,7 +19,7 @@ spec:
   containers:
   - image: shekeriev/k8s-notes
     name: container-ed
-    # volumes are used with volumeMounts construct, but it is a part of the container description.
+    # volumes are used with volumeMounts construct, but it is part of the container description.
     volumeMounts:
     - mountPath: /data
       name: data-volume
