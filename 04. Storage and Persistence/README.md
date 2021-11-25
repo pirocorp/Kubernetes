@@ -79,3 +79,7 @@ spec:
   - name: data-volume
     emptyDir: {}
 ```
+
+### Persistent Volumes
+
+
