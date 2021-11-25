@@ -110,7 +110,7 @@ spec:
       volumes:
       - name: hp-data
         hostPath:
-          # path from machine where container is started will be mount to mountPath
+          # path from node (this path must exist on every worker node) where container is started will be mount to mountPath
           path: /tmp/data
           type: Directory
 ```
