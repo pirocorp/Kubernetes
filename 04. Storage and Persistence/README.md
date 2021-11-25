@@ -82,4 +82,35 @@ spec:
 
 ### Persistent Volumes
 
+#### HostPath
 
+While working, it binds us (or our Pod) to the host’s filesystem, so we should use it with care. In addition, it may expose security vulnerabilities, so we should use it in read only mode until we know what we are doing.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels: 
+      app: notes
+  template:
+    metadata:
+      labels:
+        app: notes
+    spec:
+      containers:
+      - name: container-hp
+        image: shekeriev/k8s-notes
+        volumeMounts:
+        - mountPath: /data
+          name: hp-data
+      volumes:
+      - name: hp-data
+        hostPath:
+          # path from machine where container is started will be mount to mountPath
+          path: /tmp/data
+          type: Directory
+```
