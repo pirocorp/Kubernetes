@@ -6,9 +6,10 @@
 
 We should keep in mind that ephemeral volume will disappear together with the Pod once terminated.
 
-#### emptydir-pod.yaml 
+#### Emptydir Pod
 
 ```yaml
+# Pod definition
 apiVersion: v1
 kind: Pod
 metadata:
@@ -28,4 +29,20 @@ spec:
   - name: data-volume
     # volume type
     emptyDir: {}
+    
+    ---
+
+# Service definition
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-vol
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30001
+    protocol: TCP
+  selector:
+    app: notes
 ```
