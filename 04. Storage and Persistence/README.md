@@ -8,6 +8,9 @@ We should keep in mind that ephemeral volume will disappear together with the Po
 
 #### Emptydir Pod
 
+![image](https://user-images.githubusercontent.com/34960418/143465833-9840c0d1-ecb4-4dbd-ad3f-5e713ebd9994.png)
+
+
 ```yaml
 # Pod definition
 apiVersion: v1
