@@ -326,3 +326,20 @@ spec:
           key: XYZ2
 
 ```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-cm-env-vars
+  labels:
+    app: environ
+spec:
+  containers:
+  - image: shekeriev/k8s-environ
+    name: cont-w-env
+    envFrom:
+    - configMapRef:
+        name: environ-map-1
+      #prefix: CM_ # Use this to prefix variables created from the ConfigMap
+```
