@@ -251,4 +251,20 @@ spec:
   containers:
   - image: shekeriev/k8s-environ
     name: cont-no-env
+    
+ ---
+ 
+ apiVersion: v1
+kind: Service
+metadata:
+  name: svc-environ
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30001
+    protocol: TCP
+  selector:
+    app: environ
+
 ```
