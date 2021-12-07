@@ -85,7 +85,7 @@ spec:
 
 #### HostPath
 
-While working, it binds us (or our Pod) to the host’s filesystem, so we should use it with care. In addition, it may expose security vulnerabilities, so we should use it in read only mode until we know what we are doing.
+While working, it binds us (or our Pod) to the host’s filesystem, so we should use it with care. In addition, it may expose security vulnerabilities, so we should use it in read only mode until we know what we are doing. (Data in this path on different nodes will be different.)
 
 ```yaml
 apiVersion: apps/v1
@@ -115,4 +115,38 @@ spec:
           # path from node (this path must exist on every worker node) where container is started will be mount to mountPath
           path: /tmp/data
           type: Directory
+```
+
+#### NFS
+
+One of the most useful types of volumes in Kubernetes is nfs. NFS stands for Network File System – it's a shared filesystem that can be accessed over the network. The NFS must already exist – Kubernetes doesn't run the NFS, pods in just access it.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels: 
+      app: notes
+  template:
+    metadata:
+      labels:
+        app: notes
+    spec:
+      containers:
+      - name: container-nfs
+        image: shekeriev/k8s-notes
+        volumeMounts:
+          # On which path for containers(pods) exposed path will be mounted
+        - mountPath: /data
+          name: nfs-data
+      volumes:
+      - name: nfs-data
+        nfs:
+          server: nfs-server
+          # Exposed path by NFS Server
+          path: /data/nfs/k8sdata
 ```
