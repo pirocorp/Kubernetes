@@ -150,3 +150,31 @@ spec:
           # Exposed path by NFS Server
           path: /data/nfs/k8sdata
 ```
+
+### Persistent Volumes and Claims
+
+We can define Persistent Volumes and then let them to be claimed via Persistent Volume Claims
+
+#### PersistentVolume
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvnfs10gb
+  labels:
+    purpose: demo
+spec:
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  # Deleting PVC will trigger the reclaim policy.
+  persistentVolumeReclaimPolicy: Recycle
+  mountOptions:
+    - nfsvers=4.1
+  nfs:
+    path: /data/nfs/k8sdata
+    server: nfs-server
+```
