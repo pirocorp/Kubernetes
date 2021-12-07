@@ -155,7 +155,7 @@ spec:
 
 We can define Persistent Volumes and then let them to be claimed via Persistent Volume Claims
 
-#### PersistentVolume
+#### PersistentVolume (PV)
 
 ```yaml
 apiVersion: v1
@@ -177,4 +177,27 @@ spec:
   nfs:
     path: /data/nfs/k8sdata
     server: nfs-server
+```
+
+#### PersistentVolumeClaim (PVC)
+
+PersistentVolumeClaim (PVC) is a request for storage by a user
+
+![image](https://user-images.githubusercontent.com/34960418/145032191-76621524-d189-436c-81b4-f75f1cc40adf.png)
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc10gb
+spec:
+  accessModes:
+    - ReadWriteMany
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 10Gi
+  selector:
+    matchLabels:
+      purpose: demo
 ```
