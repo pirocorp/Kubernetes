@@ -71,6 +71,7 @@ spec:
       name: data-volume
   volumes:
   - name: git-volume
+    # volume type
     # the source from repository will be downloaded and will be mountet to mountPath specified in volumeMounts
     gitRepo:
       repository: "https://github.com/shekeriev/k8s-notes.git"
@@ -109,6 +110,7 @@ spec:
           name: hp-data
       volumes:
       - name: hp-data
+        # volume type
         hostPath:
           # path from node (this path must exist on every worker node) where container is started will be mount to mountPath
           path: /tmp/data
