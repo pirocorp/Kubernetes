@@ -205,7 +205,7 @@ spec:
       purpose: demo
 ```
 
-##### Deployment consuming pvc
+#### Consuming PVC
 
 ```yaml
 apiVersion: apps/v1
