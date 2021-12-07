@@ -181,7 +181,9 @@ spec:
 
 #### PersistentVolumeClaim (PVC)
 
-PersistentVolumeClaim (PVC) is a request for storage by a user
+PersistentVolumeClaim (PVC) is a request for storage by a user.
+
+Binding is the process of matching and attaching a PVC to PV. This is done on a set of criteria. It is ono-to-one mapping
 
 ![image](https://user-images.githubusercontent.com/34960418/145032191-76621524-d189-436c-81b4-f75f1cc40adf.png)
 
@@ -190,6 +192,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: pvc10gb
+# Set of criteria used to bind PVC to PV from available PVs
 spec:
   accessModes:
     - ReadWriteMany
