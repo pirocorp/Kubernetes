@@ -282,6 +282,7 @@ spec:
   containers:
   - image: shekeriev/k8s-environ
     name: cont-w-env
+    # Environment variables (key - value pairs)
     env:
     - name: XYZ1
       value: "VALUE1"
