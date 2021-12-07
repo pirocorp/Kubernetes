@@ -318,6 +318,7 @@ spec:
   - image: shekeriev/k8s-environ
     name: cont-w-env
     env:
+    # Value for variable XYZ_FROM_CM will be taken from environ-map-1 ConfigMap variable XYZ2
     - name: XYZ_FROM_CM
       valueFrom:
         configMapKeyRef:
