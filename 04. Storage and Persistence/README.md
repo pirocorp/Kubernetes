@@ -238,4 +238,17 @@ spec:
 
 ## Part 2
 
-###
+### Pod with no environment variables
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-no-env
+  labels:
+    app: environ
+spec:
+  containers:
+  - image: shekeriev/k8s-environ
+    name: cont-no-env
+```
