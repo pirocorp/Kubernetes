@@ -234,3 +234,8 @@ spec:
         persistentVolumeClaim:
           claimName: pvc10gb
 ```
+
+
+## Part 2
+
+###
