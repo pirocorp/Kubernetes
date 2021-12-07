@@ -297,6 +297,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: environ-map-1
+# Evnironment variables (list of key-value pairs)
 data:
   XYZ1: "VALUE1"
   XYZ2: "42"
