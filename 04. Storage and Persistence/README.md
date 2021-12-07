@@ -204,3 +204,33 @@ spec:
     matchLabels:
       purpose: demo
 ```
+
+##### Deployment consuming pvc
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels: 
+      app: notes
+  template:
+    metadata:
+      labels:
+        app: notes
+    spec:
+      containers:
+      - name: container-nfs
+        image: shekeriev/k8s-notes
+        volumeMounts:
+        - mountPath: /data
+          name: volume-by-claim
+      volumes:
+      - name: volume-by-claim
+        # Make volume over PVC with claimName pvc10gb
+        persistentVolumeClaim:
+          claimName: pvc10gb
+```
