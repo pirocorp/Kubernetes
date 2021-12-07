@@ -289,3 +289,14 @@ spec:
     - name: XYZ2
       value: "42"
 ```
+
+### ConfigMap
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: environ-map-a
+data:
+  XYZ1: VALUE1
+```
