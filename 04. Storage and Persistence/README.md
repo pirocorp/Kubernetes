@@ -303,3 +303,25 @@ data:
   XYZ2: "42"
   XYZ3: "3.14"
 ```
+
+### Pod with Config Map
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-cm-env-var
+  labels:
+    app: environ
+spec:
+  containers:
+  - image: shekeriev/k8s-environ
+    name: cont-w-env
+    env:
+    - name: XYZ_FROM_CM
+      valueFrom:
+        configMapKeyRef:
+          name: environ-map-1
+          key: XYZ2
+
+```
