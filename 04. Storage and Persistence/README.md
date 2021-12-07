@@ -268,3 +268,23 @@ spec:
     app: environ
 
 ```
+
+### Pow with environment variables
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-w-env
+  labels:
+    app: environ
+spec:
+  containers:
+  - image: shekeriev/k8s-environ
+    name: cont-w-env
+    env:
+    - name: XYZ1
+      value: "VALUE1"
+    - name: XYZ2
+      value: "42"
+```
