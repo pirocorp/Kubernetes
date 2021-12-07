@@ -296,7 +296,9 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: environ-map-a
+  name: environ-map-1
 data:
-  XYZ1: VALUE1
+  XYZ1: "VALUE1"
+  XYZ2: "42"
+  XYZ3: "3.14"
 ```
