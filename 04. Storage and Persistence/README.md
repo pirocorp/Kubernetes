@@ -455,3 +455,19 @@ spec:
 ```
 
 **Headless service** is required for the network identity of the pods
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: facts
+spec:
+  selector:
+    app: facts
+  # This make service **headless**
+  clusterIP: None
+  ports:
+  - port: 5000
+    protocol: TCP
+```
+
