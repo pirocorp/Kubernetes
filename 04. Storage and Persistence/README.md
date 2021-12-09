@@ -269,7 +269,7 @@ spec:
 
 ```
 
-### Pow with environment variables
+### Pod with environment variables
 
 ```yaml
 apiVersion: v1
@@ -391,5 +391,64 @@ StatefulSet is the workload API object used to manage stateful applications. Man
 
 
 ```yaml
-
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvssa
+  labels:
+    purpose: ssdemo
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  mountOptions:
+    - nfsvers=4.1
+  nfs:
+    path: /data/nfs/k8spva
+    server: nfs-server
+    
+    ---
+    
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvssb
+  labels:
+    purpose: ssdemo
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  mountOptions:
+    - nfsvers=4.1
+  nfs:
+    path: /data/nfs/k8spvb
+    server: nfs-server
+    
+  ---
+  
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvssc
+  labels:
+    purpose: ssdemo
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  mountOptions:
+    - nfsvers=4.1
+  nfs:
+    path: /data/nfs/k8spvc
+    server: nfs-server
 ```
