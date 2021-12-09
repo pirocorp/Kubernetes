@@ -381,3 +381,15 @@ spec:
         name: mysecrets
       prefix: XYZ_
 ```
+
+
+### StatefulSet
+
+StatefulSet is the workload API object used to manage stateful applications. Manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods. Like a Deployment, a StatefulSet manages Pods that are based on an identical container spec.
+
+![image](https://user-images.githubusercontent.com/34960418/145412355-67d48f68-8078-444e-b5fc-462ae3ec5826.png)
+
+
+```yaml
+
+```
