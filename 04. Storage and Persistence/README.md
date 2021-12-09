@@ -389,7 +389,7 @@ StatefulSet is the workload API object used to manage stateful applications. Man
 
 ![image](https://user-images.githubusercontent.com/34960418/145412355-67d48f68-8078-444e-b5fc-462ae3ec5826.png)
 
-Storage for a Pod must be provisioned upfront either automatically or by an administrator
+Storage for a Pod must be provisioned **upfront** either automatically or by an administrator
 
 ```yaml
 apiVersion: v1
@@ -453,3 +453,5 @@ spec:
     path: /data/nfs/k8spvc
     server: nfs-server
 ```
+
+**Headless service** is required for the network identity of the pods
