@@ -510,3 +510,22 @@ spec:
         requests:
           storage: 1Gi
 ```
+
+Public (NodePort) Service
+
+Create a standard or public (in this case NodePort) service that will expose the pods.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: factsnp
+spec:
+  selector:
+    app: facts
+  type: NodePort
+  ports:
+  - port: 5000
+    nodePort: 30001
+    protocol: TCP
+```
