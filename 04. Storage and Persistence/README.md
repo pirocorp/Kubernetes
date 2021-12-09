@@ -473,7 +473,7 @@ spec:
 
 StatefulSet is managing Volume Claims
 
-```
+```yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
