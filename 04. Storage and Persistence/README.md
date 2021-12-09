@@ -464,7 +464,7 @@ metadata:
 spec:
   selector:
     app: facts
-  # This make service **headless**
+  # This make service headless. Allow pods to comunicate through their names.
   clusterIP: None
   ports:
   - port: 5000
