@@ -304,7 +304,7 @@ data:
   XYZ3: "3.14"
 ```
 
-### Pod with Config Map
+Consuming ConfigMap
 
 ```yaml
 apiVersion: v1
@@ -317,6 +317,7 @@ spec:
   containers:
   - image: shekeriev/k8s-environ
     name: cont-w-env
+    # Declaring environment variables
     env:
     # Value for variable XYZ_FROM_CM will be taken from environ-map-1 ConfigMap variable XYZ2
     - name: XYZ_FROM_CM
@@ -338,13 +339,15 @@ spec:
   containers:
   - image: shekeriev/k8s-environ
     name: cont-w-env
+    # Consuming ConfigMaps or Secrets
     envFrom:
+    # Add environment values from ConfigMap environ-map-1
     - configMapRef:
         name: environ-map-1
       #prefix: CM_ # Use this to prefix variables created from the ConfigMap
 ```
 
-### Secret
+### Secrets
 
 ```yaml
 apiVersion: v1
@@ -357,4 +360,24 @@ data:
   password1: S3ViZXJuZXRlc1JvY2tzIQo=
   password2: U3VwZXJTZWNyZXRQQHNzdzByZAo=
   message: S3ViZXJuZXRlcyBpcyBib3RoIGZ1biBhbmQgZWFzeSB0byBsZWFybiA7KQo=
+```
+
+Consuming secrets
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-secret
+  labels:
+    app: environ
+spec:
+  containers:
+  - image: shekeriev/k8s-environ
+    name: cont-w-env
+    envFrom:
+    # Add environment values from Secret mysecrets
+    - secretRef:
+        name: mysecrets
+      prefix: XYZ_
 ```
