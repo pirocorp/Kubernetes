@@ -471,3 +471,42 @@ spec:
     protocol: TCP
 ```
 
+StatefulSet is managing Volume Claims
+
+```
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: facts
+spec:
+  selector:
+    matchLabels:
+      app: facts
+  serviceName: facts
+  replicas: 2
+  # POD template
+  template:
+    metadata:
+      labels:
+        app: facts
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: main
+        image: shekeriev/k8s-facts
+        ports:
+        - name: app
+          containerPort: 5000
+        volumeMounts:
+        - name: facts-data
+          mountPath: /data
+  # VolumeClaim template
+  volumeClaimTemplates:
+  - metadata:
+      name: facts-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+```
