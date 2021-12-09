@@ -343,3 +343,18 @@ spec:
         name: environ-map-1
       #prefix: CM_ # Use this to prefix variables created from the ConfigMap
 ```
+
+### Secret
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysecrets
+  namespace: default
+# Secrets (list of key-value pairs)
+data:
+  password1: S3ViZXJuZXRlc1JvY2tzIQo=
+  password2: U3VwZXJTZWNyZXRQQHNzdzByZAo=
+  message: S3ViZXJuZXRlcyBpcyBib3RoIGZ1biBhbmQgZWFzeSB0byBsZWFybiA7KQo=
+```
