@@ -1,0 +1,174 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvssa
+  labels:
+    purpose: ssdemo
+spec:
+  capacity:
+    storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  mountOptions:
+    - nfsvers=4.1
+  nfs:
+    path: /data/nfs/k8spva
+    server: nfs-server
+    
+---
+    
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvssb
+  labels:
+    purpose: ssdemo
+spec:
+  capacity:
+    storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  mountOptions:
+    - nfsvers=4.1
+  nfs:
+    path: /data/nfs/k8spvb
+    server: nfs-server
+    
+---
+  
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvssc
+  labels:
+    purpose: ssdemo
+spec:
+  capacity:
+    storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  mountOptions:
+    - nfsvers=4.1
+  nfs:
+    path: /data/nfs/k8spvc
+    server: nfs-server
+    
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pod-be
+spec:
+  selector:
+    matchLabels:
+      app: facts
+  serviceName: facts 
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: facts
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: main
+        image: shekeriev/k8s-facts
+        ports:
+        - name: app
+          containerPort: 5000
+        volumeMounts:
+        - name: facts-data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: facts-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 2Gi
+          
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: facts 
+spec:
+  selector:
+    app: facts  
+  clusterIP: None
+  ports:
+  - port: 5000
+    protocol: TCP
+    
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-be 
+spec:
+  type: ClusterIP
+  selector:
+    app: facts
+  ports:
+  - port: 5000
+    targetPort: 5000
+    protocol: TCP
+    
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-be-map
+data:
+  FACTS_SERVER: "service-be"
+  FACTS_PORT: "5000"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fe-deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels: 
+      app: facts-fe
+  template:
+    metadata:
+      labels:
+        app: facts-fe
+    spec:
+      containers:
+      - name: facts-fe
+        image: shekeriev/k8s-facts-fe 
+        ports:
+        - containerPort: 5000
+        envFrom:
+        - configMapRef:
+            name: service-be-map
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-fe 
+spec:
+  type: NodePort
+  selector:
+    app: facts-fe  
+  ports:
+  - port: 5000
+    nodePort: 30001
+    protocol: TCP

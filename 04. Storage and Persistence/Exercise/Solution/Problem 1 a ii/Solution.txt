@@ -1,0 +1,1 @@
+kubectl create configmap hwcm --from-literal=k8sver=1.22.3 --from-literal=k8sos="Debian GNU/Linux 10 (buster)" --from-file=./main.conf --from-file=./port.conf

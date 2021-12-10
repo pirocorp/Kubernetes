@@ -1,0 +1,1 @@
+kubectl create secret generic hwsec --from-file=main.key=./main.key  --from-file=main.crt=./main.crt
