@@ -25,7 +25,7 @@ spec:
     args: ["1d"]
 ```
 
-### Sidecar
+### Sidecar (Pattern)
 
 Sidecar containers enhance the main container. For example, it may sync the local file system with a remote repository. In any case, both share the same filesystem.
 
@@ -95,4 +95,14 @@ spec:
     protocol: TCP
   selector:
     app: sidecar
+```
+
+### Adapter (Pattern)
+
+Adapter containers are used to standardize and normalize the output
+
+![image](https://user-images.githubusercontent.com/34960418/145601960-9dc33487-d722-4a2f-a320-3626aa3ca147.png)
+
+```yaml
+
 ```
