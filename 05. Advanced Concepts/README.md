@@ -54,16 +54,20 @@ spec:
         app: sidecar
     spec:
       containers:
+      # First container
       - name: cont-main
         image: shekeriev/k8s-appb
         imagePullPolicy: Always
+        # Same volume is mounted in both containers, but on a different path
         volumeMounts:
         - name: data
           mountPath: /var/www/html/data
         ports:
         - containerPort: 80 
+      # Second container
       - name: cont-sidecar
         image: alpine
+        # Same volume is mounted in both containers, but on a different path
         volumeMounts:
         - name: data
           mountPath: /data
