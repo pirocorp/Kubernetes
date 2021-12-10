@@ -104,5 +104,32 @@ Adapter containers are used to standardize and normalize the output
 ![image](https://user-images.githubusercontent.com/34960418/145601960-9dc33487-d722-4a2f-a320-3626aa3ca147.png)
 
 ```yaml
-
+apiVersion: v1
+kind: Pod
+metadata:
+  name: adapter
+spec:
+  containers:
+  - name: cont-main
+    image: alpine
+    volumeMounts:
+    - name: log
+      mountPath: /var/log
+    command: ["/bin/sh", "-c"]
+    args:
+      - while true; do
+          echo $(date +'%Y-%m-%d %H:%M:%S') $(uname) OP$(tr -cd 0-1 </dev/urandom | head -c 1) $(tr -cd a-z </dev/urandom | head -c 5).html RE$(tr -cd 0-1 </dev/urandom | head -c 1) >> /var/log/app.log;
+          sleep 3;
+        done
+  - name: cont-adapter
+    image: alpine
+    volumeMounts:
+    - name: log
+      mountPath: /var/log
+    command: ["/bin/sh", "-c"]
+    args:
+      - tail -f /var/log/app.log | sed -e 's/^/MSG:/' -e 's/OP0/GET/' -e 's/OP1/SET/' -e 's/RE0/OK/' -e 's/RE1/ER/' > /var/log/out.log
+  volumes:
+  - name: log
+    emptyDir: {}
 ```
