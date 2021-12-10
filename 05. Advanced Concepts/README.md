@@ -27,6 +27,11 @@ spec:
 
 ### Sidecar
 
+Sidecar containers enhance the main container. For example, it may sync the local file system with a remote repository. In any case, both share the same filesystem.
+
+![image](https://user-images.githubusercontent.com/34960418/145599526-702a9b5d-d35e-4383-bc4b-56c56ddad6ba.png)
+
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
