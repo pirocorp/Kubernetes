@@ -133,3 +133,53 @@ spec:
   - name: log
     emptyDir: {}
 ```
+
+### Init Container
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-init
+  labels:
+    app: pod-init
+spec:
+  containers:
+  - name: cont-main
+    image: nginx
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: data
+      mountPath: /usr/share/nginx/html
+  initContainers:
+  - name: cont-init
+    image: alpine
+    command: ["/bin/sh", "-c"]
+    args:
+      - for i in $(seq 1 5); do
+          echo $(date +'%Y-%m-%d %H:%M:%S') '<br />' >> /data/index.html;
+          sleep 5;
+        done
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-init
+  labels:
+    app: svc-init
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30001
+    protocol: TCP
+  selector:
+    app: pod-init
+```
