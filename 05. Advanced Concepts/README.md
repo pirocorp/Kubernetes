@@ -136,7 +136,7 @@ spec:
 
 ### Init Container
 
-**Specialized containers** that ** run before app containers** in a Pod. Contain utilities or setup scripts not present in an app image. **App Containers** are specified via **containers** section and the **Init Containers** are specified via **initContainers** section. Init Containers **always run to completion**. If one of them **fails**, the **kubelet** repeatedly **restarts it until it succeeds**. Each Init Container **must complete successfully** before the **next one starts**.
+**Specialized containers** that **run before app containers** in a Pod. Contain utilities or setup scripts not present in an app image. **App Containers** are specified via **containers** section and the **Init Containers** are specified via **initContainers** section. Init Containers **always run to completion**. If one of them **fails**, the **kubelet** repeatedly **restarts it until it succeeds**. Each Init Container **must complete successfully** before the **next one starts**.
 
 
 ```yaml
@@ -147,6 +147,7 @@ metadata:
   labels:
     app: pod-init
 spec:
+# Application Containers
   containers:
   - name: cont-main
     image: nginx
@@ -155,7 +156,7 @@ spec:
     volumeMounts:
     - name: data
       mountPath: /usr/share/nginx/html
-  #
+  # Init Containers
   initContainers:
   - name: cont-init
     image: alpine
