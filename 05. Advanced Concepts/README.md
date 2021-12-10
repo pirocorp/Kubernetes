@@ -24,3 +24,66 @@ spec:
     command: ["sleep"]
     args: ["1d"]
 ```
+
+### Sidecar
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sidecar
+spec:
+  replicas: 3
+  selector:
+    matchLabels: 
+      app: sidecar
+  minReadySeconds: 15
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: sidecar
+    spec:
+      containers:
+      - name: cont-main
+        image: shekeriev/k8s-appb
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: data
+          mountPath: /var/www/html/data
+        ports:
+        - containerPort: 80 
+      - name: cont-sidecar
+        image: alpine
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        command: ["/bin/sh", "-c"]
+        args:
+          - while true; do
+              date >> /data/generated-data.txt;
+              sleep 10;
+            done
+      volumes:
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sidecar
+  labels:
+    app: sidecar
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30001
+    protocol: TCP
+  selector:
+    app: sidecar
+```
