@@ -367,3 +367,24 @@ spec:
         image: shekeriev/sleeper
       restartPolicy: Never
 ```
+
+Parallel job execution
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: batch-job-parallel
+spec: 
+  completions: 4
+  parallelism: 2
+  template:
+    metadata:
+      labels: 
+        app: batch-job
+    spec:
+      containers:
+      - name: main
+        image: shekeriev/sleeper
+      restartPolicy: Never
+```
