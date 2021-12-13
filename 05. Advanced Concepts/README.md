@@ -414,3 +414,29 @@ spec:
           - name: main
             image: shekeriev/sleeper
 ```
+
+## Part 3
+
+### Ingress and Ingress Controllers
+
+#### IngressClass
+
+Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource. We must have an Ingress controller to satisfy the Ingress
+
+Types
+- Single service (default backend)
+- Fanout
+![image](https://user-images.githubusercontent.com/34960418/145839121-8dff2f25-ac48-4f65-98d8-f3793cad7b7c.png)
+- Name based virtual hosting
+- ![image](https://user-images.githubusercontent.com/34960418/145839272-6393f239-c9b7-450e-b682-810d22130dbf.png)
+- TLS
+
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: haproxy
+spec:
+  controller: haproxy-ingress.github.io/controller
+```
