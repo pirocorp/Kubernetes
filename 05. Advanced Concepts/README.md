@@ -239,8 +239,11 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: auto-scale-deploy
 spec:
+  # Maximum replicas count
   maxReplicas: 5
+  # Minimum replicas count
   minReplicas: 1
+  # Target for scalling (Pod, Deployment, etc)
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
@@ -251,5 +254,6 @@ spec:
       name: cpu
       target:
         type: Utilization
+        # If average utilization for the pods in this deployment drop below 10% pods will be scale down
         averageUtilization: 10
 ```
