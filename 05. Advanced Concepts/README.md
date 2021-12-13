@@ -504,7 +504,7 @@ spec:
 
 #### Custom Path (Single service)
 
-![image](https://user-images.githubusercontent.com/34960418/145848881-55dcf30f-699e-4cfa-a898-78e8efc80271.png)
+![image](https://user-images.githubusercontent.com/34960418/145851656-f5f23898-07c9-41b9-8667-b6090074d223.png)
 
 
 ```yaml            
