@@ -326,3 +326,24 @@ spec:
         ports:
         - containerPort: 80
 ```
+
+### Jobs
+
+There are situations in which we need to run tasks that start, do something, and then finish. This is covered by a special object type – Job
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: batch-job
+spec: 
+  template:
+    metadata:
+      labels: 
+        app: batch-job
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: main
+        image: shekeriev/sleeper
+```
