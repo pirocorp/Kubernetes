@@ -507,11 +507,13 @@ spec:
 ![image](https://user-images.githubusercontent.com/34960418/145848881-55dcf30f-699e-4cfa-a898-78e8efc80271.png)
 
 
-```yaml
+```yaml            
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-ctrl
+  annotations:
+    nginx.org/rewrites: "serviceName=service1 rewrite=/"
 spec:
   ingressClassName: nginx
   rules:
