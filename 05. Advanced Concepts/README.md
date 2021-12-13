@@ -419,8 +419,6 @@ spec:
 
 ### Ingress and Ingress Controllers
 
-#### IngressClass
-
 Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource. We must have an Ingress controller to satisfy the Ingress
 
 Types
@@ -430,6 +428,12 @@ Types
 - Name based virtual hosting
 - ![image](https://user-images.githubusercontent.com/34960418/145839272-6393f239-c9b7-450e-b682-810d22130dbf.png)
 - TLS
+
+#### IngressClass
+
+Ingress Controllers must be annotated with the appropriate Ingress Class. [image]
+
+![image](https://user-images.githubusercontent.com/34960418/145843008-8d64c7c6-d6e5-4805-a701-440fe24795b4.png)
 
 
 ```yaml
