@@ -296,3 +296,33 @@ spec:
         value: nomorework
         effect: NoSchedule
 ```
+
+### Daemon Sets
+
+**Daemon Sets** are like the **Deployments**, **Replication Controllers** and **Replica Sets**
+
+There is one important difference though – their workload goes to every node or only to specific nodes and with only one copy, so no multiple replicas spread across the cluster.
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: daemon-set
+spec: 
+  selector:
+    matchLabels: 
+      app: daemon-set
+  template:
+    metadata:
+      labels: 
+        app: daemon-set
+    spec:
+      # Node selector limist nodes which will recive copy of the given pod
+      nodeSelector: 
+        disk: samsung
+      containers:
+      - name: main
+        image: shekeriev/k8s-appa:v1
+        ports:
+        - containerPort: 80
+```
