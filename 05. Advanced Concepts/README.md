@@ -254,6 +254,6 @@ spec:
       name: cpu
       target:
         type: Utilization
-        # If average utilization for the pods in this deployment drop below 10% pods will be scale down
+        # If average utilization for the pods in this deployment drop below 10%, pods will be scaled down. If it's above 10%, pods will be scaled up.
         averageUtilization: 10
 ```
