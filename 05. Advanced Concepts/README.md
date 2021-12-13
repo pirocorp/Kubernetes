@@ -512,6 +512,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-ctrl
+  # Urls for service1 are rewrited to the service root (/).
+  # Anotations are controller specific
   annotations:
     nginx.org/rewrites: "serviceName=service1 rewrite=/"
 spec:
