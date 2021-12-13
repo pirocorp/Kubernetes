@@ -499,3 +499,26 @@ spec:
               number: 80
 
 ```
+
+#### Custom Path
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-ctrl
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: demo.lab
+    http:
+      paths:
+        # All request to demo.lab/service1 will be redirected to service1, port 80
+      - path: /service1
+        pathType: Prefix
+        backend:
+          service:
+            name: service1
+            port:
+              number: 80
+```
