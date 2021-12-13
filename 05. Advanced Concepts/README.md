@@ -327,7 +327,7 @@ spec:
         - containerPort: 80
 ```
 
-### Jobs
+### Job
 
 There are situations in which we need to run tasks that start, do something, and then finish. This is covered by a special object type – Job
 
@@ -376,7 +376,7 @@ kind: Job
 metadata:
   name: batch-job-parallel
 spec: 
-  # Expect total of four executions by two in parallel
+  # Expect a total of four executions by two in parallel
   completions: 4
   parallelism: 2
   template:
@@ -388,4 +388,28 @@ spec:
       - name: main
         image: shekeriev/sleeper
       restartPolicy: Never
+```
+
+### CronJob
+
+Execute job not once but on a schedule.
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: batch-job-cron
+spec: 
+  schedule: "*/2 * * * *"
+  jobTemplate:
+    spec: 
+      template:
+        metadata:
+          labels: 
+            app: batch-job-cron
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: main
+            image: shekeriev/sleeper
 ```
