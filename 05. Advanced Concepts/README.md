@@ -347,3 +347,23 @@ spec:
       - name: main
         image: shekeriev/sleeper
 ```
+
+Serial job execution
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: batch-job-serial
+spec: 
+  completions: 3
+  template:
+    metadata:
+      labels: 
+        app: batch-job
+    spec:
+      containers:
+      - name: main
+        image: shekeriev/sleeper
+      restartPolicy: Never
+```
