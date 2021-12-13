@@ -400,6 +400,7 @@ kind: CronJob
 metadata:
   name: batch-job-cron
 spec: 
+  # It will run every two minutes
   schedule: "*/2 * * * *"
   jobTemplate:
     spec: 
