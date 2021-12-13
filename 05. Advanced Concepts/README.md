@@ -447,6 +447,8 @@ spec:
 
 #### Single service (default backend)
 
+![image](https://user-images.githubusercontent.com/34960418/145848801-a6b3828a-adb0-44df-b870-df6daea0e797.png)
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -500,7 +502,10 @@ spec:
 
 ```
 
-#### Custom Path
+#### Custom Path (Single service)
+
+![image](https://user-images.githubusercontent.com/34960418/145848881-55dcf30f-699e-4cfa-a898-78e8efc80271.png)
+
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -522,3 +527,5 @@ spec:
             port:
               number: 80
 ```
+
+
