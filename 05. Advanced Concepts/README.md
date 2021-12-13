@@ -188,3 +188,6 @@ spec:
   selector:
     app: pod-init
 ```
+
+## Part 2
+
