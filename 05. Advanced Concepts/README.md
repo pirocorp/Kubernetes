@@ -392,7 +392,7 @@ spec:
 
 ### CronJob
 
-Execute job not once but on a schedule.
+A CronJob creates Jobs on a repeating schedule. CronJobs are useful for creating periodic and recurring tasks, like running backups, reports generation, sending emails, etc.
 
 ```yaml
 apiVersion: batch/v1
