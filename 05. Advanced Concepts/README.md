@@ -482,10 +482,13 @@ kind: Ingress
 metadata:
   name: ingress-ctrl
 spec:
+  # Which Ingress Class will be used. (nginx/haproxy in this case)
   ingressClassName: nginx
+  # Every rule is for given host. (Specific entry point.)
   rules:
   - host: demo.lab
     http:
+      # All request to demo.lab will be redirected to service1, port 80
       paths:
       - path: /
         pathType: Prefix
