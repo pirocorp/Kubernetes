@@ -444,3 +444,55 @@ metadata:
 spec:
   controller: haproxy-ingress.github.io/controller
 ```
+
+#### Single service (default backend)
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+  labels:
+    app: pod1
+spec:
+  containers:
+  - image: shekeriev/k8s-environ
+    name: main
+    env:
+    - name: TOPOLOGY
+      value: "POD1 -> SERVICE1"
+    - name: FOCUSON
+      value: "TOPOLOGY"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service1
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    app: pod1
+    
+---
+ 
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-ctrl
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: demo.lab
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: service1
+            port:
+              number: 80
+
+```
