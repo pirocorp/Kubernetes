@@ -376,6 +376,7 @@ kind: Job
 metadata:
   name: batch-job-parallel
 spec: 
+  # Expect total of four executions by two in parallel
   completions: 4
   parallelism: 2
   template:
