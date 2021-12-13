@@ -317,7 +317,7 @@ spec:
       labels: 
         app: daemon-set
     spec:
-      # Node selector limits nodes (worker nodes) that will receive copy of the given pod
+      # Node selector limits nodes (worker nodes) that will receive a copy of the given pod
       nodeSelector: 
         disk: samsung
       containers:
