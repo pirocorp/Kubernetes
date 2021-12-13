@@ -257,3 +257,39 @@ spec:
         # If average utilization for the pods in this deployment drop below 10%, pods will be scaled down. If it's above 10%, pods will be scaled up.
         averageUtilization: 10
 ```
+
+
+### Scheduling
+
+**Taints** are applied to nodes and allow them to repel pods. They have **key**, **value** and taint **effect** and are set like ```kubectl taint nodes node1 key1=value1:NoSchedule```. Effect must be NoSchedule , PreferNoSchedule or NoExecute. Tolerations are applied to pods and allow them to schedule on nodes with matching taints. They are specified with key, operator (Exists or Equal), value (if the operator is equal) and effect
+
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schedule-deploy
+spec:
+  replicas: 3 
+  selector:
+    matchLabels: 
+      app: schedule
+  template:
+    metadata:
+      labels:
+        app: schedule
+    spec:
+      containers:
+      - name: schedule-container
+        image: shekeriev/terraform-docker
+        ports:
+        - containerPort: 80 
+        resources: 
+          requests: 
+            cpu: 100m
+      tolerations:
+      - key: demo-taint
+        operator: Equal
+        value: nomorework
+        effect: NoSchedule
+```
