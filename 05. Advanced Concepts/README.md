@@ -191,3 +191,65 @@ spec:
 
 ## Part 2
 
+### Autoscalling
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auto-scale-deploy
+spec:
+  replicas: 3 
+  selector:
+    matchLabels: 
+      app: auto-scale
+  template:
+    metadata:
+      labels:
+        app: auto-scale
+    spec:
+      containers:
+      - name: auto-scale-container
+        image: shekeriev/terraform-docker
+        ports:
+        - containerPort: 80 
+        resources: 
+          requests: 
+            cpu: 100m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auto-scale-svc
+  labels:
+    app: auto-scale
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30001
+    protocol: TCP
+  selector:
+    app: auto-scale
+    
+---
+
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: auto-scale-deploy
+spec:
+  maxReplicas: 5
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: auto-scale-deploy
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 10
+```
