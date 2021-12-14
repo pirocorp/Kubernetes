@@ -655,3 +655,35 @@ spec:
             port:
               number: 80
 ```
+
+#### Name based virtual hosting
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-ctrl
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: demo.lab
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: service1
+            port:
+              number: 80
+  - host: awesome.lab
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: service2
+            port:
+              number: 80
+```
