@@ -445,7 +445,7 @@ spec:
   controller: haproxy-ingress.github.io/controller
 ```
 
-#### Single service (default backend)
+#### Single service
 
 ![image](https://user-images.githubusercontent.com/34960418/145848801-a6b3828a-adb0-44df-b870-df6daea0e797.png)
 
@@ -532,9 +532,39 @@ spec:
               number: 80
 ```
 
-#### 
+#### Default Backend (Single service)
 
 ```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: podd
+  labels:
+    app: podd
+spec:
+  containers:
+  - image: shekeriev/k8s-environ
+    name: main
+    env:
+    - name: TOPOLOGY
+      value: "PODd -> SERVICEd (default backend)"
+    - name: FOCUSON
+      value: "TOPOLOGY"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: serviced
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    app: podd
+    
+---
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
