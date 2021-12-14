@@ -592,3 +592,66 @@ spec:
             port:
               number: 80
 ```
+
+#### Fanout
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+  labels:
+    app: pod2
+spec:
+  containers:
+  - image: shekeriev/k8s-environ
+    name: main
+    env:
+    - name: TOPOLOGY
+      value: "POD2 -> SERVICE2"
+    - name: FOCUSON
+      value: "TOPOLOGY"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service2
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    app: pod2
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-ctrl
+  annotations:
+    nginx.org/rewrites: "serviceName=service1 rewrite=/;serviceName=service2 rewrite=/"
+spec:
+  ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: serviced
+      port:
+        number: 80
+  rules:
+  - host: demo.lab
+    http:
+      paths:
+      - path: /service1
+        pathType: Prefix
+        backend:
+          service:
+            name: service1
+            port:
+              number: 80
+      - path: /service2
+        pathType: Prefix
+        backend:
+          service:
+            name: service2
+            port:
+              number: 80
+```
