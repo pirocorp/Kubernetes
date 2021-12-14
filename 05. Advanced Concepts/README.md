@@ -532,4 +532,31 @@ spec:
               number: 80
 ```
 
+#### 
 
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-ctrl
+  annotations:
+    nginx.org/rewrites: "serviceName=service1 rewrite=/"
+spec:
+  ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: serviced
+      port:
+        number: 80
+  rules:
+  - host: demo.lab
+    http:
+      paths:
+      - path: /service1
+        pathType: Prefix
+        backend:
+          service:
+            name: service1
+            port:
+              number: 80
+```
