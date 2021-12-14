@@ -573,6 +573,7 @@ metadata:
     nginx.org/rewrites: "serviceName=service1 rewrite=/"
 spec:
   ingressClassName: nginx
+  # default requests (not specified in rules:paths) to "demo.lab" are send to "serviced"
   defaultBackend:
     service:
       name: serviced
@@ -582,6 +583,7 @@ spec:
   - host: demo.lab
     http:
       paths:
+        # All request to "demo.lab/service1" will be redirected to "service1"
       - path: /service1
         pathType: Prefix
         backend:
