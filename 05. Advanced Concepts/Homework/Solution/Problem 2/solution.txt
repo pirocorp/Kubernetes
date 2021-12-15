@@ -1,0 +1,12 @@
+# Generate Certificate
+openssl genrsa -out main.key 4096
+openssl req -new -x509 -key main.key -out main.crt -days 365 -subj /CN=demo.lab
+
+# Create secret containing private key and certificate
+kubectl create secret generic demo-lab-secret --from-file=tls.key=./main.key  --from-file=tls.crt=./main.crt
+
+# Edit secret type to be: kubernetes.io/tls and aplly secret from file
+kubectl apply -f secret.yaml
+
+# Apply fanout ingress plus all services and pods
+kubectl apply -f solution.yaml
