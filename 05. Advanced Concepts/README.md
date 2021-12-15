@@ -622,7 +622,7 @@ spec:
     protocol: TCP
   selector:
     app: pod2
-
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
