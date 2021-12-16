@@ -232,3 +232,42 @@ spec:
   selector:
     app: readiness-cmd
 ```
+
+### Startup Probes
+
+Indicate whether the application in the container is started. If it fails, then kubelet kills the container. After that, the container is subject to the restart policy. All other probes are disabled if a startup probe is present until it succeeds. If no startup probe is provided it is considered as if it was there and the return status is Success.
+
+#### Exec Probe
+
+Exec is used to exec a specified command inside the container. If the return code is 0 is considered successful.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: startup-same
+spec:
+  containers:
+  - name: startup
+    image: alpine
+    command: ["/bin/sh", "-c"]
+    args:
+    - t=$(( 10 + $RANDOM % 100 )); echo 'Sleep for '$t; sleep $t; touch /tmp/healthy; sleep 60; rm -rf /tmp/healthy; sleep 600
+    # Liveness probe check if file /tmp/healthy is present
+    livenessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+      initialDelaySeconds: 5
+      periodSeconds: 5
+    # Startup probe check if file /tmp/healthy is present
+    startupProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+      # Number of failed attempts
+      failureThreshold: 22
+      periodSeconds: 5
+```
