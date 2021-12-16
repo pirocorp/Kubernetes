@@ -65,3 +65,89 @@ spec:
       initialDelaySeconds: 3
       periodSeconds: 3
 ```
+
+### Readiness Probes
+
+Indicate whether a container is ready to respond to requests. If it fails, then the endpoints controller removes the pod’s IP address from the endpoints of all services that match the pod. A pod is considered ready when all its containers are ready. The default state, before the initial delay is Failure. If no readiness probe is provided it is considered as if it was there and the return status is Success.
+
+#### Exec Probe
+
+Exec is used to exec a specified command inside the container. If the return code is 0 is considered successful.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: readiness-cmd
+  name: readiness-cmd
+spec:
+  initContainers:
+  - name: init-data
+    image: alpine
+    command: ["/bin/sh", "-c"]
+    args:
+      - echo '(Almost) Always Ready to Serve ;)' > /data/index.html
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  containers:
+  - name: cont-main
+    image: nginx
+    volumeMounts:
+    - name: data
+      mountPath: /usr/share/nginx/html
+    - name: check
+      mountPath: /check
+    readinessProbe:
+      exec:
+        command:
+        - cat
+        - /check/healthy
+      initialDelaySeconds: 5
+      periodSeconds: 5
+  - name: cont-sidecar-postpone
+    image: alpine
+    command: ["/bin/sh", "-c"]
+    args:
+      - while true; do
+          sleep 20; 
+          touch /check/healthy; 
+          sleep 60;
+        done
+    volumeMounts:
+    - name: check
+      mountPath: /check
+  - name: cont-sidecar-break
+    image: alpine
+    command: ["/bin/sh", "-c"]
+    args:
+      - while true; do
+          sleep 60; 
+          rm /check/healthy;
+          sleep 20;
+        done
+    volumeMounts:
+    - name: check
+      mountPath: /check
+  volumes:
+  - name: data
+    emptyDir: {}
+  - name: check
+    emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: readiness-cmd
+  labels:
+    app: readiness-cmd
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30001
+    protocol: TCP
+  selector:
+    app: readiness-cmd
+```
