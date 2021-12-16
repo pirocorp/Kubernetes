@@ -31,6 +31,8 @@ spec:
         command:
         - cat
         - /tmp/healthy
+      # the number of seconds to wait before a probe to be initiated.
       initialDelaySeconds: 5
+      # sets how often (in seconds) a probe to be performed.
       periodSeconds: 10
 ```
