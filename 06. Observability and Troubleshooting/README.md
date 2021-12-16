@@ -25,7 +25,7 @@ spec:
     - /bin/sh
     - -c
     - touch /tmp/healthy; sleep 60; rm -rf /tmp/healthy; sleep 600
-    # Exec liveness probe
+    # Exec liveness probe - check if /tmp/healthy file exists.
     livenessProbe:
       exec:
         command:
@@ -82,6 +82,7 @@ metadata:
     app: readiness-cmd
   name: readiness-cmd
 spec:
+  # In the case of the example, the init container makes an index file.
   initContainers:
   - name: init-data
     image: alpine
@@ -99,6 +100,7 @@ spec:
       mountPath: /usr/share/nginx/html
     - name: check
       mountPath: /check
+    # Rediness exec probe - check if /check/healthy file exists.
     readinessProbe:
       exec:
         command:
@@ -106,6 +108,7 @@ spec:
         - /check/healthy
       initialDelaySeconds: 5
       periodSeconds: 5
+    # The first sidecar container simulates application startup before creating file /check/healthy.
   - name: cont-sidecar-postpone
     image: alpine
     command: ["/bin/sh", "-c"]
@@ -118,6 +121,7 @@ spec:
     volumeMounts:
     - name: check
       mountPath: /check
+    # The second sidecar container simulates the breaking of the application.
   - name: cont-sidecar-break
     image: alpine
     command: ["/bin/sh", "-c"]
