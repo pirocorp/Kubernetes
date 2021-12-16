@@ -155,3 +155,80 @@ spec:
   selector:
     app: readiness-cmd
 ```
+
+#### HTTP Probe
+
+HTTP makes a GET request against the pod’s IP address on a specified port and path. It is considered successful if the status code is between 200 and 399
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: readiness-http
+  name: readiness-http
+spec:
+  initContainers:
+  - name: init-data
+    image: alpine
+    command: ["/bin/sh", "-c"]
+    args:
+      - echo '(Almost) Always Ready to Serve ;)' > /data/index.html
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  containers:
+  - name: cont-main
+    image: nginx
+    volumeMounts:
+    - name: data
+      mountPath: /usr/share/nginx/html
+    readinessProbe:
+      httpGet:
+        path: /healthy.html
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 5
+  - name: cont-sidecar-postpone
+    image: alpine
+    command: ["/bin/sh", "-c"]
+    args:
+      - while true; do
+          sleep 20; 
+          echo 'WORKING' > /check/healthy.html; 
+          sleep 60;
+        done
+    volumeMounts:
+    - name: data
+      mountPath: /check
+  - name: cont-sidecar-break
+    image: alpine
+    command: ["/bin/sh", "-c"]
+    args:
+      - while true; do
+          sleep 60; 
+          rm /check/healthy.html;
+          sleep 20;
+        done
+    volumeMounts:
+    - name: data
+      mountPath: /check
+  volumes:
+  - name: data
+    emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: readiness-cmd
+  labels:
+    app: readiness-cmd
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30001
+    protocol: TCP
+  selector:
+    app: readiness-cmd
+```
