@@ -10,7 +10,7 @@ Indicate whether a container is running. If it fails, then kubelet kills the con
 
 Exec is used to exec a specified command inside the container. If the return code is 0 is considered successful.
 
-```yaml
+```yaml 
 apiVersion: v1
 kind: Pod
 metadata:
@@ -35,4 +35,33 @@ spec:
       initialDelaySeconds: 5
       # sets how often (in seconds) a probe to be performed.
       periodSeconds: 10
+```
+
+#### HTTP Probe
+
+HTTP makes a GET request against the pod’s IP address on a specified port and path. It is considered successful if the status code is between 200 and 399
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: liveness-http
+spec:
+  containers:
+  - name: liveness
+    image: k8s.gcr.io/liveness
+    args:
+    - /server
+    # Http livenessProbe at /healthz
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+        httpHeaders:
+        - name: Custom-Header
+          value: Awesome
+      initialDelaySeconds: 3
+      periodSeconds: 3
 ```
