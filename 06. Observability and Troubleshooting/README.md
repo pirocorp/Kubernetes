@@ -273,7 +273,7 @@ spec:
 ```
 
 
-#### HTTP Probe
+#### Mixed Probe
 
 HTTP makes a GET request against the pod’s IP address on a specified port and path. It is considered successful if the status code is between 200 and 399
 
