@@ -356,3 +356,7 @@ spec:
   selector:
     app: startup-mixed
 ```
+
+## Part 2
+
+### Auditing and Logging
