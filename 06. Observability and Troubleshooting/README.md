@@ -509,3 +509,19 @@ rules:
     omitStages:
       - "RequestReceived"
 ```
+
+
+#### Logging
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: counter
+spec:
+  containers:
+  - name: count
+    image: alpine
+    args: [/bin/sh, -c,
+            'i=0; while true; do echo "$i: $(date)"; i=$((i+1)); if [ -f /stop.file ]; then exit; fi; sleep 5; done']
+```
