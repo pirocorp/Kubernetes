@@ -433,7 +433,7 @@ In the ```volumesMounts``` section change
     readOnly: true
 ```
 
-Add parameters to the ```kube-apiserver``` in section ```containers```
+Change parameters in ```kube-apiserver``` in section ```containers```
 
 ```yaml
   - --audit-policy-file=/var/lib/k8s-audit/2-audit.yaml
