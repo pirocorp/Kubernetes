@@ -369,7 +369,31 @@ Actions in the cluster are captured in chronological order. They can be initiate
 
 Defines the rules about what events should be captured and what data they should include. During processing, an event is compared against the list of rules in order. First match sets the audit level of the event. The available audit levels are None, Metadata, Request, and RequestResponse. A policy to be valid, should have at least one rule.
 
-The policy is applied to the kube-apiserver manifest ```/etc/kubernetes/manifests/kube-apiserver.yaml```
+The policy is configured in the kube-apiserver manifest ```/etc/kubernetes/manifests/kube-apiserver.yaml```
+
+In the ```volumes``` section add
+
+```yaml
+  - hostPath: 
+      path: /var/lib/k8s-audit/1-audit-simple.yaml
+      type: File
+    name: audit-policy
+  - hostPath:
+      path: /var/log/k8s-audit/audit.log
+      type: FileOrCreate
+    name: audit-log
+```
+
+In the ```volumesMounts``` section add
+
+```yaml
+  - mountPath: /var/lib/k8s-audit/1-audit-simple.yaml
+    name: audit-policy  
+    readOnly: true
+  - mountPath: /var/log/k8s-audit/audit.log
+    name: audit-log  
+    readOnly: false
+```
 
 ```yaml
 # Log all requests at the Metadata level.
@@ -378,3 +402,4 @@ kind: Policy
 rules:
 - level: Metadata
 ```
+
