@@ -510,8 +510,13 @@ rules:
       - "RequestReceived"
 ```
 
-
 #### Logging
+
+Logs help us understand what is happening in our applications and cluster. They are used for debugging problems and monitoring activity. Most applications use logging either on the stdout/stderr or in a file. Container engines/runtimes even though providing logging capabilities are usually not enough. We need to access the logs even if and after a container or node crashes. Thus, we need a cluster-level logging solution that will store logs elsewhere and they will have different lifecycle compared to the resources or nodes in the cluster.
+
+##### Basic Logging
+
+The most basic form of logging is for containers to emit messages on their **stdout/stderr**
 
 ```yaml
 apiVersion: v1
