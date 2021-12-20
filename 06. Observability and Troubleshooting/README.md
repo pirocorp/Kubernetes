@@ -360,3 +360,21 @@ spec:
 ## Part 2
 
 ### Auditing and Logging
+
+#### Auditing
+
+Actions in the cluster are captured in chronological order. They can be initiated by the users, applications, or control plane. Answers who did what and when on what and what happened. Audit records begin their existence in the kube-apiserver. Each request on each stage of its execution generated an event. It is pre-processed according to the policy and send to a backend. Following stages are available **RequestReceived**, **ResponseStarted**, **ResponseComplete**, and **Panic**. Audit logging may increase the memory consumption.
+
+##### Audit Policy
+
+Defines the rules about what events should be captured and what data they should include. During processing, an event is compared against the list of rules in order. First match sets the audit level of the event. The available audit levels are None, Metadata, Request, and RequestResponse. A policy to be valid, should have at least one rule.
+
+The policy is applied to the kube-apiserver manifest ```/etc/kubernetes/manifests/kube-apiserver.yaml```
+
+```yaml
+# Log all requests at the Metadata level.
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+- level: Metadata
+```
