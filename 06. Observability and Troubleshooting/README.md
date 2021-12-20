@@ -530,3 +530,49 @@ spec:
     args: [/bin/sh, -c,
             'i=0; while true; do echo "$i: $(date)"; i=$((i+1)); if [ -f /stop.file ]; then exit; fi; sleep 5; done']
 ```
+
+##### Streaming Sidecar
+
+One application container with two different log files and two streaming sidecar containers – one for each log file
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: counter
+spec:
+  containers:
+  - name: main
+    image: busybox
+    args:
+    - /bin/sh
+    - -c
+    - >
+      i=0;
+      while true;
+      do
+        echo "$i: $(date)" >> /var/log/1.log;
+        echo "$(date) INFO $i" >> /var/log/2.log;
+        i=$((i+1));
+        if [ -f /stop.file ]; then exit; fi;
+        sleep 5;
+      done      
+    volumeMounts:
+    - name: varlog
+      mountPath: /var/log
+  - name: sidecar-1
+    image: busybox
+    args: [/bin/sh, -c, 'tail -n+1 -f /var/log/1.log']
+    volumeMounts:
+    - name: varlog
+      mountPath: /var/log
+  - name: sidecar-2
+    image: busybox
+    args: [/bin/sh, -c, 'tail -n+1 -f /var/log/2.log']
+    volumeMounts:
+    - name: varlog
+      mountPath: /var/log
+  volumes:
+  - name: varlog
+    emptyDir: {}
+```
