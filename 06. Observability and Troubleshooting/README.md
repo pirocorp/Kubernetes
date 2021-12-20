@@ -413,6 +413,32 @@ rules:
 ```
 
 ###### Audit Policy
+
+Change kube-apiserver manifest ```/etc/kubernetes/manifests/kube-apiserver.yaml```
+
+In the ```volumes``` section change
+
+```yaml
+  - hostPath: 
+      path: /var/lib/k8s-audit/2-audit.yaml
+      type: File
+    name: audit-policy
+```
+
+In the ```volumesMounts``` section change
+
+```yaml
+  - mountPath: /var/lib/k8s-audit/2-audit.yaml
+    name: audit-policy  
+    readOnly: true
+```
+
+Add parameters to the ```kube-apiserver``` in section ```containers```
+
+```yaml
+  - --audit-policy-file=/var/lib/k8s-audit/2-audit.yaml
+```
+
 ```yaml
 apiVersion: audit.k8s.io/v1 # This is required.
 kind: Policy
