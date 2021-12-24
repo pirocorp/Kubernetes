@@ -111,9 +111,10 @@ sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%a
 
 ### Using Kustomize with manifests
 
-#### Hello World
+#### Base Kustomization
 
-##### Kustomization
+![image](https://user-images.githubusercontent.com/34960418/147357001-439aa23e-7709-4b36-9b58-db3729cf6a9a.png)
+
 
 Kustomization contains the base structure of our customizable application
 
@@ -134,12 +135,12 @@ resources:
 - configMap.yaml
 ```
 
-```/path``` must point to kustomization location
+```$BASE``` must point to kustomization location
 
 This will display base configuration in yaml on console
 
 ```bash
-kustomize build /path
+kustomize build $BASE
 ```
 
 To send configuration to cluster
@@ -152,4 +153,14 @@ To delete it from cluster
 
 ```bash
 kustomize build $BASE | kubectl delete -f -
+```
+
+#### Stageing overlay
+
+
+
+create overlays subfolder
+
+```bash
+mkdir -p $OVERLAYS/staging
 ```
