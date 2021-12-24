@@ -113,7 +113,7 @@ sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%a
 
 ![image](https://user-images.githubusercontent.com/34960418/147357001-439aa23e-7709-4b36-9b58-db3729cf6a9a.png)
 
-#### Base Kustomization
+#### Base Variant Kustomization
 
 Kustomization contains the base structure of our customizable application
 
@@ -154,12 +154,21 @@ To delete it from cluster
 kustomize build $BASE | kubectl delete -f -
 ```
 
-#### Stageing overlay
+#### Staging overlay
 
+Kustomization
 
-
-create overlays subfolder
-
-```bash
-mkdir -p $OVERLAYS/staging
+```yaml
+namePrefix: staging-
+commonLabels:
+  variant: staging
+  org: acmeCorporation
+commonAnnotations:
+  note: Hello, I am staging!
+# Location of base variant
+resources:
+- ../../base
+# Patch files
+patchesStrategicMerge:
+- map.yaml
 ```
