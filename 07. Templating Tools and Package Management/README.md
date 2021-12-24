@@ -97,8 +97,14 @@ spec:
 
 ##### Using ```sed``` with parameterized manifests
 
-if we wont to store produced yaml in file
+To store produced yaml in file
 
 ```bash
 sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%approach%/MANUAL/ ; s/%nodeport%/30001/' 2-appa.yaml > 3-appa.yaml
+```
+
+To send it to cluster
+
+```bash
+sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%approach%/MANUAL/ ; s/%nodeport%/30001/' 2-appa.yaml | kubectl apply -f -
 ```
