@@ -111,10 +111,9 @@ sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%a
 
 ### Using Kustomize with manifests
 
-#### Base Kustomization
-
 ![image](https://user-images.githubusercontent.com/34960418/147357001-439aa23e-7709-4b36-9b58-db3729cf6a9a.png)
 
+#### Base Kustomization
 
 Kustomization contains the base structure of our customizable application
 
