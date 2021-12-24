@@ -172,3 +172,15 @@ resources:
 patchesStrategicMerge:
 - map.yaml
 ```
+
+ConfigMap patch (map.yaml)
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: the-map
+data:
+  altGreeting: "Have a pineapple!"
+  enableRisky: "true"
+```
