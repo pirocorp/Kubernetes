@@ -111,7 +111,7 @@ sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%a
 
 ### Using Kustomize with manifests
 
-![image](https://user-images.githubusercontent.com/34960418/147357001-439aa23e-7709-4b36-9b58-db3729cf6a9a.png)
+![image](https://user-images.githubusercontent.com/34960418/147357972-a133c2f2-4542-4d50-be8a-d6a2f9c9f2f1.png)
 
 #### Base Variant Kustomization
 
