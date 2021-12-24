@@ -48,12 +48,18 @@ spec:
 
 ##### Parameterized manifest
 
+- The replicas value is parameterized
+- The image and tag are parameterized
+- The ```APPROACH``` environment variable is parameterized
+- The NodePort (the port on which service is listening) is parameterized
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: appa
 spec:
+  # replicas value is parameterized
   replicas: %replicas%
   selector:
     matchLabels: 
@@ -65,9 +71,11 @@ spec:
     spec:
       containers:
       - name: main
+        # The image and tag are parameterized
         image: %image%:%tag%
         env:
-        - name: APPROACH
+        # The APPROACH environment variable is parameterized
+        - name: APPROACH          
           value: "%approach%"
         - name: FOCUSON
           value: "APPROACH"
@@ -80,6 +88,7 @@ spec:
   type: NodePort
   ports:
   - port: 80
+    # The NodePort is parameterized
     nodePort: %nodeport%
     protocol: TCP
   selector:
