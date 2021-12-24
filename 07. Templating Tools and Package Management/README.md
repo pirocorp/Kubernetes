@@ -273,6 +273,18 @@ or
 kubectl apply -k $OVERLAYS/staging
 ```
 
+Delete staging variant
+
+```bash
+kustomize build $OVERLAYS/staging | kubectl delete -f -
+```
+
+or
+
+```bash
+kubectl delete -k $OVERLAYS/staging
+```
+
 #### Production overlay
 
 Kustomization
@@ -311,4 +323,10 @@ Apply production variant
 
 ```bash
 kubectl apply -k $OVERLAYS/production
+```
+
+Delete production variant
+
+```bash
+kubectl delete -k $OVERLAYS/production
 ```
