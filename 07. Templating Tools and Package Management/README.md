@@ -246,6 +246,7 @@ ConfigMap patch (map.yaml)
 
 ```yaml
 apiVersion: v1
+# Kind and metadata describe patched resources.
 kind: ConfigMap
 metadata:
   name: the-map
