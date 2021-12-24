@@ -97,7 +97,7 @@ spec:
 
 ##### Using ```sed``` with parameterized manifests
 
-To store produced yaml in file
+To send it to file
 
 ```bash
 sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%approach%/MANUAL/ ; s/%nodeport%/30001/' 2-appa.yaml > 3-appa.yaml
