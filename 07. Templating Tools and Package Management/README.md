@@ -253,3 +253,32 @@ data:
   altGreeting: "Have a pineapple!"
   enableRisky: "true"
 ```
+
+
+#### Production overlay
+
+Kustomization
+
+```yaml
+namePrefix: production-
+commonLabels:
+  variant: production
+  org: acmeCorporation
+commonAnnotations:
+  note: Hello, I am production!
+resources:
+- ../../base
+patchesStrategicMerge:
+- deployment.yaml
+```
+
+Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: the-deployment
+spec:
+  replicas: 5
+```
