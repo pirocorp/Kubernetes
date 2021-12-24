@@ -109,5 +109,41 @@ To send it to cluster
 sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%approach%/MANUAL/ ; s/%nodeport%/30001/' 2-appa.yaml | kubectl apply -f -
 ```
 
-### Using Kustomize with parameterized manifests
+### Using Kustomize with manifests
 
+#### Hello World
+
+##### Kustomization
+
+Kustomization contains the base structure of our customizable application
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: arbitrary
+
+# Example configuration for the webserver
+# at https://github.com/monopole/hello
+commonLabels:
+  app: hello
+
+resources:
+- deployment.yaml
+- service.yaml
+- configMap.yaml
+```
+
+```/path``` must point to kustomization location
+
+This will display base configuration in yaml on console
+
+```bash
+kustomize build /path
+```
+
+To send configuration to cluster
+
+```bash
+kustomize build $BASE | kubectl apply -f -
+```
