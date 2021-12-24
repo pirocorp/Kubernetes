@@ -254,6 +254,11 @@ data:
   enableRisky: "true"
 ```
 
+Build staging variant
+
+```bash
+kustomize build $OVERLAYS/staging
+```
 
 #### Production overlay
 
@@ -281,4 +286,10 @@ metadata:
   name: the-deployment
 spec:
   replicas: 5
+```
+
+Build production variant
+
+```bash
+kustomize build $OVERLAYS/production
 ```
