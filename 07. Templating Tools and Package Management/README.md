@@ -2,7 +2,7 @@
 
 ## Part 1
 
-### Using ```sed``` to over parameterized manifests
+### Using ```sed``` with parameterized manifests
 
 #### Example for converting standart manifest into parameterized.
 
@@ -108,3 +108,6 @@ To send it to cluster
 ```bash
 sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%approach%/MANUAL/ ; s/%nodeport%/30001/' 2-appa.yaml | kubectl apply -f -
 ```
+
+### Using Kustomize with parameterized manifests
+
