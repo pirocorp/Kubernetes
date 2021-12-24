@@ -260,6 +260,18 @@ Build staging variant
 kustomize build $OVERLAYS/staging
 ```
 
+Apply staging variant
+
+```bash
+kustomize build $OVERLAYS/staging | kubectl apply -f -
+```
+
+or
+
+```bash
+kubectl apply -k $OVERLAYS/staging
+```
+
 #### Production overlay
 
 Kustomization
