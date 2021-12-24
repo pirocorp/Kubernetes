@@ -305,3 +305,9 @@ Build production variant
 ```bash
 kustomize build $OVERLAYS/production
 ```
+
+Apply production variant
+
+```bash
+kubectl apply -k $OVERLAYS/production
+```
