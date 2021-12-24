@@ -272,7 +272,7 @@ patchesStrategicMerge:
 - deployment.yaml
 ```
 
-Deployment
+Deployment (deployment.yaml)
 
 ```yaml
 apiVersion: apps/v1
