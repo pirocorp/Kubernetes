@@ -147,3 +147,9 @@ To send configuration to cluster
 ```bash
 kustomize build $BASE | kubectl apply -f -
 ```
+
+To delete it from cluster
+
+```bash
+kustomize build $BASE | kubectl delete -f -
+```
