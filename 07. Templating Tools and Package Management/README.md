@@ -136,7 +136,7 @@ resources:
 
 Base(original) Resources
 
-Config Map
+Config Map (configMap.yaml)
 
 ```yaml
 apiVersion: v1
@@ -148,7 +148,7 @@ data:
   enableRisky: "false"
 ```
 
-Deployment
+Deployment (deployment.yaml)
 
 ```yaml
 apiVersion: apps/v1
@@ -186,7 +186,7 @@ spec:
               key: enableRisky
 ```
 
-Service
+Service (service.yaml)
 
 ```yaml
 kind: Service
