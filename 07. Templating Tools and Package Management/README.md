@@ -451,3 +451,9 @@ approachVar: "Helm Charts! :)"
 focusOnVar: "APPROACH"
 nodePort: 30001
 ```
+
+Install chart
+
+```bash
+helm install <release name> <chart name>
+```
