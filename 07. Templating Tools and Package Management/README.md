@@ -377,7 +377,8 @@ spec:
 
 #### Create helm chart
 
-Chart file structure
+Chart directory structure
+
 ![image](https://user-images.githubusercontent.com/34960418/147486012-5b3d7e10-9ab5-489c-b687-df609f99c73e.png)
 
 
