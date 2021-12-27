@@ -452,7 +452,7 @@ focusOnVar: "APPROACH"
 nodePort: 30001
 ```
 
-Install chart
+Install chart. In the above example chart name is appchart. Release name is user provided
 
 ```bash
 helm install <release name> <chart name>
