@@ -457,3 +457,9 @@ Install chart. In the above example chart name is appchart. Release name is user
 ```bash
 helm install <release name> <chart name>
 ```
+
+Install chart with custom parameters.
+
+```bash
+helm install testRelease appchart --set nodePort=30002 --set replicasCount=3
+```
