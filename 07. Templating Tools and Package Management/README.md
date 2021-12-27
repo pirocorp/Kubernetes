@@ -331,7 +331,7 @@ Delete production variant
 kubectl delete -k $OVERLAYS/production
 ```
 
-## Part 2
+## Part 2 (Helm)
 
 ### Chart From Existing Manifest
 
@@ -375,7 +375,13 @@ spec:
     app: appa
 ```
 
-#### Create Chart.yaml file
+#### Create helm chart
+
+Chart file structure
+![image](https://user-images.githubusercontent.com/34960418/147486012-5b3d7e10-9ab5-489c-b687-df609f99c73e.png)
+
+
+Chart.yaml file
 
 ```yaml
 apiVersion: v2
