@@ -425,3 +425,20 @@ spec:
         - name: FOCUSON
           value: {{ .Values.focusOnVar }}
 ```
+
+service.yaml
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-service
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: {{ .Values.nodePort }}
+    protocol: TCP
+  selector:
+    app: {{ .Release.Name }}
+```
