@@ -442,3 +442,12 @@ spec:
   selector:
     app: {{ .Release.Name }}
 ```
+
+values.yaml
+
+```yaml
+replicasCount: 1
+approachVar: "Helm Charts! :)"
+focusOnVar: "APPROACH"
+nodePort: 30001
+```
