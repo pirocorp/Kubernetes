@@ -382,7 +382,7 @@ Chart directory structure
 ![image](https://user-images.githubusercontent.com/34960418/147486012-5b3d7e10-9ab5-489c-b687-df609f99c73e.png)
 
 
-Chart.yaml file
+Chart.yaml
 
 ```yaml
 apiVersion: v2
@@ -397,4 +397,31 @@ version: 0.1.0
 
 # Version of the application. In our case this can be a custom version as it is our application
 appVersion: "1.0.0"
+```
+
+deployment.yaml
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deployment
+spec:
+  replicas: {{ .Values.replicasCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: main
+        image: shekeriev/k8s-environ:latest
+        env:
+        - name: APPROACH
+          value: {{ .Values.approachVar }}
+        - name: FOCUSON
+          value: {{ .Values.focusOnVar }}
 ```
