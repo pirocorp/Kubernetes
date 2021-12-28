@@ -1,0 +1,9 @@
+namePrefix: production-
+commonLabels:
+  variant: production
+  org: pirocorp
+resources:
+- ../../base
+patchesStrategicMerge:
+- deployment.yaml
+- service.yaml

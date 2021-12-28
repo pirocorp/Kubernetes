@@ -1,0 +1,1 @@
+sed 's/%replicas%/3/ ; s/%nodeport%/30001/' homework.yaml > result.yaml

@@ -1,0 +1,9 @@
+namePrefix: test-
+commonLabels:
+  variant: test
+  org: pirocorp
+resources:
+- ../../base
+patchesStrategicMerge:
+- deployment.yaml
+- service.yaml

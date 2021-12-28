@@ -1,0 +1,13 @@
+apiVersion: v2
+name: webchart
+description: A simple Nginx-based Helm chart for Kubernetes
+
+# Chart type. A chart can be either an 'application' or a 'library' chart
+type: application
+
+# Version of the chart
+version: 0.1.0
+
+# Version of the application. In our case - Nginx 1.21.4
+appVersion: "1.21.4"
+

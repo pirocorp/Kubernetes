@@ -1,0 +1,3 @@
+replicasCount: 3
+greetingMessage: Hello from NGINX chart :)
+nodePort: 31000
