@@ -169,6 +169,21 @@ The ```Running``` status indicates that a container is executing without issues.
 
 A container in the ```Terminated``` state began execution and then either ran to completion or failed for some reason. When you use ```kubectl``` to query a Pod with a container that is ```Terminated```, you see a reason, an exit code, and the start and finish time for that container's period of execution.
 
+Labels and Annotations
+
+- Labels
+  - Key-value pairs attached to objects
+  - Each object may have multiple labels
+  - Each label may be attached to multiple objects
+  - Used to identify and group sets of objects
+  - Used with label selectors to select a group of objects
+- Annotations
+  - Key-value pairs attached to objects
+  - Each object may have multiple labels
+  - Each label may be attached to multiple objects
+  - Key-value pairs attached to objects
+  - Used to store additional information (metadata) like description, creator, etc.
+
 ### Example Pod manifest
 
 ```yaml
