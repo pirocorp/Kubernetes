@@ -37,3 +37,15 @@ A **container** is a **standard unit of software that packages up code and all i
 - Provides and controls access to/from outside world
 - Tracks and optimizes the resource usage
 
+![image](https://user-images.githubusercontent.com/34960418/147655118-6ef8c3c7-9e8e-40b2-a371-a8cec74ab8ac.png)
+
+### Control Plane (master) Nodes
+
+- Responsible for **managing** the cluster
+- Typically, **more than one** is installed
+- In HA mode one node is the **Leader**
+- It is **work-free** (this can be changed)
+- Components running on master are also known as **Control Plane**
+- Can be reached via **CLI** (kubectl), **APIs**, or **Dashboard**
+
+![image](https://user-images.githubusercontent.com/34960418/147655346-15dcff5f-ec59-444c-ad8d-a9f95b868933.png)
