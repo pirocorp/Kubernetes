@@ -143,6 +143,8 @@ When something is said to have the same lifetime as a Pod, such as a volume, tha
 
 ### Pod phase
 
+
+
 | Value     | Description                                                                                                                                                                                                                                                        |
 |-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Pending   | The Pod has been accepted by the Kubernetes cluster, but one or more of the containers has not been set up and made ready to run. This includes time a Pod spends waiting to be scheduled as well as the time spent downloading container images over the network. |
@@ -150,6 +152,22 @@ When something is said to have the same lifetime as a Pod, such as a volume, tha
 | Succeeded | All containers in the Pod have terminated in success, and will not be restarted.                                                                                                                                                                                   |
 | Failed    | All containers in the Pod have terminated, and at least one container has terminated in failure. That is, the container either exited with non-zero status or was terminated by the system.                                                                        |
 | Unknown   | For some reason the state of the Pod could not be obtained. This phase typically occurs due to an error in communicating with the node where the Pod should be running.                                                                                            |
+
+### Container states
+
+Once the scheduler assigns a Pod to a Node, the kubelet starts creating containers for that Pod using a container runtime. There are three possible container states: ```Waiting```, ```Running```, and ```Terminated```.
+
+#### Waiting
+
+If a container is not in either the ```Running``` or ```Terminated``` state, it is ```Waiting```. A container in the ```Waiting``` state is still running the operations it requires in order to complete start up: for example, pulling the container image from a container image registry, or applying Secret data. When you use ```kubectl``` to query a Pod with a container that is ```Waiting```, you also see a Reason field to summarize why the container is in that state.
+
+#### Running
+
+The ```Running``` status indicates that a container is executing without issues. If there was a ```postStart``` hook configured, it has already executed and finished. When you use ```kubectl``` to query a Pod with a container that is ```Running```, you also see information about when the container entered the ```Running``` state.
+
+#### Terminated
+
+A container in the ```Terminated``` state began execution and then either ran to completion or failed for some reason. When you use ```kubectl``` to query a Pod with a container that is ```Terminated```, you see a reason, an exit code, and the start and finish time for that container's period of execution.
 
 ### Example Pod manifest
 
