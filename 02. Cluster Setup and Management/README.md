@@ -374,4 +374,28 @@ kubectl version
 
 Note: +/-1 minor version is acceptable
 
-# Post cluster installation activities
+# Dashboard Installation
+
+Check the latest version and any installation instructions [here](https://github.com/kubernetes/dashboard)
+
+Deploy the **Dashboard**
+
+```yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.4.0/aio/deploy/recommended.yaml
+```
+Check the pods
+
+```yaml
+kubectl get pods --all-namespaces
+```
+
+Try to access the Dashboard
+
+```yaml
+kubectl proxy
+```
+Use this [URL](http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/) ```http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/```
+
+We cannot log in as we do not have any valid way of doing it. Stop the Dashboard proxy with Ctrl + C. Create a file dashboard-admin-user.yml with the following content.
+
+
