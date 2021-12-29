@@ -122,6 +122,8 @@ A **container** is a **standard unit of software that packages up code and all i
 - Expects a file named **config** in the **$HOME/.kube** directory
 - Other files can be specified by setting the **KUBECONFIG** environment variable or by setting the **--kubeconfig** flag
 
+Its version should +/- 1 minor version compared to the cluster. For example, with kubectl version 1.22 we can work with clusters version 1.21, 1.22, and 1.23
+
 The syntax is 
 
 ```bash
