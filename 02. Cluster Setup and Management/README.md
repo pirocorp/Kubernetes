@@ -201,3 +201,32 @@ Using the virtualization solution techniques create three identical virtual mach
 -	2 vCPU
 -	2 GB+ RAM
 
+Connect them in a way that will allow for Internet access and easier communication with and between them. External/bridged mode will be the best option
+During the manual, will use 192.168.0.0/24. You should adjust the commands to match your setup.
+
+## Preparation
+
+Start all nodes
+
+Log on the first one and set
+-	Its IP address, for example 192.168.0.53/24
+-	Ifs FQDN, for example node-1.k8s
+-	Its /etc/hosts file:
+
+
+edit /etc/network/interfaces with this values for example
+
+iface eth0 inet static
+        address 192.168.0.53/24
+        gateway 192.168.0.1
+        dns-nameservers 8.8.8.8
+
+```bash
+hostnamectl set-hostname node-1.k8s
+```
+
+```bash
+echo "192.168.0.53  node-1.k8s  node-1" | tee -a /etc/hosts
+echo "192.168.0.54  node-2.k8s  node-2" | tee -a /etc/hosts
+echo "192.168.0.55  node-3.k8s  node-3" | tee -a /etc/hosts
+```
