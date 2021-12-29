@@ -214,30 +214,46 @@ spec:
 
 ![Pod Comunication](./Pod%20Comunication.png)
 
-## Simple Service Manifest (YAML)
+## Service
+
+An abstract way to expose an application running on a set of Pods as a network service.
+With Kubernetes you don't need to modify your application to use an unfamiliar service discovery mechanism. Kubernetes gives Pods their own IP addresses and a single DNS name for a set of Pods, and can load-balance across them.
+
+An abstraction which defines a logical set of Pods and a policy by which to access them (sometimes this pattern is called a micro-service).
+
+- Provide reliable network endpoint
+  - IP address
+  - DNS name
+  - Port
+- Expose pods to the outside world
+- Use end point object to track pods
+- Use label selectors to do their magic
 
 ### Service Types
 
 #### ClusterIP
 
-exposes the Service on a **cluster-internal IP**. This way the Service will be only reachable from within the cluster. **This is the default**.
+Exposes the Service on a **cluster-internal IP**. This way the Service will be only reachable from within the cluster. **This is the default**.
 
 #### NodePort
 
-exposes the Service on each Node's IP at a static port specified by the NodePort. A ClusterIP Service, to which the NodePort Service routes, is automatically created. We can contact the NodePort Service, from outside the cluster, by requesting **<NodeIP>:<NodePort>**. Default range is between **30000** and **32767**.
+Exposes the Service on each Node's IP at a static port specified by the NodePort. A ClusterIP Service, to which the NodePort Service routes, is automatically created. We can contact the NodePort Service, from outside the cluster, by requesting ```<NodeIP>:<NodePort>```. Default range is between **30000** and **32767**.
 
 #### LoadBalancer
 
-exposes the Service externally using a cloud provider's load balancer. NodePort and ClusterIP Services, to which the external load balancer routes, are automatically created.
+Exposes the Service externally using a cloud provider's load balancer. NodePort and ClusterIP Services, to which the external load balancer routes, are automatically created.
 
 #### ExternalName
   
-maps the Service to the contents of the **externalName** field (e.g. foo.bar.example.com), by returning a **CNAME** record with its value. No proxying of any kind is set up.
+Maps the Service to the contents of the **externalName** field (e.g. foo.bar.example.com), by returning a **CNAME** record with its value. No proxying of any kind is set up.
 
+### Example Service manifest
+
+Note: A Service can map any incoming port to a targetPort. By default and for convenience, the targetPort is set to the same value as the port field.
   
 ```yaml
 apiVersion: v1
-# Service object expose pods to the outside world. Provide reliable network endpoint
+# Service object expose pods to the outside world. Provide reliable network endpoint.
 kind: Service
 metadata:
   name: appa-svc
@@ -245,15 +261,17 @@ metadata:
     app: appa
     ver: v1
 spec:
-  # Specifies service type.
+  # Service type.
   type: NodePort
   ports:
-  # Port exposed by the service.
+    # Exposes the Kubernetes service on the specified port within the cluster. Other pods within the cluster can communicate with this server on the specified port..
   - port: 80
-  # Port exposed by the service but in the k8s cluster.
+    # Is the port on which the service will send requests to, that your pod will be listening on.
+    targetPort: 80
+    # Service port exposed on each Node's IP.
     nodePort: 30001
     protocol: TCP
-  # Pods which have these labels and label values will be targeted (load balanced).
+  # Will target pods with these labels and label values (load balanced).
   selector:
     app: appa
     ver: v1
