@@ -17,6 +17,20 @@ In the ```.yaml``` file for the Kubernetes object you want to create, you'll nee
 - ```metadata``` - Data that helps uniquely identify the object, including a name string, UID, and optional namespace
 - ```spec``` - What state you desire for the object
 
+## Kubernetes Object Management
+
+### Imperative commands
+
+When using imperative commands, a user operates directly on live objects in a cluster. The user provides operations to the kubectl command as arguments or flags.
+
+Commands are invoked against live objects. We directly state what should be done. Good for development or test and for one-off tasks
+
+Example: 
+
+```bash
+kubectl create deployment nginx --image nginx
+```
+
 # Manifest files explanations (YAML)
 
 ## Simple Pod Manifest (YAML)
