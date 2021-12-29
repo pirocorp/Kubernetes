@@ -64,7 +64,7 @@ sed -i '/swap/ s/^/#/' /etc/fstab
 
 ## Container runtime
 
-Will use Docker and will follow the steps from the official [documentation](https://docs.docker.com/engine/install/debian/):
+Will use Docker and will follow the steps from the official [documentation](https://docs.docker.com/engine/install/debian/).
 
 Update the repositories information
 
