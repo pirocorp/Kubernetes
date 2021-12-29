@@ -24,4 +24,8 @@ A **container** is a **standard unit of software that packages up code and all i
 
 ![image](https://user-images.githubusercontent.com/34960418/147654316-422a936c-9489-4eb0-90fd-d89153f2f7b4.png)
 
+- **Container** - A runnable instance of an image. Containers are processes with much more isolation.
+- **Image** - A read-only template of a container built from layers. Images provide a way for simpler software distribution
+- **Repository** - A collection of different versions of an image identified by tags
+- **Registry** - A collection of repositories
 
