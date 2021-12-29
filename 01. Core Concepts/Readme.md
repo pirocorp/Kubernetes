@@ -279,7 +279,17 @@ spec:
 
 ![Service Comunication](./Services.png)
   
-## Replication Controller Manifest (YAML)
+## Replication Controller 
+
+- **Higher** level workload.
+- Looks after **pod** or **set of pods**.
+- **Scale** up/down **pods**.
+- Sets **Desired State**.
+- Rarely used these days.
+
+A ReplicationController ensures that a specified number of pod replicas are running at any one time. In other words, a ReplicationController makes sure that a pod or a homogeneous set of pods is always up and available.
+
+### Example Replication Controller Manifest
 
 ```yaml
 apiVersion: v1
@@ -309,10 +319,27 @@ spec:
 
 ![Replication Controllers](./Replication%20Controllers.png)
   
-## Replica Set Manifest (YAML)
+## Replica Set
+
+- **Higher** level workload.
+- Looks after **pod** or **set of pods**.
+- **Scale** up/down **pods**.
+- Sets **Desired State**.
+- Preferred over **Replication Controllers**.
+- Rarely used alone by itself.
+
+A ReplicaSet's purpose is to maintain a stable set of replica Pods running at any given time. As such, it is often used to guarantee the availability of a specified number of identical Pods.
 
 Replica Set is rarely used in its own. It's commonly used with Deployment object.
-  
+
+A ReplicaSet is defined with fields, including a selector that specifies how to identify Pods it can acquire, a number of replicas indicating how many Pods it should be maintaining, and a pod template specifying the data of new Pods it should create to meet the number of replicas criteria. A ReplicaSet then fulfills its purpose by creating and deleting Pods as needed to reach the desired number. When a ReplicaSet needs to create new Pods, it uses its Pod template.
+
+A ReplicaSet is linked to its Pods via the Pods' metadata.ownerReferences field, which specifies what resource the current object is owned by. All Pods acquired by a ReplicaSet have their owning ReplicaSet's identifying information within their ownerReferences field. It's through this link that the ReplicaSet knows of the state of the Pods it is maintaining and plans accordingly.
+
+A ReplicaSet identifies new Pods to acquire by using its selector. If there is a Pod that has no OwnerReference or the OwnerReference is not a Controller and it matches a ReplicaSet's selector, it will be immediately acquired by said ReplicaSet.
+
+### Example Replica Set Manifest
+
 ```yaml
 apiVersion: apps/v1
 # Replica Set looks after pod or set of pods, scale up/down pods, sets desired state, preferred over Replication Controllers
