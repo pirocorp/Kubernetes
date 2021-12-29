@@ -128,4 +128,5 @@ The syntax is
 kubectl [command] [TYPE] [NAME] [flags]
 ```
 
+```command```: Specifies the operation that you want to perform on one or more resources, for example ```create```, ```get```, ```describe```, ```delete```
 
