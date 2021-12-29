@@ -1,6 +1,8 @@
 # Basic Cluster Installation
 
-creation of simple yet working Kubernetes cluster
+Creation of simple yet working Kubernetes cluster.
+
+[Requirements](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#before-you-begin)
 
 ## Basic settings
 
@@ -59,4 +61,6 @@ As a final general step, turn off the SWAP both for the session and in general
 swapoff -a
 sed -i '/swap/ s/^/#/' /etc/fstab
 ```
+
+## Container runtime
 
