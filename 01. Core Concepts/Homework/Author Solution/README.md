@@ -146,3 +146,76 @@ Or the following under UNIX-like OSes
 ```bash
 kubectl apply -R -f task2/
 ```
+
+## Task 4
+
+Try to translate the attached ```docker-compose.yml``` file to a set of Kubernetes objects and the corresponding manifest(s)
+
+```yaml
+version: "3.9"
+services:
+  listener:
+    image: "shekeriev/k8s-listener"
+  speaker:
+    image: "shekeriev/k8s-speaker"
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: hw
+    role: listener
+  name: listener
+spec:
+  containers:
+  - image: shekeriev/k8s-listener
+    name: listener
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: hw
+    role: speaker
+  name: speaker
+spec:
+  containers:
+  - image: shekeriev/k8s-speaker
+    name: speaker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: hw
+  name: listener
+spec:
+  ports:
+  - name: listener-port
+    nodePort: 32000
+    port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: hw
+    role: listener
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: hw
+  name: speaker
+spec:
+  ports:
+  - name: speaker-port
+    port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: hw
+    role: speaker
+```
