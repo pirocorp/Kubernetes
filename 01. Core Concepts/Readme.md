@@ -31,6 +31,32 @@ Example:
 kubectl create deployment nginx --image nginx
 ```
 
+### Imperative object configuration
+
+In imperative object configuration, the **kubectl** command specifies the operation (**create**, **replace**, etc.), optional flags and **at least one file name**. The file specified must contain a full definition of the object in YAML or JSON format.
+
+Operations are specified together with at least one file, which contains the definition of target object(s). Can be used in production.
+
+Example:
+```bash
+kubectl create -f nginx.yaml
+```
+
+### Declarative object configuration
+
+When using declarative object configuration, a user operates on object configuration files stored locally, however the user does not define the operations to be taken on the files. Create, update, and delete operations are automatically detected per-object by kubectl. This enables working on directories, where different operations might be needed for different objects.
+
+Operates with local configuration files but the actions are not stated explicitly. Can work with files and folders.
+
+Examples:
+
+Process all object configuration files in the ```configs``` directory, and create or patch the live objects. You can first diff to see what changes are going to be made, and then apply:
+
+```bash
+kubectl diff -f configs/
+kubectl apply -f configs/
+```
+
 # Manifest files explanations (YAML)
 
 ## Simple Pod Manifest (YAML)
