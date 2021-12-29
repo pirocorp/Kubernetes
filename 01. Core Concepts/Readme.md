@@ -186,7 +186,7 @@ metadata:
     ver: v1
 # What state you desire for the object
 spec:
-  # Specifies containers in the object (pod)
+  # Specifies containers in the pod
   containers:
   # Container name (first)
   - name: appa-container
