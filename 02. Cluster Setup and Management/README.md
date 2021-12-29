@@ -4,7 +4,7 @@ Creation of simple yet working Kubernetes cluster.
 
 [Requirements](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#before-you-begin)
 
-## Basic settings
+# Debian 10 Based Kubernetes Template
 
 Let’s assume that we have a virtual machine with **Debian 10** installed (basic / minimal). We will use it to prepare our golden image, that will be used for the creation of the cluster. Log on to the machine (we will assume that we are working with the **root** user)
 
@@ -182,3 +182,13 @@ Then exclude the packages from being updated
 ```bash
 apt-mark hold kubelet kubeadm kubectl
 ```
+
+Turn off the machine
+
+```bash
+shutdown now
+```
+
+Using the virtualization solution techniques create a template of this machine or its virtual disk
+
+# Cluster creation
