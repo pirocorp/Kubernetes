@@ -125,6 +125,16 @@ Solution:
 
 Please note, that this solution requires access to a supported local virtualization solution. VirtualBox is the one selected for this. Also, you must have Vagrant installed.
 
+The main part is in the Vagrantfile file
+
+There are several things to pay attention to:
+
+-	The selected virtual machine template image (**shekeriev/debian-10**). It is a generic one (just a bare installation). It may be changed to anything else (including to **shekeriev/debian-11**), but then the initialization scripts may need to be adjusted as well.
+-	There are three initialization scripts (variables ***$common***, ***$k8scp***, ***$k8swk***). The first one (***$common***) is applicable to all machines in the cluster as it is generic and prepares them for being part of the cluster. The second one (***$k8scp***) is just for the control plane node as it initializes the cluster (control plane) and installs a **POD Network plugin**. The third one (***$k8swk***) is applicable only to the worker nodes as it joins them to the cluster.
+-	Calico is selected as a **POD Network** plugin. You may change it to one of the others, of course with the appropriate changes of the initialization script.
+-	The version of **Kubernetes** components is controlled via a variable (**K8SVER**) in the first script (and then in the second). Set it to a particular version (for example, **1.21.6-00**) or **latest** (to install the latest available).
+-	The **Vagrantfile** itself may be further optimized and/or made more agile, but this is outside the scope of the current course.
+
 ```Vagrantfile
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
@@ -295,4 +305,50 @@ Vagrant.configure(2) do |config|
     node3.vm.provision "shell", inline: $k8swk
   end
 end
+```
+
+Once done with the adjustments, execute
+
+```bash
+vagrant up
+```
+To create the cluster and then
+
+```bash
+vagrant ssh node1
+```
+To open a session to **node 1**
+There you may check the environment by executing
+
+```bash
+kubectl cluster-info
+kubectl get nodes -o wide
+```
+And then, run the application
+
+```bash
+kubectl apply -f /vagrant/homework.yaml
+```
+
+And check its components
+
+```bash
+kubectl get pods,svc -n homework -o wide
+```
+Try to reach the application 
+
+```bash
+curl http://192.168.99.101:32000
+```
+Once done exploring, remove the application with
+
+```bash
+kubectl delete -f /vagrant/homework.yaml
+```
+
+And finally, remove the cluster by closing the session and executing
+
+```bash
+exit
+vagrant destroy --force
 ```
