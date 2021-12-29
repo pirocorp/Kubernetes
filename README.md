@@ -132,6 +132,11 @@ kubectl [command] [TYPE] [NAME] [flags]
 
 ```TYPE```: Specifies the resource type. Resource types are case-insensitive and you can specify the singular, plural, or abbreviated forms.
 
+```NAME```: Specifies the name of the resource. Names are case-sensitive. If the name is omitted, details for all resources are displayed.
+
+```flags```: Specifies optional flags.
+
+***Caution***: Flags that you specify from the command line override default values and any corresponding environment variables.
 
 #### Resource types
 
