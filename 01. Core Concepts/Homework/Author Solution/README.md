@@ -48,6 +48,6 @@ kubectl annotate pods purpose=homework --namespace homework --selector=app=hw
 kubectl create service nodeport homework-svc --node-port=32000 --tcp=5000:5000 --namespace homework
 ```
 If we try now to access the application, we will notice that it won’t show. Should we want to know why, we can describe the service and notice that no pods are being associated (the endpoints list is empty). We can handle this by changing the automatically created selector (app=homework-svc) of the service with something more suitable (app=hw) that will select the two pods
-```sh
+```bash
 kubectl set selector service homework-svc app=hw --namespace homework
 ```
