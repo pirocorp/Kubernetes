@@ -315,6 +315,63 @@ Join the node to the cluster (yours may be different).
 ```bash
 kubeadm join 192.168.81.211:6443 --token 8qu2va.le6ndhtt9mdpbmow \
         --discovery-token-ca-cert-hash sha256:9d2642aeda7a1c210b26db639bbf0272e4bfa59b895904162b948c055cb39402
-``
+```
 
 Repeat the same on node-3
+
+Return on node-1
+And check nodes
+
+```bash
+kubectl get nodes
+```
+
+Show cluster information
+
+```bash
+kubectl cluster-info
+```
+
+## Control our new cluster from our host.
+
+- Close the session to node-1.
+- Navigate to our home folder (on our host) and then to the **.kube** folder
+- Copy the configuration file (use your actual master/node-1 IP address here)
+
+```bash
+scp root@192.168.0.53:/etc/kubernetes/admin.conf .
+```
+
+Backup the existing configuration if any
+
+```bash
+mv ~\.kube\config ~\.kube\config.bak
+```
+
+Make the copied file the active configuration
+
+```bash
+mv .\admin.conf ~\.kube\config
+```
+
+Ask for cluster information but this time from the host
+
+```bash
+kubectl cluster-info
+```
+
+Check version of our **kubectl**
+
+```bash
+kubectl version --client
+```
+
+And compare it with the one of the cluster
+
+```bash
+kubectl version
+```
+
+Note: +/-1 minor version is acceptable
+
+# Post cluster installation activities
