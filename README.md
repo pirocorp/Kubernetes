@@ -115,3 +115,16 @@ A **container** is a **standard unit of software that packages up code and all i
 - Each pod has its **own address**
 - All containers in a pod share the **same IP** address
 - Offers **load balancing** across all pods in a **service**
+
+### kubectl (kubernetes cli)
+
+- Controls Kubernetes clusters
+- Expects a file named **config** in the **$HOME/.kube** directory
+- Other files can be specified by setting the **KUBECONFIG** environment variable or by setting the **--kubeconfig** flag
+- The syntax is 
+
+```bash
+kubectl [command] [TYPE] [NAME] [flags]
+```
+
+
