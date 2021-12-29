@@ -49,3 +49,29 @@ A **container** is a **standard unit of software that packages up code and all i
 - Can be reached via **CLI** (kubectl), **APIs**, or **Dashboard**
 
 ![image](https://user-images.githubusercontent.com/34960418/147655346-15dcff5f-ec59-444c-ad8d-a9f95b868933.png)
+
+### Control Plane Nodes: Persistent Store
+
+- Based on **etcd**
+- **Persistent** storage
+- Cluster **state** and **configuration**
+- **Distributed** and **consistent**
+- Provides single **source of truth**
+- Can be installed **externally**
+
+### Control Plane Nodes: API Server
+
+- Exposes the **Kubernetes API (REST)**
+- **Front-end** for the control plane
+- **Administrative** tasks
+- Consumes **JSON** via **Manifest files (YAML)**
+
+### Control Plane Nodes: Controller
+
+- Executes control loops
+- Responsible for other controllers
+  - Node controller
+  - Endpoints controller
+  - Namespace controller, etc.
+- Watches for changes
+- Maintains the desired state
