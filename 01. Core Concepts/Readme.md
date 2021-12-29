@@ -179,8 +179,8 @@ Labels and Annotations
   - Used with label selectors to select a group of objects
 - Annotations
   - Key-value pairs attached to objects
-  - Each object may have multiple labels
-  - Each label may be attached to multiple objects
+  - Each object may have multiple annotations
+  - Each annotation may be attached to multiple objects
   - Key-value pairs attached to objects
   - Used to store additional information (metadata) like description, creator, etc.
 
