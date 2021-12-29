@@ -64,6 +64,19 @@ kubectl diff -R -f configs/
 kubectl apply -R -f configs/
 ```
 
+## Namespaces
+
+- Kubernetes supports multiple virtual clusters.
+- These virtual clusters are called **namespaces**.
+- Namespaces provide a **scope for names**.
+- Names of resources need to be **unique** within a namespace.
+- Namespaces **cannot be nested** inside one another.
+- Each Kubernetes resource can **only be in one** namespace.
+- Most Kubernetes resources are in some namespace.
+- Namespace resources are not themselves (and others such as **nodes**) in a namespace.
+- Deleting a Namespace will clean up everything under it.
+
+
 # Manifest files explanations (YAML)
 
 ## Simple Pod Manifest (YAML)
