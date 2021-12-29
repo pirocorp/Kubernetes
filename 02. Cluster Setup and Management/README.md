@@ -99,7 +99,7 @@ apt-get install docker-ce docker-ce-cli containerd.io
 
 ## Container runtime configuration
 
-Will refer to this [source](https://kubernetes.io/docs/setup/production-environment/container-runtimes/):
+Will refer to this [source](https://kubernetes.io/docs/setup/production-environment/container-runtimes/).
 
 Create the configuration folder if does not exist
 
@@ -128,4 +128,57 @@ Reload and restart the service
 systemctl enable docker
 systemctl daemon-reload
 systemctl restart docker
+```
+
+## Kubernetes components
+
+Will refer to this [source](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl). 
+
+Install any packages that may be missing.
+
+```bash
+apt-get update
+apt-get install -y apt-transport-https ca-certificates curl
+```
+
+Download and install the key
+
+```bash
+curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+```
+
+Add the repository
+
+```bash
+echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+```
+
+Update repositories information.
+
+```bash
+apt-get update
+```
+
+Check available versions of the packages.
+
+```bash
+apt-cache madison kubelet
+```
+
+Should we want to install the latest version, we may use (skip it for now).
+
+```bash
+apt-get install -y kubelet kubeadm kubectl
+```
+
+For a particular version we should use (execute this one)
+
+```bash
+apt-get install kubelet=1.21.6-00 kubeadm=1.21.6-00 kubectl=1.21.6-00
+```
+
+Then exclude the packages from being updated
+
+```bash
+apt-mark hold kubelet kubeadm kubectl
 ```
