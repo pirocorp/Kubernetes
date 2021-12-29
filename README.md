@@ -50,7 +50,7 @@ A **container** is a **standard unit of software that packages up code and all i
 
 ![image](https://user-images.githubusercontent.com/34960418/147655346-15dcff5f-ec59-444c-ad8d-a9f95b868933.png)
 
-### Control Plane Nodes: Persistent Store
+#### Control Plane Nodes: Persistent Store
 
 - Based on **etcd**
 - **Persistent** storage
@@ -59,14 +59,14 @@ A **container** is a **standard unit of software that packages up code and all i
 - Provides single **source of truth**
 - Can be installed **externally**
 
-### Control Plane Nodes: API Server
+#### Control Plane Nodes: API Server
 
 - Exposes the **Kubernetes API (REST)**
 - **Front-end** for the control plane
 - **Administrative** tasks
 - Consumes **JSON** via **Manifest files (YAML)**
 
-### Control Plane Nodes: Controller
+#### Control Plane Nodes: Controller
 
 - Executes **control loops**
 - Responsible for other controllers
@@ -76,8 +76,42 @@ A **container** is a **standard unit of software that packages up code and all i
 - Watches for **changes**
 - Maintains the **desired state**
 
-### Control Plane Nodes: Scheduler
+#### Control Plane Nodes: Scheduler
 
 - **Listens** API Server for new work
 - **Assigns work** to nodes
 
+### (Worker) Nodes
+
+![image](https://user-images.githubusercontent.com/34960418/147656355-445cbf18-e506-458a-a952-49cb83d11295.png)
+
+- **Container runtime** - Docker, containerd, CRI-O, etc
+- **kubelet** - Communicates with the control plane
+- **kube-proxy** - Network proxy
+
+#### (Worker) Nodes: kubelet
+
+- Main Kubernetes agent
+- Registers node in the cluster
+- Listens to the API Server
+- Creates pods
+- Reports back to the control plane
+- Exposes endpoint on :10255
+  - /spec
+  - /healthz
+  - /pods
+
+#### (Worker) Nodes: Container Runtime
+
+- Container management:
+  - **Pulling** images
+  - **Starting** and **stopping**
+- It is **pluggable**
+- By default, is **Docker**
+
+#### (Worker) Nodes: kube-proxy
+
+- Provides the **networking**
+- Each pod has its **own address**
+- All containers in a pod share the **same IP** address
+- Offers **load balancing** across all pods in a **service**
