@@ -1,20 +1,40 @@
+# Kubernetes Objects
+
+- Kubernetes objects are persistent entities.
+- They are used to represent the state of the cluster.
+- An object is a **"record of intent"**. Once created, the Kubernetes system will constantly work to ensure that object exists.
+- Almost every object includes two nested object fields.
+  - **Spec** provides a description of the characteristics (**desired state**).
+  - **Status** describes the current state of the object.
+- They include **Pods**, **Services**, **Namespaces**, **Volumes**, etc.
+
+## Required Fields
+
+In the ```.yaml``` file for the Kubernetes object you want to create, you'll need to set values for the following fields:
+
+- ```apiVersion``` - Which version of the Kubernetes API you're using to create this object
+- ```kind``` - What kind of object you want to create
+- ```metadata``` - Data that helps uniquely identify the object, including a name string, UID, and optional namespace
+- ```spec``` - What state you desire for the object
+
 # Manifest files explanations (YAML)
 
 ## Simple Pod Manifest (YAML)
 
 ```yaml
-# Service information (Object version)
+# Service information (Kubernetes Api version)
 apiVersion: v1
-# Kubernetes object type
+# What kind of object you want
 # Pod contains one or more containers.
 kind: Pod
+# Data that helps uniquely identify the object, including a name string, UID, and optional namespace
 metadata:
   name: appa-pod
   # Labels are key value pairs. They can be used to target given objects
   labels:
     app: appa
     ver: v1
-# Object specification
+# What state you desire for the object
 spec:
   # Specifies containers in the object (pod)
   containers:
