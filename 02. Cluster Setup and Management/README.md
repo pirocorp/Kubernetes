@@ -232,3 +232,70 @@ echo "192.168.0.55  node-3.k8s  node-3" | tee -a /etc/hosts
 ```
 
 Repeat the above steps on the other two machines.
+
+## Cluster initialization (node-1)
+
+Initialize the cluster with
+
+```bash
+kubeadm init --apiserver-advertise-address=192.168.81.211 --pod-network-cidr 10.244.0.0/16
+```
+
+Installation will finish relatively quickly. Copy somewhere the join command. To start using our cluster, we must execute the following.
+
+```bash
+mkdir -p $HOME/.kube
+cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+Let's check our cluster nodes (just one so far)
+
+```bash
+kubectl get nodes
+```
+
+Note that it appears as **not ready**
+Check the pods as well
+
+```bash
+kubectl get pods -n kube-system
+```
+
+Hm, most of the pods are operational, but there is one pair that is not (CoreDNS)
+Let's check why the node is not ready
+
+```bash
+kubectl describe node node-1
+```
+
+Scroll to top and look for **Ready** and **KubeletNotReady** words.
+It appears that there isn't any (POD) network plugin installed
+
+We can check [here](https://kubernetes.io/docs/concepts/cluster-administration/addons/).
+And get further details form [here](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network).
+Check here for a list of plugins [here](https://kubernetes.io/docs/concepts/cluster-administration/networking/#how-to-implement-the-kubernetes-networking-model).
+
+It appears, that by installing a pod network plugin, we will solve both issues. Let's install a POD network plugin. For this demo, will use the [Flannel](https://github.com/flannel-io/flannel#flannel) plugin.
+
+Install it
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+```
+
+Watch the progress with
+
+```bash
+kubectl get pods --all-namespaces -w
+```
+
+After a while both Flannel and CoreDNS will be fully operational
+Press Ctrl + C to stop the monitoring
+Check again the status of the node
+
+```bash
+kubectl get nodes
+```
+
+It should be operational and ready as well
