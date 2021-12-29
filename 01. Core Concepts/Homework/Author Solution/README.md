@@ -11,8 +11,6 @@ Execute a series of commands to
 
 Solution:
 
-We assume that all we are working on a machine with minikube installed and running. Open a terminal session and make sure that your cluster is ready and reachable
-
 1. To create the required namespace execute
 ```bash
 kubectl create namespace homework
@@ -50,4 +48,83 @@ kubectl create service nodeport homework-svc --node-port=32000 --tcp=5000:5000 -
 If we try now to access the application, we will notice that it won’t show. Should we want to know why, we can describe the service and notice that no pods are being associated (the **endpoints** list is empty). We can handle this by changing the automatically created selector (**app=homework-svc**) of the service with something more suitable (**app=hw**) that will select the two pods
 ```bash
 kubectl set selector service homework-svc app=hw --namespace homework
+```
+
+## Task 2
+
+Create manifests for every object (the namespace, the two pods, and the service) from task 1 and apply them one by one
+
+Solution:
+
+hw-ns.yaml
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: homework
+```
+hw-pod-1.yaml
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    purpose: homework
+  labels:
+    app: hw
+  name: homework-1
+  namespace: homework
+spec:
+  containers:
+  - image: shekeriev/k8s-oracle
+    name: homework-1
+```
+
+hw-pod-2.yaml
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    purpose: homework
+  labels:
+    app: hw
+  name: homework-2
+  namespace: homework
+spec:
+  containers:
+  - image: shekeriev/k8s-oracle
+    name: homework-2
+```
+
+kubectl apply -f hw-svc.yaml
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: hw
+  name: homework-svc
+  namespace: homework
+spec:
+  ports:
+  - name: 5000-5000
+    nodePort: 32000
+    port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: hw
+  type: NodePort
+```
+
+```bash
+kubectl apply -f hw-ns.yaml
+kubectl apply -f hw-pod-1.yaml
+kubectl apply -f hw-pod-2.yaml
+kubectl apply -f hw-svc.yaml
 ```
