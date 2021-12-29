@@ -436,7 +436,3 @@ ver: v1```). However, more sophisticated selection rules are possible, as long a
   - Create one container and name it ```appa-container``` using the ```.spec.template.spec.containers[0].name``` field.
 
 ![Deployment](./Deployment.png)
-  
-# Overal Architecture
-
-![Architecture Overview](./Architecture%20Overview.png)
