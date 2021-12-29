@@ -57,6 +57,13 @@ kubectl diff -f configs/
 kubectl apply -f configs/
 ```
 
+Recursively process directories:
+
+```bash
+kubectl diff -R -f configs/
+kubectl apply -R -f configs/
+```
+
 # Manifest files explanations (YAML)
 
 ## Simple Pod Manifest (YAML)
