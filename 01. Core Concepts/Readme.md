@@ -84,6 +84,8 @@ When you create a Service, it creates a corresponding DNS entry. This entry is o
 
 The Kubernetes control plane sets an immutable label kubernetes.io/metadata.name on all namespaces. The value of the label is the namespace name.
 
+![Namespaces vs Clusters vs Data Centers](./Namespaces%20vs%20Clusters%20vs%20Data%20Centers.png)
+
 # Manifest files explanations (YAML)
 
 ## Simple Pod Manifest (YAML)
@@ -279,5 +281,3 @@ spec:
 # Overal Architecture
 
 ![Architecture Overview](./Architecture%20Overview.png)
-  
-![Namespaces vs Clusters vs Data Centers](./Namespaces%20vs%20Clusters%20vs%20Data%20Centers.png)
