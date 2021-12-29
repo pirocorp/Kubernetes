@@ -29,3 +29,11 @@ A **container** is a **standard unit of software that packages up code and all i
 - **Repository** - A collection of different versions of an image identified by tags
 - **Registry** - A collection of repositories
 
+## Kubernetes
+
+- Runs a cluster of hosts
+- Schedules containers to run on different hosts
+- Facilitates the communication between the containers
+- Provides and controls access to/from outside world
+- Tracks and optimizes the resource usage
+
