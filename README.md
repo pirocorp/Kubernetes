@@ -262,5 +262,3 @@ kubectl [command] [TYPE] [NAME] [flags]
 | ```-o name```                             | Print only the resource name and nothing else.                                                        |
 | ```-o wide```                             | Output in the plain-text format with any additional information. For pods, the node name is included. |
 | ```-o yaml```                             | Output a YAML formatted API object.                                                                   |
-
-  
