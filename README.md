@@ -247,3 +247,16 @@ kubectl [command] [TYPE] [NAME] [flags]
 | csinodes                        |            | storage.k8s.io               | false      | CSINode                        |
 | storageclasses                  | sc         | storage.k8s.io               | false      | StorageClass                   |
 | volumeattachments               |            | storage.k8s.io               | false      | VolumeAttachment               |
+
+#### Output options
+  
+| Output format                     | Description                                                                                           |
+|-----------------------------------|-------------------------------------------------------------------------------------------------------|
+| -o custom-columns=<spec>          | Print a table using a comma separated list of custom columns.                                         |
+| -o custom-columns-file=<filename> | Print a table using the custom columns template in the <filename> file.                               |
+| -o json                           | Output a JSON formatted API object.                                                                   |
+| -o jsonpath=<template>            | Print the fields defined in a jsonpath expression.                                                    |
+| -o jsonpath-file=<filename>       | Print the fields defined by the jsonpath expression in the <filename> file.                           |
+| -o name                           | Print only the resource name and nothing else.                                                        |
+| -o wide                           | Output in the plain-text format with any additional information. For pods, the node name is included. |
+| -o yaml                           | Output a YAML formatted API object.                                                                   |
