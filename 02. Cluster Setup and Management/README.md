@@ -96,3 +96,36 @@ Install the required packages
 apt-get update
 apt-get install docker-ce docker-ce-cli containerd.io
 ```
+
+## Container runtime configuration
+
+Will refer to this [source](https://kubernetes.io/docs/setup/production-environment/container-runtimes/):
+
+Create the configuration folder if does not exist
+
+```bash
+mkdir /etc/docker
+```
+
+Then create the configuration file with the following content
+
+```bash
+cat <<EOF | tee /etc/docker/daemon.json
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+EOF
+```
+
+Reload and restart the service
+
+```bash
+systemctl enable docker
+systemctl daemon-reload
+systemctl restart docker
+```
