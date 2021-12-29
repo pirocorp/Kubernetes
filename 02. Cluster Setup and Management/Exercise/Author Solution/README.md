@@ -36,7 +36,7 @@ And try to reach the application on ```http://<minikube-ip>:32000```
 ```bash
 minikube ip
 ```
-Or directly the service URL with
+Or directly the service **URL** with
 
 ```bash
 minikube service list
@@ -47,8 +47,8 @@ Once done, clean up the application with
 kubectl delete -f homework.yaml
 ```
 
-And then the minikube cluster with
+And then the **minikube** cluster with
 
 ```bash
-And then the minikube cluster with
+minikube delete
 ```
