@@ -76,6 +76,13 @@ kubectl apply -R -f configs/
 - Namespace resources are not themselves (and others such as **nodes**) in a namespace.
 - Deleting a Namespace will clean up everything under it.
 
+### Namespaces and DNS
+
+When you create a Service, it creates a corresponding DNS entry. This entry is of the form ```<service-name>.<namespace-name>.svc.cluster.local```, which means that if a container only uses ```<service-name>```, it will resolve to the service which is local to a namespace. This is useful for using the same configuration across multiple namespaces such as Development, Staging and Production. If you want to reach across namespaces, you need to use the fully qualified domain name (FQDN).
+
+### Automatic labelling (since 1.21)
+
+The Kubernetes control plane sets an immutable label kubernetes.io/metadata.name on all namespaces. The value of the label is the namespace name.
 
 # Manifest files explanations (YAML)
 
