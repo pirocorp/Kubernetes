@@ -128,3 +128,21 @@ kubectl apply -f hw-pod-1.yaml
 kubectl apply -f hw-pod-2.yaml
 kubectl apply -f hw-svc.yaml
 ```
+
+## Task 3
+
+Is there a way to submit those manifests at once? Find and demonstrate two ways of doing it
+
+Solution:
+
+Under Windows
+
+```cmd
+kubectl apply -R -f .\task2\
+```
+
+Or the following under UNIX-like OSes
+
+```bash
+kubectl apply -R -f task2/
+```
