@@ -64,3 +64,35 @@ sed -i '/swap/ s/^/#/' /etc/fstab
 
 ## Container runtime
 
+Will use Docker and will follow the steps from the official [documentation](https://docs.docker.com/engine/install/debian/):
+
+Update the repositories information
+
+```bash
+apt-get update
+```
+
+And install the required packages
+
+```bash
+apt-get install ca-certificates curl gnupg lsb-release
+```
+
+Download and install the key
+
+```bash
+curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+```
+
+Add the repository
+
+```bash
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+```
+
+Install the required packages
+
+```bash
+apt-get update
+apt-get install docker-ce docker-ce-cli containerd.io
+```
