@@ -230,3 +230,5 @@ echo "192.168.0.53  node-1.k8s  node-1" | tee -a /etc/hosts
 echo "192.168.0.54  node-2.k8s  node-2" | tee -a /etc/hosts
 echo "192.168.0.55  node-3.k8s  node-3" | tee -a /etc/hosts
 ```
+
+Repeat the above steps on the other two machines.
