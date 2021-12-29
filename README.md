@@ -68,10 +68,16 @@ A **container** is a **standard unit of software that packages up code and all i
 
 ### Control Plane Nodes: Controller
 
-- Executes control loops
+- Executes **control loops**
 - Responsible for other controllers
   - Node controller
   - Endpoints controller
   - Namespace controller, etc.
-- Watches for changes
-- Maintains the desired state
+- Watches for **changes**
+- Maintains the **desired state**
+
+### Control Plane Nodes: Scheduler
+
+- **Listens** API Server for new work
+- **Assigns work** to nodes
+
