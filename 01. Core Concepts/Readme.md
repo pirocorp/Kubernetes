@@ -426,14 +426,16 @@ spec:
         - containerPort: 80 
 ```
 
-A Deployment named ```appa-deploy``` is created, indicated by the ```.metadata.name field.```
-
-The Deployment creates ten replicated Pods, indicated by the ```.spec.replicas``` field.
-
-The ```.spec.selector``` field defines how the Deployment finds which Pods to manage. In this case, you select a labels that are defined in the Pod template (```app: appa
+- A Deployment named ```appa-deploy``` is created, indicated by the ```.metadata.name field.```
+- The Deployment creates ten replicated Pods, indicated by the ```.spec.replicas``` field.
+- The ```.spec.selector``` field defines how the Deployment finds which Pods to manage. In this case, you select a labels that are defined in the Pod template (```app: appa,
 ver: v1```). However, more sophisticated selection rules are possible, as long as the Pod template itself satisfies the rule.
+- The ```template``` field contains the following sub-fields:
+  - The Pods are labeled ```app: appa, ver: v1``` using the ```.metadata.labels``` field.
+  - The Pod template's specification, or ```.template.spec``` field, indicates that the Pods run one container, ```appa-container```, which runs the ```shekeriev/k8s-appa``` Docker Hub image at version ```v1```.
+  - Create one container and name it ```appa-container``` using the ```.spec.template.spec.containers[0].name``` field.
 
-  ![Deployment](./Deployment.png)
+![Deployment](./Deployment.png)
   
 # Overal Architecture
 
