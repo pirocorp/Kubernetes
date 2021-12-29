@@ -86,9 +86,18 @@ The Kubernetes control plane sets an immutable label kubernetes.io/metadata.name
 
 ![Namespaces vs Clusters vs Data Centers](./Namespaces%20vs%20Clusters%20vs%20Data%20Centers.png)
 
-# Manifest files explanations (YAML)
+## Pod
 
-## Simple Pod Manifest (YAML)
+- Smallest **unit of scheduling**.
+- **Scheduled** on nodes.
+- **One** or **more** containers.
+- Containers **share** the pod **environment**.
+- **Deployed as one** and on **one node**. It is **atomic**.
+- Created via **manifest files**.
+
+In terms of Docker concepts, a Pod is similar to a group of Docker containers with shared namespaces and shared filesystem volumes.
+
+Pods are generally not created directly and are created using workload resources.
 
 ```yaml
 # Service information (Kubernetes Api version)
@@ -109,7 +118,7 @@ spec:
   containers:
   # Container name (first)
   - name: appa-container
-    # From which image container should be build (docker image)
+    # From which image, container should be build (docker image)
     image: shekeriev/k8s-appa:v1
     ports:
     # containerPort sets the port that container will expose.
@@ -117,9 +126,6 @@ spec:
 ```
 
 ![Pod Comunication](./Pod%20Comunication.png)
-
-![Namespaces vs Clusters vs Data Centers](./Namespaces%20vs%20Clusters%20vs%20Data%20Centers.png)
-
 
 ## Simple Service Manifest (YAML)
 
