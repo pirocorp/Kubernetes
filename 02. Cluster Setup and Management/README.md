@@ -192,3 +192,12 @@ shutdown now
 Using the virtualization solution techniques create a template of this machine or its virtual disk
 
 # Cluster creation
+
+Small cluster with three nodes. One will be part of the control plane and the rest will handle any work.
+
+## Virtual infrastructure
+
+Using the virtualization solution techniques create three identical virtual machines each with:
+-	2 vCPU
+-	2 GB+ RAM
+
