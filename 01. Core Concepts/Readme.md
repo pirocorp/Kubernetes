@@ -371,9 +371,17 @@ spec:
 ![Replica Set](./Replica%20Set.png)
   
   
-## Deployment Manifest (YAML)
+## Deployment
+
+- **Even higher-level** workload.
+- Simplifies **updates** and **rollbacks**.
+- **Declarative** and **imperative** approach.
+- Self **documenting**.
+- Suitable for **versioning**.
 
 Deployment creates ReplicaSet
+
+### Example Deployment Manifest (YAML)
   
 ```yaml
 apiVersion: apps/v1
