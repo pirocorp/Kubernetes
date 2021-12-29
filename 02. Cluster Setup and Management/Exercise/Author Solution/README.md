@@ -52,3 +52,67 @@ And then the **minikube** cluster with
 ```bash
 minikube delete
 ```
+
+# Task 2
+
+Create a three node **KIND**-based **Kubernetes** cluster and deploy a simple app on it. For example, ```shekeriev/k8s-oracle``` from the previous HW 
+
+Solution:
+
+kind-cluster.yaml
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 32000
+    hostPort: 8080
+- role: worker
+- role: worker
+```
+
+Then start the cluster with
+
+```bash
+kind create cluster --name hw --config kind-cluster.yaml
+```
+
+Finally, switch the context to the new cluster
+
+```bash
+kubectl config use-context kind-hw
+```
+
+Ask for some information about the cluster
+
+```bash
+kubectl cluster-info
+kubectl get nodes -o wide
+```
+
+Then spin up the application
+
+```bash
+kubectl apply -f homework.yaml
+```
+
+And check its components
+
+```bash
+kubectl get pods,svc -n homework -o wide
+```
+
+Try to reach the application on ```http://localhost:8080```
+Once done exploring, remove the application with
+
+```bash
+kubectl delete -f homework.yaml
+```
+
+And finally, remove the cluster with
+
+```bash
+kind delete cluster --name hw
+```
