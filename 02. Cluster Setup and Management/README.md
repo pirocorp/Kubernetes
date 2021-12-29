@@ -238,7 +238,7 @@ Repeat the above steps on the other two machines.
 Initialize the cluster with
 
 ```bash
-kubeadm init --apiserver-advertise-address=192.168.81.211 --pod-network-cidr 10.244.0.0/16
+kubeadm init --apiserver-advertise-address=192.168.0.53 --pod-network-cidr 10.244.0.0/16
 ```
 
 Installation will finish relatively quickly. Copy somewhere the join command. To start using our cluster, we must execute the following.
