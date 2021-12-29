@@ -380,22 +380,76 @@ Check the latest version and any installation instructions [here](https://github
 
 Deploy the **Dashboard**
 
-```yaml
+```bash
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.4.0/aio/deploy/recommended.yaml
 ```
 Check the pods
 
-```yaml
+```bash
 kubectl get pods --all-namespaces
 ```
 
 Try to access the Dashboard
 
-```yaml
+```bash
 kubectl proxy
 ```
 Use this [URL](http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/) ```http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/```
 
 We cannot log in as we do not have any valid way of doing it. Stop the Dashboard proxy with Ctrl + C. Create a file dashboard-admin-user.yml with the following content.
 
+Create a file ```dashboard-admin-user.yml``` with the following content
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard
+```
+
+Create one more file ```dashboard-admin-role.yml``` with the following content
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kubernetes-dashboard
+```
+
+Apply both files
+
+```bash
+kubectl apply -f dashboard-admin-user.yml
+kubectl apply -f dashboard-admin-role.yml
+```
+
+Now, we can list the available secrets
+
+```bash
+kubectl -n kubernetes-dashboard get secret 
+```
+
+Identify the one with name ```admin-user-token-xxxxx``` and ask for its details
+
+```bash
+kubectl -n kubernetes-dashboard describe secret admin-user-token-wtpbm 
+```
+
+Copy the token field data. Start the proxy again with.
+
+```bash
+kubectl proxy
+```
+Navigate to the same [URL](http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/) ```http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/```
+
+Use the token from earlier. Explore the Dashboard. Once done, close the browser tab and stop the proxy with Ctrl + C.
 
