@@ -97,7 +97,7 @@ apt-get install docker-ce docker-ce-cli containerd.io
 
 ## Container runtime configuration
 
-Will refer to this [source](https://kubernetes.io/docs/setup/production-environment/container-runtimes/).
+Will refer to this [Container Runtimes](https://kubernetes.io/docs/setup/production-environment/container-runtimes/).
 
 Create the configuration folder if does not exist
 
@@ -130,7 +130,7 @@ systemctl restart docker
 
 ## Kubernetes components
 
-Will refer to this [source](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl). 
+Will refer to this [Installing kubeadm kubelet and kubectl](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl). 
 
 Install any packages that may be missing.
 
@@ -270,9 +270,9 @@ kubectl describe node node-1
 Scroll to top and look for **Ready** and **KubeletNotReady** words.
 It appears that there isn't any (POD) network plugin installed
 
-We can check [here](https://kubernetes.io/docs/concepts/cluster-administration/addons/).
-And get further details form [here](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network).
-Check here for a list of plugins [here](https://kubernetes.io/docs/concepts/cluster-administration/networking/#how-to-implement-the-kubernetes-networking-model).
+We can check [Addons](https://kubernetes.io/docs/concepts/cluster-administration/addons/).
+And get further details form [Pod Network](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network).
+Check here for a list of plugins [How to implement the kubernetes networking model](https://kubernetes.io/docs/concepts/cluster-administration/networking/#how-to-implement-the-kubernetes-networking-model).
 
 It appears, that by installing a pod network plugin, we will solve both issues. Let's install a POD network plugin. For this demo, will use the [Flannel](https://github.com/flannel-io/flannel#flannel) plugin.
 
@@ -374,7 +374,7 @@ Note: +/-1 minor version is acceptable
 
 # Dashboard Installation
 
-Check the latest version and any installation instructions [here](https://github.com/kubernetes/dashboard)
+Check the latest version and any installation instructions [Dashboard](https://github.com/kubernetes/dashboard)
 
 Deploy the **Dashboard**
 
