@@ -462,3 +462,15 @@ kubectl get pods -o wide
 ```
 
 Make sure that there are pods on **node-3** (you may need to further scale one of the deployments). Turn off the **node-3** virtual machine. Check the status of the nodes.
+
+```bash
+kubectl get nodes
+```
+
+Check the distribution of the pods
+
+```bash
+kubectl get pods -o wide
+```
+
+Check that the application is working as expected. Hm, the application is working but it appears that the cluster is thinking that some of the pods are working even if the node is missing. We will come back to this in a later module. Power on the node and wait for it to become ready. Check again pods distribution. Some of the pods (the ones that were running on node-3) are being restarted. Check the application. It should be working. There is another, more gallant, way to remove a node from the cluster for maintenance. We can first mark the node as not schedulable, so it won't receive any new work
