@@ -140,82 +140,31 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
+Save and close the file and push it to the cluster.
 
+```bash
+kubectl apply -f role-bindings.yaml
+```
+
+# Permission Check
+
+Check for current user or ```as``` other user.
+
+```bash
+kubectl auth can-i [command] [type] [flags]
+kubectl auth can-i create pods
+kubectl auth can-i create pods -n demo-prod
+kubectl auth can-i create pods -n demo-prod --as pirocorp
+```
+
+Furthermore, instead of asking for individual actions, we can ask for everything one can do in a namespace
+
+```bash
+kubectl auth can-i --list --namespace demo-dev --as pirocorp
+```
 
 
 # Manifest files explanations (YAML)
-
-## Part 1
-
-### RoleBindings (jhon and jane)
-
-This manifest (john's role bindings) have two RoleBinding resources. Jhon have role edit in namespace demo-prod and role view in namespace demo-dev.
-
-```yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-# Metadata describes for which user (name) in which (namespace) role binding is set
-metadata:
-  name: john
-  namespace: demo-prod
-# Subcects (multiple) for which rolebinding is applied.
-subjects:
-- kind: User
-  name: john
-  apiGroup: rbac.authorization.k8s.io
-# Role which will be bound to subjects
-roleRef:
-  # Role type (resource type) 
-  kind: ClusterRole
-  name: edit
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: john
-  namespace: demo-dev
-subjects:
-- kind: User
-  name: john
-  apiGroup: rbac.authorization.k8s.io
-roleRef:
-  kind: ClusterRole
-  name: view
-  apiGroup: rbac.authorization.k8s.io
-```
-
-This manifest (jane's role bindings) have two RoleBinding resources. Jane have role view in namespace demo-prod and role edit is namespace demo-dev.
-
-```yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: jane
-  namespace: demo-prod
-subjects:
-- kind: User
-  name: jane
-  apiGroup: rbac.authorization.k8s.io
-roleRef:
-  kind: ClusterRole
-  name: view
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: jane
-  namespace: demo-dev
-subjects:
-- kind: User
-  name: jane
-  apiGroup: rbac.authorization.k8s.io
-roleRef:
-  kind: ClusterRole
-  name: edit
-  apiGroup: rbac.authorization.k8s.io
-```
 
 ### Demo Role 
 
