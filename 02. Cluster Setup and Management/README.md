@@ -741,3 +741,109 @@ Need three virtual machines for control plane nodes and one or more (in this cas
 - [High Availability](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/)
 - [HA Topology](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/)
 - [HA Considerations](https://github.com/kubernetes/kubeadm/blob/main/docs/ha-considerations.md)
+
+## Load Balancer
+
+This is an intentionally over-simplified HAProxy setup which will act as a load balancer for the **Control Plane**.
+
+Install the required package
+
+```bash
+apt-get update
+apt-get install haproxy
+```
+
+Then, edit the **/etc/haproxy/haproxy.cfg** file and add the following to the end 
+
+```
+frontend kubernetes
+    bind 192.168.0.220:6443
+    option tcplog
+    mode tcp
+    default_backend kubernetes-cp
+
+backend kubernetes-cp
+    option httpchk GET /healthz
+    http-check expect status 200
+    mode tcp
+    option ssl-hello-chk
+    balance roundrobin
+    server node-1 192.168.0.221:6443 check fall 3 rise 2
+    server node-2 192.168.0.222:6443 check fall 3 rise 2
+    server node-3 192.168.0.223:6443 check fall 3 rise 2
+
+frontend stats
+    bind 192.168.0.220:8080
+    mode http
+    stats enable
+    stats uri /
+    stats realm HAProxy\ Statistics
+    stats auth admin:haproxy
+```
+
+Save and close the file. Note: *you should adjust it to match your setup (names, ip addresses, etc.)*.
+
+Restart the service
+
+```bash
+systemctl restart haproxy
+```
+
+## Control Plane
+
+Before continuing make sure that all six machines have their **/etc/hosts** file adjusted.
+
+```bash
+echo "192.168.0.221  node-1.k8s  node-1" | tee -a /etc/hosts
+echo "192.168.0.222  node-2.k8s  node-2" | tee -a /etc/hosts
+echo "192.168.0.223  node-3.k8s  node-3" | tee -a /etc/hosts
+echo "192.168.0.224  node-4.k8s  node-4" | tee -a /etc/hosts
+echo "192.168.0.225  node-5.k8s  node-5" | tee -a /etc/hosts
+echo "192.168.0.226  node-6.k8s  node-6" | tee -a /etc/hosts
+```
+
+Initialize the cluster (on the first control plane node).
+
+```bash
+kubeadm init --control-plane-endpoint "192.168.0.220:6443" --upload-certs --pod-network-cidr 10.244.0.0/16
+```
+
+Installation will finish relatively quickly. Copy somewhere the join command(s). To start using our cluster, we must execute the following.
+
+```bash
+mkdir -p $HOME/.kube
+cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+Let's check our cluster nodes (just one so far).
+
+```bash
+kubectl get nodes
+```
+
+Note that it appears as not ready. We know already what is causing this - the missing POD network plugin. Let's install a POD network plugin. For this demo, we will use the [Flannel plugin](https://github.com/flannel-io/flannel#flannel). Install it.
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+```
+
+We can watch the progress with:
+
+```bash
+kubectl get pods --all-namespaces -w
+```
+
+After a while both Flannel and CoreDNS will be fully operational. Press Ctrl + C to stop the monitoring. Check again the status of the node.
+
+```bash
+kubectl get nodes
+```
+
+It should be operational and ready as well. Join the rest of the control plane nodes (*adjust and execute the following on all control plane nodes*).
+
+```bash
+kubeadm join 192.168.81.220:6443 --token ozo8xv.c5jz648l6tp50jqp \
+        --discovery-token-ca-cert-hash sha256:f7eff5b82343969492fb8f8f613dc7ff752dc2da06e5d79e69879d425e980121 \
+        --control-plane --certificate-key d6befa0a65edc6659e1bd56a4706de715c7e11499c2aaf0c4c3f5b7100e7f780
+```
