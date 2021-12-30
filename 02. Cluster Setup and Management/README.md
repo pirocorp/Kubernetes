@@ -732,3 +732,12 @@ kubectl get nodes
 ```
 
 Repeat the procedure on the other node(s). Cluster is upgraded 😊.
+
+# Highly-available Cluster
+
+Need three virtual machines for control plane nodes and one or more (in this case 3) for nodes members of the cluster. In addition, we will need a machine to act as a load balancer. The following sources are used:
+
+- [Highly Available Control Plane](https://kubernetes.io/docs/tasks/administer-cluster/highly-available-control-plane/)
+- [High Availability](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/)
+- [HA Topology](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/)
+- [HA Considerations](https://github.com/kubernetes/kubeadm/blob/main/docs/ha-considerations.md)
