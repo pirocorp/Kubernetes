@@ -451,7 +451,13 @@ Navigate to the same [URL](http://localhost:8001/api/v1/namespaces/kubernetes-da
 
 Use the token from earlier. Explore the Dashboard. Once done, close the browser tab and stop the proxy with Ctrl + C.
 
-# Nodes management
+# Nodes Maintenance
+
+- Make the node unavailable for new work (**cordon**)
+- Initiate workload migration (**drain**)
+- All pods are **evicted** and recreated on other nodes 
+- Node is ready for maintenance
+- Declare the node ready for accepting work (**uncordon**)
 
 The gallant, way to remove a node from the cluster for maintenance. We can first mark the node as not schedulable, so it won't receive any new work.
 
@@ -471,7 +477,7 @@ Then check how the pods are distributed
 kubectl get pods -o wide
 ```
 
-As the cordon action is included in the drain action, we may continue or uncordon it first.
+As the cordon action is included in the drain action, we may **continue** or uncordon it first.
 
 ```bash
 kubectl uncordon node-3.k8s
@@ -506,6 +512,10 @@ kubectl get pods -o wide
 Hm, it seems that the workload is unbalanced. We will accept it for now, but will come back to it in a later module.
 
 # Etcd backup
+
+- **etcd** is the default database for storing the cluster state.
+- It runs on the control plane node(s).
+- Use the **etcdctl** command to control it.
 
 Let's create a snapshot of the etcd database. Log on to the control plane node. Execute the following to create a snapshot.
 
@@ -583,6 +593,16 @@ kubectl get pods
 The pods should be like they was in saved state.
 
 # Upgrade a cluster
+
+- Control plane nodes (one by one)
+  - kubeadm
+  - Upgrade the node
+  - Drain the node
+  - Upgrade the other components
+  - Uncordon the node
+- Nodes (one by one)
+  - Same approach as with the control plane nodes
+
 
 We will refer to these sources:
 
