@@ -1,3 +1,107 @@
+# Security and Policies
+
+# Default Cluster User
+
+Log on to the control plane node. Check the cluster configuration file.
+
+```bash
+cat ~/.kube/config
+```
+
+We can see that there are several notable sections – clusters, contexts, current-context, and users. Clusters section contains currently registered clusters with their certificate authority data, control plane and name. Contexts section contains list of currently registered contexts that combine clusters with users. Current context specifies against which context our commands will be fired by default and without the need to explicitly specifying it. Users section contains the list of registered users with their name, certificate and key. Should we want to control more than one cluster or interact as different users, then we must alter this file or use another copy.
+
+# Additional Cluster Users
+
+Utilizing the option for using X.509 client certificates for cluster authentication.
+
+Create the **pirocorp** OS user
+
+```bash
+useradd -m -s /bin/bash pirocorp
+```
+Switch to its home folder
+
+```bash
+cd /home/pirocorp
+```
+
+Create a folder for the certificate related files and change to it
+
+```bash
+mkdir .certs && cd .certs
+```
+
+Create a private key
+
+```bash
+openssl genrsa -out pirocorp.key 2048
+```
+
+Create a certificate signing request
+
+```bash
+openssl req -new -key pirocorp.key -out pirocorp.csr -subj "/CN=pirocorp"
+```
+
+Sign the **CSR** with the **Kubernetes CA** certificate
+
+```bash
+openssl x509 -req -in pirocorp.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out pirocorp.crt -days 365
+```
+
+Return to the home folder. Create the user in **Kubernetes**.
+
+```bash
+kubectl config set-credentials pirocorp --client-certificate=/home/pirocorp/.certs/pirocorp.crt --client-key=/home/pirocorp/.certs/pirocorp.key
+```
+
+Create context for the user as well
+
+```bash
+kubectl config set-context pirocorp-context --cluster=kubernetes --user=pirocorp
+```
+
+Create a folder to store the user configuration
+
+```bash
+mkdir /home/pirocorp/.kube
+```
+
+And create a file config there with the following content (most of it is skipped but borrowed from **/etc/kubernetes/admin.conf**). 
+
+```yaml
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM1ekNDQWMrZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJeE1URXhNekUwTlRrME1Wb1hEVE14TVRF$    server: https://192.168.0.53:6443
+  name: kubernetes
+contexts:
+- context:
+    cluster: kubernetes
+    user: john
+  name: john-context
+current-context: john-context
+kind: Config
+preferences: {}
+users:
+- name: pirocorp
+  user:
+    client-certificate: /home/pirocorp/.certs/pirocorp.crt
+    client-key: /home/pirocorp/.certs/pirocorp.key
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Manifest files explanations (YAML)
 
 ## Part 1
