@@ -102,7 +102,43 @@ Change the ownership of the files
 chown -R pirocorp: /home/pirocorp/
 ```
 
+# Bind Cluster User to Role (RoleBinding)
 
+- First rolebinding allows ```pirocorp``` to ```edit``` objects in ```demo-prod``` namespace.
+- Second rolebinding allows ```pirocorp``` to ```view``` objects in ```demo-dev``` namespace.
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: demo-prod-edit
+  namespace: demo-prod
+# Subcects (multiple) for which rolebinding is applied.
+subjects:
+- kind: User
+  name: pirocorp
+  apiGroup: rbac.authorization.k8s.io
+# Role which will be bound to subjects
+roleRef:
+  # Role type (resource type) 
+  kind: ClusterRole
+  name: edit
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: demo-dev-view
+  namespace: demo-dev
+subjects:
+- kind: User
+  name: pirocorp
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: view
+  apiGroup: rbac.authorization.k8s.io
+```
 
 
 
