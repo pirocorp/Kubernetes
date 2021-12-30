@@ -185,57 +185,7 @@ Save and close the file. Send the **Service Account** to the cluster.
 kubectl apply -f service-account.yaml
 ```
 
-```yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-# Metadata specifies role name and in which namespace role is defined
-metadata:
-  name: demo-role
-  namespace: rbac-ns
-# Role can have multiple resources (resource types) with different access rights (verbs)
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - get
-  - list
-  - create
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services
-  verbs:
-  - get
-  - list
-  - create
-```
-
-Then create a **RoleBinding** for it
-
-```bash
-kubectl create rolebinding demo-role --role=demo-role --serviceaccount=rbac-ns:demo-sa --namespace=rbac-ns
-```
-
-
-
-Save and close the file. Send the **role** to the cluster.
-
-```bash
-kubectl apply -f demo-role.yaml
-```
-
-
-
-
-
-
-
-# Manifest files explanations (YAML)
-
-### Demo Role 
+Create Role
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -265,17 +215,19 @@ rules:
   - create
 ```
 
-### Demo Service Acount
+Save and close the file. Send the **Role** to the cluster.
 
-```yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: demo-sa
-  namespace: rbac-ns
+```bash
+kubectl apply -f role.yaml
 ```
 
-### Demo Role RoleBinding
+Then create a **RoleBinding** for the Service Account and Role.
+
+```bash
+kubectl create rolebinding demo-role-binding --role=demo-role --serviceaccount=rbac-ns:demo-sa --namespace=rbac-ns
+```
+
+or send this yaml to cluster
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -296,7 +248,16 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
-### Demo Pod
+Check that it got some of the permissions that we wanted to grant
+
+```bash
+kubectl auth can-i get pods --namespace rbac-ns --as system:serviceaccount:rbac-ns:demo-sa
+kubectl auth can-i get services --namespace rbac-ns --as system:serviceaccount:rbac-ns:demo-sa
+kubectl auth can-i delete pods --namespace rbac-ns --as system:serviceaccount:rbac-ns:demo-sa
+kubectl auth can-i delete services --namespace rbac-ns --as system:serviceaccount:rbac-ns:demo-sa
+```
+
+Now, let’s start a new pod that will use this service account and check from there
 
 ```yaml
 apiVersion: v1
@@ -312,6 +273,20 @@ spec:
   serviceAccount: demo-sa
   serviceAccountName: demo-sa
 ```
+
+Save and close the file. Send the **Pod** to the cluster.
+
+```bash
+kubectl apply -f pod.yaml
+```
+
+
+
+
+
+# Manifest files explanations (YAML)
+
+
 
 ## Part 2
 
