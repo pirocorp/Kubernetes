@@ -280,6 +280,42 @@ Save and close the file. Send the **Pod** to the cluster.
 kubectl apply -f pod.yaml
 ```
 
+Now, open a session to the pod
+
+
+```bash
+kubectl exec -it demo-pod -n rbac-ns -- bash
+```
+
+Install the missing curl command
+
+```bash
+apt-get update && apt-get install -y curl
+```
+
+Prepare a set of environment variables
+
+```bash
+APISERVER=https://kubernetes.default.svc
+SERVICEACCOUNT=/var/run/secrets/kubernetes.io/serviceaccount
+NAMESPACE=$(cat ${SERVICEACCOUNT}/namespace)
+TOKEN=$(cat ${SERVICEACCOUNT}/token)
+CACERT=${SERVICEACCOUNT}/ca.crt
+```
+
+Let’s check for the pods
+
+```bash
+curl --cacert ${CACERT} --header "Authorization: Bearer ${TOKEN}" \
+-X GET ${APISERVER}/api/v1/namespaces/rbac-ns/pods
+```
+
+Let’s check for the services
+
+```bash
+curl --cacert ${CACERT} --header "Authorization: Bearer ${TOKEN}" \
+-X GET ${APISERVER}/api/v1/namespaces/rbac-ns/services
+```
 
 
 
