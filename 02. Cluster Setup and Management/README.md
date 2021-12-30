@@ -843,7 +843,37 @@ kubectl get nodes
 It should be operational and ready as well. Join the rest of the control plane nodes (*adjust and execute the following on all control plane nodes*).
 
 ```bash
-kubeadm join 192.168.81.220:6443 --token ozo8xv.c5jz648l6tp50jqp \
+kubeadm join 192.168.0.220:6443 --token ozo8xv.c5jz648l6tp50jqp \
         --discovery-token-ca-cert-hash sha256:f7eff5b82343969492fb8f8f613dc7ff752dc2da06e5d79e69879d425e980121 \
         --control-plane --certificate-key d6befa0a65edc6659e1bd56a4706de715c7e11499c2aaf0c4c3f5b7100e7f780
 ```
+
+Check the state of the control plane with
+
+```bash
+kubectl get nodes
+kubectl get nodes -o wide
+```
+
+## Cluster Workers
+
+Now, join the other nodes using the command shown earlier (*adjust it and execute it on all remaining nodes*).
+
+```bash
+kubeadm join 192.168.81.220:6443 --token ozo8xv.c5jz648l6tp50jqp \
+        --discovery-token-ca-cert-hash sha256:f7eff5b82343969492fb8f8f613dc7ff752dc2da06e5d79e69879d425e980121
+```
+
+Check the state of the control plane with.
+
+```bash
+kubectl get nodes
+```
+
+Now should have a real cluster.
+
+Now, we can do all the usual stuff:
+-	copy the configuration locally
+-	install the Dashboard
+-	spin up some workload
+
