@@ -879,7 +879,7 @@ Now, we can do all the usual stuff:
 
 To use NodePort must use the IP address of the nodes and not the load balancer. Can correct this by changing the load balancer configuration **/etc/haproxy/haproxy.cfg**. And adding the following block.
 
-```bash
+```
 frontend nodeport
     bind *:30000-32768
     mode tcp
