@@ -163,6 +163,75 @@ Furthermore, instead of asking for individual actions, we can ask for everything
 kubectl auth can-i --list --namespace demo-dev --as pirocorp
 ```
 
+# Extend Service Account Permitions
+
+The **default** service account doesn’t have any permissions granted by default.
+
+![image](https://user-images.githubusercontent.com/34960418/147775473-ff572e21-4805-48a6-aa44-7156db592829.png)
+
+Create Service Account
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: demo-sa
+  namespace: rbac-ns
+```
+
+Save and close the file. Send the **Service Account** to the cluster.
+
+```bash
+kubectl apply -f service-account.yaml
+```
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+# Metadata specifies role name and in which namespace role is defined
+metadata:
+  name: demo-role
+  namespace: rbac-ns
+# Role can have multiple resources (resource types) with different access rights (verbs)
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - create
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - create
+```
+
+Then create a **RoleBinding** for it
+
+```bash
+kubectl create rolebinding demo-role --role=demo-role --serviceaccount=rbac-ns:demo-sa --namespace=rbac-ns
+```
+
+
+
+Save and close the file. Send the **role** to the cluster.
+
+```bash
+kubectl apply -f demo-role.yaml
+```
+
+
+
+
+
+
 
 # Manifest files explanations (YAML)
 
