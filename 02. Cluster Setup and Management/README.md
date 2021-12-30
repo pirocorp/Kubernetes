@@ -593,7 +593,7 @@ We will refer to these sources:
 
 ## Upgrade Control Plane nodes 
 
-This we will do one node at a time. Check the latest version.
+Will do one node at a time. Check the latest version.
 
 ```bash
 apt update
@@ -677,3 +677,60 @@ Check the cluster status
 ```bash
 kubectl get nodes
 ```
+
+## Upgrade worker nodes
+
+Will do one node at a time.
+
+As at the moment, the latest version is **1.22.3-00**, we will execute.
+
+```bash
+apt-get update && \
+apt-get install -y --allow-change-held-packages kubeadm=1.22.3-00
+```
+
+Then the upgrade
+
+```bash
+kubeadm upgrade node
+```
+
+Drain the node (from the control plane node)
+
+```bash
+kubectl drain node-2.k8s --ignore-daemonsets
+```
+
+Or if we see an error, execute
+
+```bash
+kubectl drain node-2.k8s --ignore-errors --ignore-daemonsets --delete-local-data --force
+```
+
+Return on the node. Upgrade the **kubelet** and **kubectl**.
+
+```bash
+apt-get update && \
+apt-get install -y --allow-change-held-packages kubelet=1.22.3-00 kubectl=1.22.3-00
+```
+
+Then, restart the **kubelet** service.
+
+```bash
+systemctl daemon-reload
+systemctl restart kubelet
+```
+
+And uncordon the node (from the control plane node).
+
+```bash
+kubectl uncordon node-2.k8s
+```
+
+While still on the control plane node, check the cluster status.
+
+```bash
+kubectl get nodes
+```
+
+Repeat the procedure on the other node(s). Cluster is upgraded 😊.
