@@ -455,22 +455,54 @@ Use the token from earlier. Explore the Dashboard. Once done, close the browser 
 
 # Nodes management
 
-Check the pods distribution with
+The gallant, way to remove a node from the cluster for maintenance. We can first mark the node as not schedulable, so it won't receive any new work.
 
 ```bash
-kubectl get pods -o wide
+kubectl cordon node-3.k8s
 ```
 
-Make sure that there are pods on **node-3** (you may need to further scale one of the deployments). Turn off the **node-3** virtual machine. Check the status of the nodes.
+Check nodes
 
 ```bash
 kubectl get nodes
 ```
 
-Check the distribution of the pods
+Then check how the pods are distributed
 
 ```bash
 kubectl get pods -o wide
 ```
 
-Check that the application is working as expected. Hm, the application is working but it appears that the cluster is thinking that some of the pods are working even if the node is missing. We will come back to this in a later module. Power on the node and wait for it to become ready. Check again pods distribution. Some of the pods (the ones that were running on node-3) are being restarted. Check the application. It should be working. There is another, more gallant, way to remove a node from the cluster for maintenance. We can first mark the node as not schedulable, so it won't receive any new work
+As the cordon action is included in the drain action, we may continue or uncordon it first.
+
+```bash
+kubectl uncordon node-3.k8s
+```
+
+Next, we can drain the node. This will remove all work from it
+
+```bash
+kubectl drain node-3.k8s --ignore-errors --ignore-daemonsets --delete-local-data –force
+```
+
+And check what happened
+
+```bash
+kubectl get nodes
+kubectl get pods -o wide
+```
+
+Now, we can safely do our maintenance tasks and once done, and the node is up and running, we can inform the cluster.
+
+```bash
+kubectl uncordon node-3.k8s
+```
+
+And again, check what is going on
+
+```bash
+kubectl get nodes
+kubectl get pods -o wide
+```
+
+Hm, it seems that the workload is unbalanced. We will accept it for now, but will come back to it in a later module.
