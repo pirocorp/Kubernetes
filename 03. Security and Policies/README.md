@@ -96,7 +96,11 @@ Save and close the file.
 *Note that in the above example we are using **client-certificate** and **client-key** and not **client-certificate-data** and **client-key-data** as with the **admin.conf** file. We may go with the second pair, but then we must first encode using **base64** the content of both files and then use the result here.*
 
 
+Change the ownership of the files
 
+```bash
+chown -R pirocorp: /home/pirocorp/
+```
 
 
 
