@@ -507,7 +507,7 @@ kubectl get pods -o wide
 
 Hm, it seems that the workload is unbalanced. We will accept it for now, but will come back to it in a later module.
 
-# etcd backup and restore
+# Etcd backup
 
 Let's create a snapshot of the etcd database. Log on to the control plane node. Execute the following to create a snapshot.
 
@@ -553,3 +553,35 @@ ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
   --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key \
   snapshot save /tmp/etcd-snapshot.db
 ```
+
+Now, everything should work as expected. Check the snapshot.
+
+```bash
+ls -al /tmp/etcd*
+```
+
+**Etcd** holds the state of the cluster. If a change occurs, can bring everything back as it was at the time of the snapshot.
+
+# Etcd restore
+
+Restore the database using the snapshot made earlier.
+
+```bash
+ETCDCTL_API=3 etcdctl snapshot restore /tmp/etcd-snapshot.db --data-dir /var/lib/etcd-restore
+```
+
+Next, we must instruct the **etcd** to use the restored data.
+
+Edit the **/etc/kubernetes/manifests/etcd.yaml** file and change the **etcd-data** volume to point to the new place (**/var/lib/etcd-restore**).
+
+Save and close the file. Wait a while for the changes to take place.
+
+Check again the pods.
+
+```bash
+kubectl get pods
+```
+
+The pods should be like they was in saved state.
+
+# Upgrade a cluster
