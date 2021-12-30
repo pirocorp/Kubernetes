@@ -453,3 +453,12 @@ Navigate to the same [URL](http://localhost:8001/api/v1/namespaces/kubernetes-da
 
 Use the token from earlier. Explore the Dashboard. Once done, close the browser tab and stop the proxy with Ctrl + C.
 
+# Nodes management
+
+Check the pods distribution with
+
+```bash
+kubectl get pods -o wide
+```
+
+Make sure that there are pods on **node-3** (you may need to further scale one of the deployments). Turn off the **node-3** virtual machine. Check the status of the nodes.
