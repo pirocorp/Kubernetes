@@ -1,6 +1,4 @@
-# Basic Cluster Installation
-
-Creation of simple yet working Kubernetes cluster.
+# Basic Cluster Operations
 
 [Requirements](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#before-you-begin)
 
@@ -193,7 +191,7 @@ Using the virtualization solution techniques create a template of this machine o
 
 # Cluster creation
 
-Small cluster with three nodes. One will be part of the control plane and the rest will handle any work.
+Creation of simple yet working Kubernetes cluster. Small cluster with three nodes. One will be part of the control plane and the rest will handle any work.
 
 ## Virtual infrastructure
 
