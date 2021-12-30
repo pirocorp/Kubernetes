@@ -506,3 +506,50 @@ kubectl get pods -o wide
 ```
 
 Hm, it seems that the workload is unbalanced. We will accept it for now, but will come back to it in a later module.
+
+# etcd backup and restore
+
+Let's create a snapshot of the etcd database. Log on to the control plane node. Execute the following to create a snapshot.
+
+```bash
+ETCDCTL_API=3 etcdctl snapshot save /tmp/etcd-snapshot.db
+```
+
+If the **etcdctl** binary appears to be missing, then install it. *For example, on **Debian/Ubuntu**, we can use the following*
+
+```bash
+apt-get update
+apt-get install etcd-client
+```
+
+Then repeat the backup try.
+
+```bash
+ETCDCTL_API=3 etcdctl snapshot save /tmp/etcd-snapshot.db
+```
+
+If we receive an error again and if reads **"Error:  rpc error: code = Unavailable desc = transport is closing"** then we must authenticate first. For this, we must change the above command to. 
+
+```bash
+ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
+  --cacert=<trusted-ca-file> --cert=<cert-file> --key=<key-file> \
+  snapshot save /tmp/etcd-snapshot.db
+```
+Where **trusted-ca-file**, **cert-file** and **key-file** can be obtained from the description of the **etcd** pod. We can get them from.
+
+```bash
+cat /etc/kubernetes/manifests/etcd.yaml
+```
+
+They are:
+- ```--trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt```
+- ```--cert-file=/etc/kubernetes/pki/etcd/server.crt```
+- ```--key-file=/etc/kubernetes/pki/etcd/server.key```
+
+Then, the final backup command becomes:
+
+```bash
+ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key \
+  snapshot save /tmp/etcd-snapshot.db
+```
