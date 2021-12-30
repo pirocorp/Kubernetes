@@ -585,3 +585,95 @@ kubectl get pods
 The pods should be like they was in saved state.
 
 # Upgrade a cluster
+
+We will refer to these sources:
+
+- [Cluster Upgrade](https://kubernetes.io/docs/tasks/administer-cluster/cluster-upgrade/)
+- [Kubeadm Upgrade](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)
+
+## Upgrade Control Plane nodes 
+
+This we will do one node at a time. Check the latest version.
+
+```bash
+apt update
+apt-cache madison kubeadm
+```
+
+Have only one control plane node, so don’t have to choose. At the moment, the latest version is 1.22.3-00 so let’s use it.
+
+```bash
+apt-get update && \
+apt-get install -y --allow-change-held-packages kubeadm=1.22.3-00
+```
+
+Check that the new version is here
+
+```bash
+kubeadm version
+```
+
+Ask for the upgrade plan
+
+```bash
+kubeadm upgrade plan
+```
+
+Should we see any errors (**not in production**), we may use the following
+
+```bash
+kubeadm upgrade plan --ignore-preflight-errors=true
+```
+
+Then initiate the actual upgrade
+
+```bash
+kubeadm upgrade apply v1.22.3
+```
+
+When asked for confirmation, do it
+
+Nay need to upgrade CNI provider plugin (not in this case), so must consult with its documentation
+**If had other control plane nodes, then must execute the following command on each one of them:**
+
+```bash
+kubeadm upgrade node
+```
+
+Drain the node
+
+```bash
+kubectl drain node-1.k8s --ignore-daemonsets
+```
+
+Or if we see any errors that the process cannot be finished, execute this
+
+```bash
+kubectl drain node-1.k8s --ignore-errors --ignore-daemonsets --delete-local-data --force
+```
+
+Upgrade the **kubelet** and **kubectl**. As at the moment, the latest version is 1.22.3-00, will execute this.
+
+```bash
+apt-get update && \
+apt-get install -y --allow-change-held-packages kubelet=1.22.3-00 kubectl=1.22.3-00
+```
+
+Restart the **kubelet** service
+
+```bash
+systemctl daemon-reload
+systemctl restart kubelet
+```
+
+Uncordon the node
+
+```bash
+kubectl uncordon node-1.k8s
+```
+
+Check the cluster status
+
+```bash
+kubectl get nodes
+```
