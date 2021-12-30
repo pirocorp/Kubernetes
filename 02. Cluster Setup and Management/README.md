@@ -860,7 +860,7 @@ kubectl get nodes -o wide
 Now, join the other nodes using the command shown earlier (*adjust it and execute it on all remaining nodes*).
 
 ```bash
-kubeadm join 192.168.81.220:6443 --token ozo8xv.c5jz648l6tp50jqp \
+kubeadm join 192.168.0.220:6443 --token ozo8xv.c5jz648l6tp50jqp \
         --discovery-token-ca-cert-hash sha256:f7eff5b82343969492fb8f8f613dc7ff752dc2da06e5d79e69879d425e980121
 ```
 
@@ -877,3 +877,19 @@ Now, we can do all the usual stuff:
 -	install the Dashboard
 -	spin up some workload
 
+To use NodePort must use the IP address of the nodes and not the load balancer. Can correct this by changing the load balancer configuration **/etc/haproxy/haproxy.cfg**. And adding the following block.
+
+```bash
+frontend nodeport
+    bind *:30000-32768
+    mode tcp
+    balance roundrobin
+    server node-1 192.168.0.221
+    server node-2 192.168.0.222
+    server node-3 192.168.0.223
+    server node-4 192.168.0.224
+    server node-5 192.168.0.225
+    server node-6 192.168.0.226
+```
+
+Save and close the file. Restart the service. Check again, but this time use the load balancer IP address. You can also check the load balancer’s statistics page: http://192.168.0.220:8080/
