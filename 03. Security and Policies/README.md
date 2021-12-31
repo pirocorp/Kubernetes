@@ -331,7 +331,8 @@ If the node where a Pod is running has enough of a resource available, it's poss
 
 Focus on the sections **Capacity**, **Allocatable**, **Non-terminated Pods**, and **Allocated resources**
 
-![image](https://user-images.githubusercontent.com/34960418/147819638-35fa5fbe-bd12-4e4e-9126-516ec9dc56d8.png)
+![image](https://user-images.githubusercontent.com/34960418/147819663-cff90f05-477c-40ea-86eb-8ae5d03e5812.png)
+
 
 ```bash
 kubectl describe nodes
