@@ -526,3 +526,5 @@ spec:
   # - protocol: TCP
   #   port: 6379  
 ```
+
+Note: NetworkPolicy includes a ```podSelector``` which selects the grouping of Pods to which the policy applies. You can see this policy selects Pods with the label ```app=oracle```. An empty ```podSelector``` selects all pods in the namespace.
