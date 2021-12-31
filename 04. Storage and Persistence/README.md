@@ -1,4 +1,4 @@
-# The Docker Way
+# The [Docker Way](https://docs.docker.com/storage/volumes/)
 
 - Bind Mounts are dependent on the OS and file system structure
 - Volumes are managed by Docker
@@ -35,6 +35,79 @@ docker container inspect web
 We should pay attention to the **Mounts** section and especially on the **Type** which should be set to **bind**.
 
 ![image](https://user-images.githubusercontent.com/34960418/147827027-0e6560c4-89b8-43b8-a81c-dafaa703c85f.png)
+
+Remove the container
+
+```bash
+docker container rm web --force
+```
+
+## Volumes
+
+First, create a volume
+
+```bash
+docker volume create demo
+```
+
+Then list the available volumes
+
+```bash
+docker volume ls
+```
+
+And then, inspect the volume we just created
+
+```bash
+docker volume inspect demo
+```
+
+Now, that we know where its data reside, we can work directly with it. Let’s create a custom **index.html** page again.
+
+```bash
+echo 'A simple <b>volume</b> test' | tee /var/lib/docker/volumes/demo/_data/index.html
+```
+
+Now, start a container that will mount the volume
+
+```bash
+docker container run -d --name web -p 80:80 -v demo:/usr/share/nginx/html:ro nginx
+```
+
+Alternatively, use the --mount option. Then the command will look like
+
+
+```bash
+docker container run -d --name web -p 80:80 --mount source=demo,destination=/usr/share/nginx/html nginx
+```
+
+Ask for the web page. Will see the sample page.
+
+```bash
+curl http://localhost
+```
+
+Let’s ask for detailed information about the container. Again, pay attention to the **Mounts** section and especially on the **Type** which should this time be set to **volume**.
+
+```bash
+docker container inspect web
+```
+
+Remove the container
+
+```bash
+docker container rm web --force
+```
+
+And then remove the volume as well
+
+```bash
+docker volume rm demo
+```
+
+
+
+
 
 
 
