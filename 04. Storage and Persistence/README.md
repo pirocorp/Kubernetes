@@ -203,7 +203,9 @@ The supported values for field **type** are:
 | FileOrCreate      	| If nothing exists at the given path, an empty file will be created there as needed with permission set to 0644, having the same group and ownership with Kubelet.      	|
 | File              	| A file must exist at the given path                                                                                                                                    	|
 | Socket            	| A UNIX socket must exist at the given path                                                                                                                             	|
-| CharDevice        	|                                                                                                                                                                        	|
+| CharDevice        	| A character device must exist at the given path                                                                                                                          |
+| BlockDevice        	| A block device must exist at the given path
+               |
 
 
 ### Persistent Volumes
