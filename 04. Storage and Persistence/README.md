@@ -466,6 +466,19 @@ spec:
         # Make volume over PVC with claimName pvc10gb
         persistentVolumeClaim:
           claimName: pvc10gb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-vol
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30001
+    protocol: TCP
+  selector:
+    app: notes
 ```
 
 Save and close the file. Send it to the cluster.
@@ -473,6 +486,60 @@ Save and close the file. Send it to the cluster.
 ```bash
 kubectl apply -f part1/pv-deployment.yaml
 ```
+
+Monitor the pods with
+
+```bash
+kubectl get pods -o wide -w
+```
+
+Once all up and running, press Ctrl+C to stop. Then, check if the claim will be marked as used now.
+
+```bash
+kubectl describe pvc pvc10gb
+```
+
+It should state that it is being used by all three pods that were created by the deployment. Describe one of them to see how it appears.
+
+```bash
+kubectl describe pod notes-deploy-<specific-id>
+```
+
+Explore both the **Volumes** and **Mounts** sections. Now, open a browser tab, and navigate to ```http://<cluster-node-ip>:30001/index.php```. Let’s see what will happen when we delete both the deployment and the claim and then recreate them again.
+  
+```bash
+kubectl delete -f pv-deployment.yaml
+```
+
+And then the claim
+
+```bash
+kubectl delete -f pvc10gb.yaml
+```
+
+Now, create them again. First the claim
+
+```bash
+kubectl apply -f pvc10gb.yaml
+```
+
+And then the deployment
+
+```bash
+kubectl apply -f pv-deployment.yaml
+```
+
+Once all pods are running, open a browser tab, and navigate to ```http://<cluster-node-ip>:30001/index.php```. There be no notes because the Persistent Volume (pvnfs10gb) with persistentVolumeReclaimPolicy is set to Recycle. Thus, when we deleted the persistent volume claim, the persistent volume was recycled (wiped).
+
+
+Clean Up
+
+```bash
+kubectl delete -f part1/pv-deployment.yaml
+kubectl delete -f part1/pvc10gb.yaml
+kubectl delete -f part1/pvnfs10gb.yaml
+```
+
 
 
 
