@@ -393,3 +393,91 @@ kubectl get pods,svc,rs,deployments -n projectx
 
 # Create **NetworkPolicy** resources in order to allow communication to the **producer** only from the **consumer** and allow communication to the **consumer** only from the **client**.
 
+As our two users (**ivan** and **mariana**) does not have rights to create network policies, next part we must execute as the **admin** user.
+
+First, let’s connect to the client pod
+
+```bash
+kubectl exec -n projectx -it client -- sh
+```
+
+And update and install the curl package
+
+```bash
+apk update
+apk add curl
+```
+
+Then, try to talk to the consumer and then the producer services
+
+```bash
+curl http://consumer:5000
+curl http://producer:5000
+```
+
+Now, close the session
+
+```bash
+exit
+```
+
+And then create the first network policy manifest **np-prod.yaml** with the following content
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np-prod
+spec:
+  podSelector:
+    matchLabels:
+      role: producer
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: consumer
+```
+
+Deploy it with
+
+```bash
+kubectl apply -n projectx -f np-prod.yaml
+```
+
+Then create the second network policy manifest **np-cons.yaml** with the following content
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np-cons
+spec:
+  podSelector:
+    matchLabels:
+      role: consumer
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          run: client
+```
+
+And deploy it with 
+
+```bash
+kubectl apply -n projectx -f np-cons.yaml
+```
+
+Finally, connect to the client pod
+
+```bash
+kubectl exec -n projectx -it client – sh
+```
+
+And test again
+
+```bash
+curl --connect-timeout 5 http://consumer:5000
+curl --connect-timeout 5 http://producer:5000
+```
