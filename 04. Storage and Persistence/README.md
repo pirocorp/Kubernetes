@@ -350,6 +350,8 @@ A PersistentVolume can be mounted on a host in any way supported by the resource
 - **ReadWriteOncePod** - the volume can be mounted as read-write by a single Pod. Use ReadWriteOncePod access mode if you want to ensure that only one pod across whole cluster can read that PVC or write to it.
 
 
+## Example
+
 Let’s create one **pvnfs10gb.yaml** with the following content
 
 ```yaml
