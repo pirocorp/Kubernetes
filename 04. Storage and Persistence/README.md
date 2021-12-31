@@ -332,15 +332,22 @@ A PersistentVolumeClaim (PVC) is a request for storage by a user. It is similar 
 
 PVs are resources in the cluster. PVCs are requests for those resources and also act as claim checks to the resource. The interaction between PVs and PVCs follows this lifecycle:
 
-- Provisioning - There are two ways PVs may be provisioned: statically or dynamically. Static: a cluster administrator creates a number of PVs. They carry the details of the real storage, which is available for use by cluster users. They exist in the Kubernetes API and are available for consumption. Dynamic: This provisioning is based on StorageClasses.
-- Binding - A user creates (or in the case of dynamic provisioning, has already created), a **PersistentVolumeClaim** with a specific amount of storage requested and with certain access modes. A control loop in the master watches for new PVCs, finds a matching PV (if possible), and binds them together. The user will always get at least what they asked for, but the volume may be in excess of what was requested. Once bound, **PersistentVolumeClaim** binds are exclusive, regardless of how they were bound. A PVC to PV binding is a one-to-one mapping, using a **ClaimRef** which is a bi-directional binding between the **PersistentVolume** and the **PersistentVolumeClaim**.
-- Using - Pods use claims as volumes. The cluster inspects the claim to find the bound volume and mounts that volume for a Pod. For volumes that support multiple access modes, the user specifies which mode is desired when using their claim as a volume in a Pod.
-- Reclaiming - When a user is done with their volume, they can delete the PVC objects from the API that allows reclamation of the resource. The reclaim policy for a PersistentVolume tells the cluster what to do with the volume after it has been released of its claim. Currently, volumes can either be Retained, Recycled, or Deleted.
-  - Retain allows for manual reclamation of the resource
-  - Delete removes both the PV object from Kubernetes, as well as the associated storage asset in the external infrastructure
-  - Recycle performs a basic scrub on the volume and makes it available again (deprecated)
+- **Provisioning** - There are two ways PVs may be provisioned: statically or dynamically. Static: a cluster administrator creates a number of PVs. They carry the details of the real storage, which is available for use by cluster users. They exist in the Kubernetes API and are available for consumption. Dynamic: This provisioning is based on StorageClasses.
+- **Binding** - A user creates (or in the case of dynamic provisioning, has already created), a **PersistentVolumeClaim** with a specific amount of storage requested and with certain access modes. A control loop in the master watches for new PVCs, finds a matching PV (if possible), and binds them together. The user will always get at least what they asked for, but the volume may be in excess of what was requested. Once bound, **PersistentVolumeClaim** binds are exclusive, regardless of how they were bound. A PVC to PV binding is a one-to-one mapping, using a **ClaimRef** which is a bi-directional binding between the **PersistentVolume** and the **PersistentVolumeClaim**.
+- **Using** - Pods use claims as volumes. The cluster inspects the claim to find the bound volume and mounts that volume for a Pod. For volumes that support multiple access modes, the user specifies which mode is desired when using their claim as a volume in a Pod.
+- **Reclaiming** - When a user is done with their volume, they can delete the PVC objects from the API that allows reclamation of the resource. The reclaim policy for a PersistentVolume tells the cluster what to do with the volume after it has been released of its claim. Currently, volumes can either be Retained, Recycled, or Deleted.
+  - **Retain** allows for manual reclamation of the resource
+  - **Delete** removes both the PV object from Kubernetes, as well as the associated storage asset in the external infrastructure
+  - **Recycle** performs a basic scrub on the volume and makes it available again (deprecated)
 
+## Access Modes
 
+A PersistentVolume can be mounted on a host in any way supported by the resource provider. For example, NFS can support multiple read/write clients. The access modes are:
+
+- **ReadWriteOnce** - the volume can be mounted as read-write by a single node. ReadWriteOnce access mode still can allow multiple pods to access the volume when the pods are running on the same node.
+- **ReadOnlyMany** - the volume can be mounted as read-only by many nodes.
+- **ReadWriteMany** - the volume can be mounted as read-write by many nodes.
+- **ReadWriteOncePod** - the volume can be mounted as read-write by a single Pod. Use ReadWriteOncePod access mode if you want to ensure that only one pod across whole cluster can read that PVC or write to it.
 
 ### Persistent Volumes and Claims
 
