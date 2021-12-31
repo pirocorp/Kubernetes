@@ -95,3 +95,45 @@ users:
     client-certificate: /home/mariana/.certs/mariana.crt
     client-key: /home/mariana/.certs/mariana.key
 ```
+
+Now, change the ownership of the respective folders and files
+
+```bash
+chown -R ivan: /home/ivan
+chown -R mariana: /home/mariana
+```
+
+# Create a LimitRange for the namespace to set defaults, minimum and maximum both for CPU and memory
+
+Create a **limits.yaml** file with the following (sample) content
+
+```yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: projectx-limits
+spec:
+  limits:
+  - max:
+      cpu: 500m
+      memory: 500Mi
+    min:
+      cpu: 50m
+      memory: 50Mi
+    default:
+      cpu: 100m
+      memory: 100Mi
+    type: Container
+```
+
+Deploy it to the cluster with
+
+```bash
+kubectl apply -f limits.yaml -n projectx
+```
+
+And check its status
+
+```bash
+kubectl describe limitrange -n projectx
+```
