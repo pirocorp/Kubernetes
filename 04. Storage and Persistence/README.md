@@ -188,45 +188,23 @@ spec:
     emptyDir: {}
 ```
 
+## HostPath
+
+A **hostPath** volume mounts a file or directory from the host node's filesystem into your Pod. In addition to the required **path** property, you can optionally specify a **type** for a **hostPath** volume.
+
+The supported values for field **type** are:
 
 
+| Value             	| Behavior                                                                                                                                                               	|
+|-------------------	|------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|
+|                   	| Empty string (default) is for backward compatibility, which means that no checks will be performed before mounting the hostPath volume.                                	|
+| DirectoryOrCreate 	| If nothing exists at the given path, an empty directory will be created there as needed with permission set to 0755, having the same group and ownership with Kubelet. 	|
+| Directory         	| A directory must exist at the given path                                                                                                                               	|
+| FileOrCreate      	| If nothing exists at the given path, an empty file will be created there as needed with permission set to 0644, having the same group and ownership with Kubelet.      	|
+| File              	| A file must exist at the given path                                                                                                                                    	|
+| Socket            	| A UNIX socket must exist at the given path                                                                                                                             	|
+| CharDevice        	|                                                                                                                                                                        	|
 
-
-
-
-
-
-
-
-#### GitRepo
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pod-git
-  labels:
-    app: notes
-spec:
-  containers:
-  - image: php:apache
-    name: container-git
-    volumeMounts:
-    - mountPath: /var/www/html
-      name: git-volume
-    - mountPath: /data
-      name: data-volume
-  volumes:
-  - name: git-volume
-    # volume type
-    # the source from repository will be downloaded and will be mountet to mountPath specified in volumeMounts
-    gitRepo:
-      repository: "https://github.com/shekeriev/k8s-notes.git"
-      revision: "main"
-      directory: .
-  - name: data-volume
-    emptyDir: {}
-```
 
 ### Persistent Volumes
 
