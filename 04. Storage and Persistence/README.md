@@ -105,6 +105,57 @@ And then remove the volume as well
 docker volume rm demo
 ```
 
+# Volumes
+
+On-disk files in a container are ephemeral, which presents some problems for non-trivial applications when running in containers. One problem is the loss of files when a container crashes. The kubelet restarts the container but with a clean state. A second problem occurs when sharing files between containers running together in a Pod. The Kubernetes **volume** abstraction solves both of these problems.
+
+**Ephemeral volume** types have a lifetime of a pod, but persistent volumes exist beyond the lifetime of a pod. When a pod ceases to exist, Kubernetes destroys ephemeral volumes; however, Kubernetes does not destroy persistent volumes. For any kind of volume in a given pod, data is preserved across container restarts.
+
+At its core, a volume is a directory, possibly with some data in it, which is accessible to the containers in a pod. How that directory comes to be, the medium that backs it, and the contents of it are determined by the particular volume type used.
+
+To use a volume, specify the volumes to provide for the Pod in ```.spec.volumes``` and declare where to mount those volumes into containers in ```.spec.containers[*].volumeMounts```. A process in a container sees a filesystem view composed from the initial contents of the container image, plus volumes (if defined) mounted inside the container. The process sees a root filesystem that initially matches the contents of the container image. Any writes to within that filesystem hierarchy, if allowed, affect what that process views when it performs a subsequent filesystem access. Volumes mount at the specified paths within the image. For each container defined within a Pod, you must independently specify where to mount each volume that the container uses.
+
+## EmptyDir
+
+An **emptyDir** volume is first created when a Pod is assigned to a node, and exists as long as that Pod is running on that node. As the name says, the **emptyDir** volume is initially empty. All containers in the Pod can read and write the same files in the **emptyDir** volume, though that volume can be mounted at the same or different paths in each container. When a Pod is removed from a node for any reason, the data in the **emptyDir** is deleted permanently.
+
+***Note***: A container crashing does not remove a Pod from a node. The data in an **emptyDir** volume is safe across container crashes.
+
+Depending on your environment, **emptyDir** volumes are stored on whatever medium that backs the node such as disk or SSD, or network storage. However, if you set the ```emptyDir.medium``` field to ```"Memory"```, Kubernetes mounts a tmpfs (RAM-backed filesystem) for you instead. While tmpfs is very fast, be aware that unlike disks, tmpfs is cleared on node reboot and any files you write count against your container's memory limit.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-ed
+  labels:
+    app: notes
+spec:
+  containers:
+  - image: shekeriev/k8s-notes
+    name: container-ed
+    # Where to mount those volumes into containers
+    volumeMounts:
+      # Mount path in container
+    - mountPath: /data
+      # Volume name
+      name: data-volume
+  volumes:
+    # Volume name
+  - name: data-volume
+    # Volume type
+    emptyDir: {}
+```
+
+
+
+
+
+
+
+
+
+
 
 
 
