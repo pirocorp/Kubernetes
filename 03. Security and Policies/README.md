@@ -479,9 +479,27 @@ Adjust the configuration if needed by editing the **custom-resources.yaml** mani
 kubectl apply -f custom-resources.yaml
 ```
 
+## Instalation of [Weave Net](https://github.com/weaveworks/weave)
 
+Assuming that we created our cluster with
 
-## Part 3
+```bash
+kubeadm init --apiserver-advertise-address=<cp-address> --pod-network-cidr 10.32.0.0/12
+```
+
+Then the Weave Net plugin can be installed with
+
+```bash
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+```
+
+Should we want to change the configuration, for example the pod network addresses, we ca change it to
+
+```bash
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d 'n')&env.IPALLOC_RANGE=10.200.0.0/16"
+```
+
+## Network policy example
 
 Network policies are defined on namespace level
 
