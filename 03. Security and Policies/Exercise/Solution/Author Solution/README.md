@@ -252,3 +252,141 @@ roleRef:
   name: devguru
   apiGroup: rbac.authorization.k8s.io
 ```
+
+# Using one of the two users, deploy the **producer-consumer** application (use the attached files – you may need to modify them a bit). Deploy one additional pod that will act as a (curl) **client**.
+
+producer-deployment.yaml 
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer-deploy
+  namespace: projectx
+spec:
+  replicas: 3
+  selector:
+    matchLabels: 
+      app: fun-facts
+      role: producer
+  minReadySeconds: 15
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: fun-facts
+        role: producer
+    spec:
+      containers:
+      - name: prod-container
+        image: shekeriev/k8s-producer:latest
+        ports:
+        - containerPort: 5000
+```
+
+producer-svc.yaml
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: producer
+  namespace: projectx
+  labels:
+    app: fun-facts
+    role: producer
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5000
+    protocol: TCP
+  selector:
+    app: fun-facts
+    role: producer
+```
+
+consumer-deployment.yaml
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer-deploy
+  namespace: projectx
+spec:
+  replicas: 3
+  selector:
+    matchLabels: 
+      app: fun-facts
+      role: consumer
+  minReadySeconds: 15
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: fun-facts
+        role: consumer
+    spec:
+      containers:
+      - name: cons-container
+        image: shekeriev/k8s-consumer:latest
+        ports:
+        - containerPort: 5000
+```
+
+consumer-svc.yaml
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: consumer
+  namespace: projectx
+  labels:
+    app: fun-facts
+    role: consumer
+spec:
+  type: NodePort
+  ports:
+  - port: 5000
+    nodePort: 30001
+    protocol: TCP
+  selector:
+    app: fun-facts
+    role: consumer
+```
+
+Switch the session as ivan
+
+```bash
+su ivan
+```
+
+Then deploy the provided manifests
+
+```bash
+kubectl apply -n projectx -f producer-deployment.yaml 
+kubectl apply -n projectx -f producer-svc.yaml
+kubectl apply -n projectx -f consumer-deployment.yaml
+kubectl apply -n projectx -f consumer-svc.yaml
+```
+
+Then, deploy a simple pod to act as a client for testing purposes
+
+```bash
+kubectl run client -n projectx --image alpine -- sleep 1d
+```
+
+Finally, check how the deployment went
+
+```bash
+kubectl get pods,svc,rs,deployments -n projectx
+```
