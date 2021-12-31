@@ -170,3 +170,85 @@ And check its status
 ```bash
 kubectl describe quota -n projectx
 ```
+
+# Create a custom role (**devguru**) which will allow the one that has it to do anything with any of the following resources **pods**, **services**, **deployments**, and **replicasets**. Grant the role to **ivan** and **mariana** (or to the group they belong to) for the namespace created earlier.
+
+We can create the required role with
+
+```bash
+kubectl create role role-hw -n projectx --verb="*" --resource=pods,services,deployments.apps,replicasets.apps
+```
+
+Then check what we have created
+
+```bash
+kubectl describe role role-hw -n projectx
+```
+
+Now, we can bind the role either to each user individually (use either this one)
+
+```bash
+kubectl create rolebinding roleb-hw-ivan -n projectx --role role-hw --user ivan
+kubectl create rolebinding roleb-hw-mariana -n projectx --role role-hw --user mariana
+```
+
+Or create a role binding to the group (or this one)
+
+```bash
+kubectl create rolebinding roleb-hw-gurus -n projectx --role role-hw --group gurus
+```
+
+And then check what we can do as ivan
+
+```bash
+kubectl auth can-i --list --namespace projectx --as ivan
+```
+
+Or
+
+```bash
+kubectl auth can-i --list --namespace projectx --as ivan --as-group gurus
+```
+
+Alternative Solution
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: devguru
+  namespace: projectx
+rules:
+- apiGroups:
+  - ""
+  - extensions
+  - apps
+  resources:
+  - pods
+  - services
+  - deployments
+  - replicasets
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete  
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: devguru
+  namespace: projectx
+subjects:
+- kind: Group
+  name: Gurus
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: devguru
+  apiGroup: rbac.authorization.k8s.io
+```
