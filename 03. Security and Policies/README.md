@@ -333,52 +333,11 @@ Focus on the sections **Capacity**, **Allocatable**, **Non-terminated Pods**, an
 
 ![image](https://user-images.githubusercontent.com/34960418/147819663-cff90f05-477c-40ea-86eb-8ae5d03e5812.png)
 
-
 ```bash
 kubectl describe nodes
 ```
 
-# Limit Ranges
-
-- Enforce minimum and maximum compute resources usage per Pod or Container in a namespace.
-- Enforce minimum and maximum storage request per PersistentVolumeClaim in a namespace.
-- Enforce a ratio between request and limit for a resource in a namespace.
-- Set default request/limit for compute resources in a namespace and automatically inject them to Containers at runtime.
-- The LimitRanger admission controller enforces defaults and limits for all Pods and Containers that do not set compute resource requirements and tracks usage to ensure it does not exceed resource minimum, maximum and ratio defined in any LimitRange present in the namespace.
-- LimitRange validations occurs only at Pod Admission stage, not on Running Pods.
-
-# Resource Quotas
-
-Resource quotas are a tool for administrators to address the need of sharing cluster resources between teams of users. They are defined by the **ResourceQuota** object. Provide constraints that limit **aggregate resource consumption per namespace**. Limit the **quantity of objects** that can be created in a namespace by type. Limit the **total amount of compute resources** that may be consumed by resources.
-
-# Manifest files explanations (YAML)
-
-
-
-## Part 2
-
-### Demo Pod (pod-2)
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pod-2
-  namespace: reslim
-spec:
-  containers:
-  - image: busybox
-    command: ["dd", "if=/dev/zero", "of=/dev/null", "bs=32M"]
-    name: main
-    # Manage resource on container (pod) level
-    resources:
-      # Resources reserved for pod in order for pod to run. If there are no such free (unreserved) resources the pod won't start
-      requests:
-        cpu: 250m
-        memory: 16Mi
-```
-
-### (pod-3a)
+## Pod with Requests and Limits
 
 ```yaml
 apiVersion: v1
@@ -391,24 +350,33 @@ spec:
   - image: busybox
     command: ["dd", "if=/dev/zero", "of=/dev/null", "bs=64M"]
     name: main
+    # Manage resource on container level
     resources:
+      # Resources reserved for container in order for container to run. If there are no such free (unreserved) resources the container won't start.
       requests:
         cpu: 250m
         memory: 16Mi
-      # limits the container (pod) how many resources it can consume. If pod overconsume resources (ex. Memory leak in app) kubernetes will kill it and start a new instance.
+      # limits the container how many resources it can consume. If pod overconsume resources (ex. Memory leak in app) kubernetes will kill it and start a new instance.
       limits:
         cpu: 500m
         memory: 128Mi
 ```
 
-### LimitRange
+# Limit Ranges
+
+- Enforce minimum and maximum compute resources usage per Pod or Container in a namespace.
+- Enforce minimum and maximum storage request per PersistentVolumeClaim in a namespace.
+- Enforce a ratio between request and limit for a resource in a namespace.
+- Set default request/limit for compute resources in a namespace and automatically inject them to Containers at runtime.
+- The LimitRanger admission controller enforces defaults and limits for all Pods and Containers that do not set compute resource requirements and tracks usage to ensure it does not exceed resource minimum, maximum and ratio defined in any LimitRange present in the namespace.
+- LimitRange validations occurs only at Pod Admission stage, not on Running Pods.
 
 LimitRangeis for managing constraints at a pod and container level within the project. LimitRanges can specify and requests (reservations).
 
-- defaultRequest — is **how much CPU/Memory will be reserved** to Container, if it doesn't specify it's own value
+- defaultRequest — is **how much CPU/Memory will be reserved** to Container, if it doesn't specify it's own value.
 - default — is **default limit** for amount of CPU/Memory for Container, if it doesn't specify it's own value
-- max — is maximum limit for amount of CPU/Memory that Container can ask for. I.e. it **can't set it's own limit more than that**
-- min — is minimum limit amount of CPU/Memory that Container can ask for. I.e. it **can't set it's own limit less than that**
+- max — is maximum limit for amount of CPU/Memory that Container/Pod can ask for. I.e. it **can't set it's own limit more than that**
+- min — is minimum limit amount of CPU/Memory that Container/Pod can ask for. I.e. it **can't set it's own limit less than that**
 
 ```yaml
 apiVersion: v1
@@ -428,7 +396,6 @@ spec:
       memory: 16Mi
   # limist on container level
   - type: Container
-    # default reserved resources
     defaultRequest:
       cpu: 100m
       memory: 16Mi
@@ -443,7 +410,9 @@ spec:
       memory: 16Mi
 ```
 
-### Quotas
+# Resource Quotas
+
+Resource quotas are a tool for administrators to address the need of sharing cluster resources between teams of users. They are defined by the **ResourceQuota** object. Provide constraints that limit **aggregate resource consumption per namespace**. Limit the **quantity of objects** that can be created in a namespace by type. Limit the **total amount of compute resources** that may be consumed by resources.
 
 ResourceQuota is for limiting the total resource consumption of a namespace.
 
@@ -463,6 +432,54 @@ spec:
     limits.cpu: 2
     limits.memory: 2Gi
 ```
+
+# Network Policies
+
+Make sure that our cluster is using a **Network plugin** that supports **Network Policies**. Partial list of them can be found [here](https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/) (**Flannel** plugin does not support network policies).
+
+## Instalation of [Antrea](https://github.com/antrea-io/antrea/blob/main/docs/getting-started.md) plugin
+
+Assuming that cluster is created with 
+
+```bash
+kubeadm init --apiserver-advertise-address=<cp-address> --pod-network-cidr 172.16.0.0/16
+```
+
+Then the **Antrea** plugin can be installed with
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/antrea-io/antrea/main/build/yamls/antrea.yml
+```
+
+
+## Instalation of [Calico](https://docs.projectcalico.org/getting-started/kubernetes/quickstart )
+
+
+Assuming that cluster is created with 
+
+```bash
+kubeadm init --apiserver-advertise-address=<cp-address> --pod-network-cidr 172.16.0.0/16
+```
+
+Then the Calico plugin can be installed with
+
+```bash
+kubectl apply -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
+```
+
+Then download the custom resources manifest
+
+```bash
+curl https://docs.projectcalico.org/manifests/custom-resources.yaml -O
+```
+
+Adjust the configuration if needed by editing the **custom-resources.yaml** manifest (especially if you used something different than 192.168.0.0/16 for pod network). Then apply it.
+
+```bash
+kubectl apply -f custom-resources.yaml
+```
+
+
 
 ## Part 3
 
