@@ -390,3 +390,6 @@ Finally, check how the deployment went
 ```bash
 kubectl get pods,svc,rs,deployments -n projectx
 ```
+
+# Create **NetworkPolicy** resources in order to allow communication to the **producer** only from the **consumer** and allow communication to the **consumer** only from the **client**.
+
