@@ -527,4 +527,119 @@ spec:
   #   port: 6379  
 ```
 
-Note: NetworkPolicy includes a ```podSelector``` which selects the grouping of Pods to which the policy applies. You can see this policy selects Pods with the label ```app=oracle```. An empty ```podSelector``` selects all pods in the namespace.
+***Note***: NetworkPolicy includes a ```podSelector``` which selects the grouping of Pods to which the policy applies. You can see this policy selects Pods with the label ```app=oracle```. An empty ```podSelector``` selects all pods in the namespace.
+
+## Behavior of ```to``` and ```from``` selectors
+
+There are four kinds of selectors that can be specified in an ```ingress``` ```from``` section or ```egress``` ```to``` section:
+
+***podSelector*** - This selects particular Pods in the same namespace as the NetworkPolicy which should be allowed as ingress sources or egress destinations.
+
+***namespaceSelector*** - This selects particular namespaces for which all Pods should be allowed as ingress sources or egress destinations.
+
+***namespaceSelector*** and ***podSelector*** - A single ```to```/```from``` entry that specifies both ```namespaceSelector``` and ```podSelector``` selects particular Pods within particular namespaces. Be careful to use correct YAML syntax.
+
+Example: 
+
+Contains a single from element allowing connections ```from``` Pods with the label ```role=client``` in namespaces with the label ```user=alice```
+
+```yaml
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          user: alice
+      podSelector:
+        matchLabels:
+          role: client
+```
+
+Contains two elements in the ```from``` array, and allows connections from Pods in the local Namespace with the label ```role=client```, or from any Pod in any namespace with the label ```user=alice```.
+
+```yaml
+ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          user: alice
+    - podSelector:
+        matchLabels:
+          role: client
+```
+
+When in doubt, use kubectl describe to see how Kubernetes has interpreted the policy.
+
+## Default policies
+
+By default, if no policies exist in a namespace, then all ingress and egress traffic is allowed to and from pods in that namespace. The following examples let you change the default behavior in that namespace.
+
+
+### Deny all ingress traffic
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+```
+
+### Allow all ingress traffic
+
+```bash
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-all-ingress
+spec:
+  podSelector: {}
+  ingress:
+  - {}
+  policyTypes:
+  - Ingress
+```
+
+### Deny all egress traffic
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-egress
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+```
+
+### Allow all egress traffic 
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-all-egress
+spec:
+  podSelector: {}
+  egress:
+  - {}
+  policyTypes:
+  - Egress
+```
+
+### Deny all ingress and all egress traffic
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+```
