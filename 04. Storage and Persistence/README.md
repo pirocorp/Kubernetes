@@ -123,6 +123,10 @@ An **emptyDir** volume is first created when a Pod is assigned to a node, and ex
 
 Depending on your environment, **emptyDir** volumes are stored on whatever medium that backs the node such as disk or SSD, or network storage. However, if you set the ```emptyDir.medium``` field to ```"Memory"```, Kubernetes mounts a tmpfs (RAM-backed filesystem) for you instead. While tmpfs is very fast, be aware that unlike disks, tmpfs is cleared on node reboot and any files you write count against your container's memory limit.
 
+
+![image](https://user-images.githubusercontent.com/34960418/143465833-9840c0d1-ecb4-4dbd-ad3f-5e713ebd9994.png)
+![image](https://user-images.githubusercontent.com/34960418/143465996-27bdadde-f83c-4c6d-af43-7ee57dbca3f7.png)
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -140,6 +144,7 @@ spec:
     - mountPath: /data
       # Volume name
       name: data-volume
+  # Volumes descriptions
   volumes:
     # Volume name
   - name: data-volume
@@ -147,74 +152,51 @@ spec:
     emptyDir: {}
 ```
 
+## GitRepo (deprecated)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Manifest files explanations (YAML)
-
-## Part 1
-
-### Ephemeral Volumes
-
-We should keep in mind that ephemeral volume will disappear together with the Pod once terminated.
-
-#### Emptydir
-
-![image](https://user-images.githubusercontent.com/34960418/143465833-9840c0d1-ecb4-4dbd-ad3f-5e713ebd9994.png)
-![image](https://user-images.githubusercontent.com/34960418/143465996-27bdadde-f83c-4c6d-af43-7ee57dbca3f7.png)
-
+A gitRepo volume is an example of a volume plugin. This plugin mounts an empty directory and clones a git repository into this directory for your Pod to use.
 
 ```yaml
-# Pod definition
 apiVersion: v1
 kind: Pod
 metadata:
-  name: pod-ed
+  name: pod-git
   labels:
     app: notes
 spec:
   containers:
-  - image: shekeriev/k8s-notes
-    name: container-ed
-    # volumes are used with volumeMounts construct, but it is part of the container description.
+  - image: php:apache
+    name: container-git
     volumeMounts:
+    - mountPath: /var/www/html
+      name: git-volume
     - mountPath: /data
       name: data-volume
-  # In volumes section volumes are defined
   volumes:
+    # First volume name
+  - name: git-volume
+    # First volume type
+    gitRepo:
+      # The repository that will be cloned.
+      repository: "https://github.com/shekeriev/k8s-notes.git"
+      # Repository branch
+      revision: "main"
+      # Directory in which will be cloned.
+      directory: .
+    # Second volume name
   - name: data-volume
-    # volume type
     emptyDir: {}
-    
-    ---
-
-# Service definition
-apiVersion: v1
-kind: Service
-metadata:
-  name: svc-vol
-spec:
-  type: NodePort
-  ports:
-  - port: 80
-    nodePort: 30001
-    protocol: TCP
-  selector:
-    app: notes
 ```
+
+
+
+
+
+
+
+
+
+
 
 #### GitRepo
 
