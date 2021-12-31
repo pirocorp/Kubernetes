@@ -137,3 +137,36 @@ And check its status
 ```bash
 kubectl describe limitrange -n projectx
 ```
+
+# Create a **ResourceQuota** for the namespace to set **requests** and **limits** both for **CPU** and **memory**. In addition, add limits for **pods**, **services**, **deployments**, and **replicasets**. Use values that you consider suitable.
+
+Create a **quotas.yaml** file with the following (sample) content
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: projectx-quotas
+spec:
+  hard:
+    requests.cpu: 1
+    requests.memory: 1Gi
+    limits.cpu: 2
+    limits.memory: 2Gi
+    pods: 10
+    services: 5
+    count/deployments.apps: 2
+    count/replicasets.apps: 2
+```
+
+Deploy the manifest to the cluster
+
+```bash
+kubectl apply -f quotas.yaml -n projectx
+```
+
+And check its status
+
+```bash
+kubectl describe quota -n projectx
+```
