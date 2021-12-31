@@ -205,7 +205,7 @@ The supported values for field **type** are:
 | Socket            	| A UNIX socket must exist at the given path                                                                                                                             	|
 | CharDevice        	| A character device must exist at the given path                                                                                                                          |
 | BlockDevice        	| A block device must exist at the given path
-               |
+               
 
 
 ### Persistent Volumes
