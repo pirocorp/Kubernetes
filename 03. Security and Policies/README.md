@@ -317,8 +317,38 @@ curl --cacert ${CACERT} --header "Authorization: Bearer ${TOKEN}" \
 -X GET ${APISERVER}/api/v1/namespaces/rbac-ns/services
 ```
 
+# Requests and Limits
 
+When you specify a **Pod**, you can optionally specify how much of each resource a **container** needs. The most common resources to specify are CPU and memory (RAM); there are others.
 
+When you specify the resource **request** for containers in a Pod, the kube-scheduler uses this information to decide which node to place the Pod on. When you specify a resource **limit** for a container, the kubelet enforces those limits so that the running container is not allowed to use more of that resource than the limit you set. The kubelet also **reserves** at least the request amount of that system resource specifically for that container to use.
+
+If the node where a Pod is running has enough of a resource available, it's possible (and allowed) for a container to use more resource than its **request** for that resource specifies. However, a container is not allowed to use more than its resource **limit**.
+
+*Note: If a container specifies its own memory limit, but does not specify a memory request, Kubernetes automatically assigns a memory request that matches the limit. Similarly, if a container specifies its own CPU limit, but does not specify a CPU request, Kubernetes automatically assigns a CPU request that matches the limit.*
+
+## Check the available resources on the nodes
+
+Focus on the sections **Capacity**, **Allocatable**, **Non-terminated Pods**, and **Allocated resources**
+
+![image](https://user-images.githubusercontent.com/34960418/147819638-35fa5fbe-bd12-4e4e-9126-516ec9dc56d8.png)
+
+```bash
+kubectl describe nodes
+```
+
+# Limit Ranges
+
+- Enforce minimum and maximum compute resources usage per Pod or Container in a namespace.
+- Enforce minimum and maximum storage request per PersistentVolumeClaim in a namespace.
+- Enforce a ratio between request and limit for a resource in a namespace.
+- Set default request/limit for compute resources in a namespace and automatically inject them to Containers at runtime.
+- The LimitRanger admission controller enforces defaults and limits for all Pods and Containers that do not set compute resource requirements and tracks usage to ensure it does not exceed resource minimum, maximum and ratio defined in any LimitRange present in the namespace.
+- LimitRange validations occurs only at Pod Admission stage, not on Running Pods.
+
+# Resource Quotas
+
+Resource quotas are a tool for administrators to address the need of sharing cluster resources between teams of users. They are defined by the **ResourceQuota** object. Provide constraints that limit **aggregate resource consumption per namespace**. Limit the **quantity of objects** that can be created in a namespace by type. Limit the **total amount of compute resources** that may be consumed by resources.
 
 # Manifest files explanations (YAML)
 
