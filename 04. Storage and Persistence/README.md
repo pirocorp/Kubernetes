@@ -349,11 +349,8 @@ A PersistentVolume can be mounted on a host in any way supported by the resource
 - **ReadWriteMany** - the volume can be mounted as read-write by many nodes.
 - **ReadWriteOncePod** - the volume can be mounted as read-write by a single Pod. Use ReadWriteOncePod access mode if you want to ensure that only one pod across whole cluster can read that PVC or write to it.
 
-### Persistent Volumes and Claims
 
-We can define Persistent Volumes and then let them to be claimed via Persistent Volume Claims
-
-#### PersistentVolume (PV)
+Let’s create one **pvnfs10gb.yaml** with the following content
 
 ```yaml
 apiVersion: v1
@@ -377,11 +374,25 @@ spec:
     server: nfs-server
 ```
 
-#### PersistentVolumeClaim (PVC)
+Save and close the file. Send it to the cluster.
 
-PersistentVolumeClaim (PVC) is a request for storage by a user.
+```bash
+kubectl apply -f pvnfs10gb.yaml
+```
 
-Binding is the process of matching and attaching a PVC to PV. This is done on a set of criteria. It is ono-to-one mapping
+Check the list of persistent volumes. Pay attention to the **STATUS** and **CLAIM** fields.
+
+```bash
+kubectl get pv
+```
+
+Describe the one that we created
+
+```bash
+kubectl describe pv pvnfs10gb
+```
+
+In order to use this persistent volume, we must claim it first. Create a pvc10gb.yaml manifest with the following content
 
 ```yaml
 apiVersion: v1
@@ -401,7 +412,31 @@ spec:
       purpose: demo
 ```
 
-#### Consuming PVC
+Save and close the file. Send it to the cluster.
+
+```bash
+kubectl apply -f pvc10gb.yaml
+```
+
+Get again the list of persistent volumes.
+
+```bash
+kubectl get pv
+```
+
+Check the list of persistent volumes. Pay attention to the **STATUS** and **CLAIM** fields. Ask for the list of persistent volume claims.
+
+```bash
+kubectl get pvc
+```
+
+And then describe it. We can see that the Used By field is empty.
+
+```bash
+kubectl describe pvc pvc10gb
+```
+
+preparing and launching a deployment pv-deployment.yaml with the following content.
 
 ```yaml
 apiVersion: apps/v1
@@ -430,6 +465,24 @@ spec:
         persistentVolumeClaim:
           claimName: pvc10gb
 ```
+
+Save and close the file. Send it to the cluster.
+
+```bash
+kubectl apply -f part1/pv-deployment.yaml
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ## Part 2
