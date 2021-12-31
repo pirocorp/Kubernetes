@@ -245,7 +245,7 @@ metadata:
   namespace: projectx
 subjects:
 - kind: Group
-  name: Gurus
+  name: gurus
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
