@@ -207,13 +207,6 @@ The supported values for field **type** are:
 | BlockDevice        	| A block device must exist at the given path
                
 
-
-### Persistent Volumes
-
-#### HostPath
-
-While working, it binds us (or our Pod) to the host’s filesystem, so we should use it with care. In addition, it may expose security vulnerabilities, so we should use it in read only mode until we know what we are doing. (Data in this path on different nodes will be different.)
-
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -239,14 +232,37 @@ spec:
       - name: hp-data
         # volume type
         hostPath:
-          # path from node (this path must exist on every worker node) where container is started will be mount to mountPath
+          # path from node (this path must exist on every worker node) where container is started. And will be mount to mountPath.
           path: /tmp/data
           type: Directory
 ```
 
-#### NFS
 
-One of the most useful types of volumes in Kubernetes is nfs. NFS stands for Network File System – it's a shared filesystem that can be accessed over the network. The NFS must already exist – Kubernetes doesn't run the NFS, pods in just access it.
+## NFS
+
+An **nfs** volume allows an existing NFS (Network File System) share to be mounted into a Pod. Unlike **emptyDir**, which is erased when a Pod is removed, the contents of an **nfs** volume are preserved and the volume is merely unmounted. This means that an NFS volume can be pre-populated with data, and that data can be shared between pods. NFS can be mounted by multiple writers simultaneously.
+
+
+***Note***: You must have your own NFS server running with the share exported before you can use it.
+
+Assume that there is a **NFS** server available and accessible by name (**nfs-server**).
+
+-	That the NFS server is reachable by that name from all nodes
+```bash
+echo 'nfs-server-ip   nfs-server' >> /etc/hosts
+```
+
+-	That on every node there is NFS client installed
+```bash
+apt-get update && apt-get install -y nfs-common
+```
+
+-	That the exported path is writable (in our case by everyone)
+```bash
+chmod -R 777 /data/nfs/k8sdata
+```
+
+Prepare the **nfs-deployment.yaml** manifest with the following content.
 
 ```yaml
 apiVersion: apps/v1
@@ -267,7 +283,7 @@ spec:
       - name: container-nfs
         image: shekeriev/k8s-notes
         volumeMounts:
-          # On which path for containers(pods) exposed path will be mounted
+          # On which path for container exposed path will be mounted
         - mountPath: /data
           name: nfs-data
       volumes:
@@ -277,6 +293,54 @@ spec:
           # Exposed path by NFS Server
           path: /data/nfs/k8sdata
 ```
+
+Push deployment to the cluster
+
+```bash
+kubectl apply -f nfs-deployment.yaml
+```
+
+Check the pods and where they went
+
+```bash
+kubectl get pods -o wide
+```
+
+Now, open a browser tab, and navigate to ```http://<cluster-node-ip>:30001/index.php```. Enter a few notes. Refresh a few times. Notes are there and seen by all pods. Describe one of the pods. And pay attention to the **Volumes** section
+
+```bash 
+kubectl describe pod notes-deploy-<specific-id>
+```
+
+Clean up
+
+```bash
+kubectl delete -f nfs-deployment.yaml
+```
+
+# Persistent Volumes and Claims
+
+A PersistentVolume (PV) is a piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using Storage Classes. PVs have a lifecycle independent of any individual Pod that uses the PV.
+
+
+A PersistentVolumeClaim (PVC) is a request for storage by a user. It is similar to a Pod. Pods consume node resources and PVCs consume PV resources. Pods can request specific levels of resources (CPU and Memory). Claims can request specific size and access modes (e.g., they can be mounted ReadWriteOnce, ReadOnlyMany or ReadWriteMany).
+
+
+![image](https://user-images.githubusercontent.com/34960418/145032191-76621524-d189-436c-81b4-f75f1cc40adf.png)
+
+## Lifecycle of a volume and claim
+
+PVs are resources in the cluster. PVCs are requests for those resources and also act as claim checks to the resource. The interaction between PVs and PVCs follows this lifecycle:
+
+- Provisioning - There are two ways PVs may be provisioned: statically or dynamically. Static: a cluster administrator creates a number of PVs. They carry the details of the real storage, which is available for use by cluster users. They exist in the Kubernetes API and are available for consumption. Dynamic: This provisioning is based on StorageClasses.
+- Binding - A user creates (or in the case of dynamic provisioning, has already created), a **PersistentVolumeClaim** with a specific amount of storage requested and with certain access modes. A control loop in the master watches for new PVCs, finds a matching PV (if possible), and binds them together. The user will always get at least what they asked for, but the volume may be in excess of what was requested. Once bound, **PersistentVolumeClaim** binds are exclusive, regardless of how they were bound. A PVC to PV binding is a one-to-one mapping, using a **ClaimRef** which is a bi-directional binding between the **PersistentVolume** and the **PersistentVolumeClaim**.
+- Using - Pods use claims as volumes. The cluster inspects the claim to find the bound volume and mounts that volume for a Pod. For volumes that support multiple access modes, the user specifies which mode is desired when using their claim as a volume in a Pod.
+- Reclaiming - When a user is done with their volume, they can delete the PVC objects from the API that allows reclamation of the resource. The reclaim policy for a PersistentVolume tells the cluster what to do with the volume after it has been released of its claim. Currently, volumes can either be Retained, Recycled, or Deleted.
+  - Retain allows for manual reclamation of the resource
+  - Delete removes both the PV object from Kubernetes, as well as the associated storage asset in the external infrastructure
+  - Recycle performs a basic scrub on the volume and makes it available again (deprecated)
+
+
 
 ### Persistent Volumes and Claims
 
@@ -311,8 +375,6 @@ spec:
 PersistentVolumeClaim (PVC) is a request for storage by a user.
 
 Binding is the process of matching and attaching a PVC to PV. This is done on a set of criteria. It is ono-to-one mapping
-
-![image](https://user-images.githubusercontent.com/34960418/145032191-76621524-d189-436c-81b4-f75f1cc40adf.png)
 
 ```yaml
 apiVersion: v1
