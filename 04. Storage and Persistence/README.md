@@ -1,3 +1,44 @@
+# The Docker Way
+
+- Bind Mounts are dependent on the OS and file system structure
+- Volumes are managed by Docker
+- tmpfs mount is for non-persistent state data
+
+![image](https://user-images.githubusercontent.com/34960418/147826579-0d7af643-404c-44e0-9fb4-4c537dfda4d1.png)
+
+## Bind Mounts
+
+For the usual example, create a ~/html folder. There, we can create an **index.html** file.
+
+```bash
+echo 'A simple <b>bind mount</b> test' | tee ~/html/index.html
+```
+
+Finally, we can run a NGINX based container and mount the folder there
+
+```bash
+docker container run -d --name web -p 80:80 -v $(pwd)/html:/usr/share/nginx/html:ro nginx
+```
+
+Then, of course, if we ask for the web page
+
+```bash
+curl http://localhost
+```
+
+We will see our sample page. Should we want, we can ask for detailed information about the container.
+
+```bash
+docker container inspect web
+```
+
+We should pay attention to the **Mounts** section and especially on the **Type** which should be set to **bind**.
+
+![image](https://user-images.githubusercontent.com/34960418/147827027-0e6560c4-89b8-43b8-a81c-dafaa703c85f.png)
+
+
+
+
 # Manifest files explanations (YAML)
 
 ## Part 1
