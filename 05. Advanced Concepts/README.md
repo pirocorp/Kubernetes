@@ -470,27 +470,53 @@ Let’s first see if there are any existing taints in cluster by executing this.
 
 ![image](https://user-images.githubusercontent.com/34960418/147854913-01c5d5af-af65-479f-a90e-2109da8e6f59.png)
 
-
 ```bash
 kubectl describe node node-1.k8s
 ```
 
+Now, try to get them for all nodes. 
 
+![image](https://user-images.githubusercontent.com/34960418/147854935-133ddd15-8414-4e31-8cf8-1ada032cc318.png)
 
+```bash
+kubectl describe node | grep Taints
+```
 
+The other two nodes don’t have any taints for now. This is the reason why there aren’t any user scheduled pods there (on the control plane node(s)). If taintis removed should be able to schedule pods there as well.
 
+This is done with (***skip it for now***)
 
+```bash
+kubectl taint nodes node-1.k8s node-role.kubernetes.io/master:NoSchedule-
+```
 
+The system pods are scheduled on the control plane, because they have tolerations for the taints of the control plane nodes. Get the list of some of those pods.
 
+```bash
+kubectl get pods -n kube-system -o wide
+```
 
+Describe one of the coredns pods
 
+![image](https://user-images.githubusercontent.com/34960418/147855124-bf53c6f5-257d-4f9d-b92e-344180435611.png)
 
+```bash
+kubectl describe pod coredns--<identifier> -n kube-system
+```
 
+Add a taint to one of the other two nodes
 
+```bash
+kubectl taint node node-2.k8s demo-taint=nomorework:NoSchedule
+```
 
+Check the situation with the **taints** again
 
+```bash
+kubectl describe node | grep Taints
+```
 
-
+Spin a new deployment from this 
 
 ```yaml
 apiVersion: apps/v1
@@ -522,6 +548,37 @@ spec:
         value: nomorework
         effect: NoSchedule
 ```
+
+Send it to the cluster
+
+```bash
+kubectl apply -f schedule-toleration.yaml
+```
+
+And check the distribution of the pods again
+
+```bash
+kubectl get pods -o wide
+```
+
+Clen up
+
+```bash
+kubectl taint node node-2.k8s demo-taint-
+kubectl delete -f schedule-toleration.yaml
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### Daemon Sets
 
