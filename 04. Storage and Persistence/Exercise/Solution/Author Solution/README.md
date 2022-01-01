@@ -109,3 +109,18 @@ spec:
   - port: 80
     nodePort: 30001
 ```
+
+
+# Create and run a set of manifest files to spin the following application
+
+![image](https://user-images.githubusercontent.com/34960418/147851307-799f5bb1-d649-4684-83d4-f15100bce20e.png)
+
+-	**Service FE** should be of type **NodePort**.
+-	**Pod FE** should use **shekeriev/k8s-facts-fe** image and should be initialized with two environment variables – **FACTS_SERVER** equal to the **name** of the **Service BE** and **FACTS_PORT** equal to the **port** of **Service BE**.
+-	**Pod FE** listens on port **5000/tcp**.
+-	**Service BE** should be of type **ClusterIP** (please note, that this is not the headless service but the “public” one).
+-	**Pod BE** should use **shekeriev/k8s-facts** image and expects a volume to be mounted at **/data** folder.
+-	**Pod BE** listens on port **5000/tcp**.
+-	For the **PVs** and **PVCs** use **NFS** and storage capacity of **2Gi**.
+-	Both the **Deployment** and the **StatefulSet** should spin three replicas.
+
