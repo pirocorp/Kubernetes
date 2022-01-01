@@ -776,13 +776,46 @@ spec:
 ```
 
 
-### StatefulSet
+# StatefulSet
 
-StatefulSet is the workload API object used to manage stateful applications. Manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods. Like a Deployment, a StatefulSet manages Pods that are based on an identical container spec.
+- Used to manage **stateful applications**.
+- Manage the deployment of a **set of Pods**.
+- Pods are with identical container specifications just **like** with **Deployment** and **ReplicaSet**.
+- The main **difference** here is that the Pods have **persistent identifiers** that are **maintained across rescheduling**.
+- **Storage volumes** can be used as part of the solution for providing persistence.
+
+StatefulSet is the workload API object used to manage stateful applications. Manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods. Like a Deployment, a StatefulSet manages Pods that are based on an identical container spec. Unlike a Deployment, a StatefulSet maintains a sticky identity for each of their Pods. These pods are created from the same spec, but are not interchangeable: each has a persistent identifier that it maintains across any rescheduling.
+
+If you want to use storage volumes to provide persistence for your workload, you can use a StatefulSet as part of the solution. Although individual Pods in a StatefulSet are susceptible to failure, the persistent Pod identifiers make it easier to match existing volumes to the new Pods that replace any that have failed.
+
+Using StatefulSets
+
+StatefulSets are valuable for applications that require one or more of the following.
+
+- Stable and unique network identifiers
+- Stable and persistent storage
+- Ordered graceful deployment and scaling
+- Ordered and automated rolling updates
+
+* Stable = persistence across pod (re)scheduling.
+* Ordered = when scaling up it is done from 0 to N and when scaling down it is done from N to 0.
+
+Stateful Sets Limitations
+
+- Storage for a Pod must be provisioned **upfront** either automatically or by an administrator.
+- Deleting or scaling down **doesn’t delete the associated volumes**.
+- **Headless service** is required for the network identity of the pods.
+- StatefulSet deletion **doesn’t guarantee the pods termination order**. If required, first we must scale it down to 0.
+- Rolling updates (with OrderedReady policy) may get broken and then a manual intervention may be required.
+
 
 ![image](https://user-images.githubusercontent.com/34960418/145412355-67d48f68-8078-444e-b5fc-462ae3ec5826.png)
 
-Storage for a Pod must be provisioned **upfront** either automatically or by an administrator
+# Example
+
+## Storage Layer
+
+One of the components that we must handle first is the storage layer. Knowing about persistent volumes and claims will employ them.
 
 ```yaml
 apiVersion: v1
@@ -802,10 +835,8 @@ spec:
     - nfsvers=4.1
   nfs:
     path: /data/nfs/k8spva
-    server: nfs-server
-    
-    ---
-    
+    server: nfs-server    
+---    
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -823,10 +854,8 @@ spec:
     - nfsvers=4.1
   nfs:
     path: /data/nfs/k8spvb
-    server: nfs-server
-    
-  ---
-  
+    server: nfs-server    
+---  
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -847,7 +876,21 @@ spec:
     server: nfs-server
 ```
 
-**Headless service** is required for the network identity of the pods
+Send all of them to the cluster.
+
+```bash
+kubectl apply -f pvs.yaml
+```
+
+And check that they appear as resources.
+
+```bash
+kubectl get pv
+```
+
+## Headless Service
+
+**Headless service** ensures that the pods will be reachable by name. **Headless service** is required for the network identity of the pods.
 
 ```yaml
 apiVersion: v1
@@ -864,7 +907,21 @@ spec:
     protocol: TCP
 ```
 
-StatefulSet is managing Volume Claims
+Send it to the cluster
+
+```bash
+kubectl apply -f service.yaml
+```
+
+Check that the resource has been created
+
+```bash
+kubectl get svc
+```
+
+## Pods and Storage
+
+Next step is to ensure that each pod will be created in order and will be linked to its own storage. This is covered by the **StatefulSet** resource. It contains two templates – one for the **pod** and one for the associated storage (a **claim**). **StatefulSet** is managing **Volume Claims**.
 
 ```yaml
 apiVersion: apps/v1
@@ -904,9 +961,21 @@ spec:
           storage: 1Gi
 ```
 
-Public (NodePort) Service
+Send it to the cluster
 
-Create a standard or public (in this case NodePort) service that will expose the pods.
+```bash
+kubectl apply -f ss.yaml
+```
+
+Check what resources we have so far
+
+```bash
+kubectl get pod,svc,statefulset,pv,pvc
+```
+
+## Public (NodePort) Service
+
+Create a standard or public (in this case **NodePort**) service that will expose the pods.
 
 ```yaml
 apiVersion: v1
@@ -921,4 +990,79 @@ spec:
   - port: 5000
     nodePort: 30001
     protocol: TCP
+```
+
+```bash
+kubectl apply -f np.yaml
+```
+
+Check what resources we have so far. We should have the full set of components now.
+
+```bash
+kubectl get pod,svc,statefulset,pv,pvc
+```
+
+Open a browser tab, and navigate to ```http://<cluster-node-ip>:30001```.
+
+
+## Stress and Scaling
+
+First, check where are scheduled the pods currently and what claims are assigned to them.
+
+```bash
+kubect get pods,pvc -o wide
+```
+
+Then, to delete the first pod, execute
+
+```bash
+kubectl delete pod facts-0
+```
+
+Now, check again. As we can see, the node may have changed (or not) but the assigned claim is still the same.
+
+```bash
+kubect get pods,pvc -o wide
+```
+
+Let’s return to the browser and see if everything is fine there. Yes, it should be.
+
+
+Now, let’s scale down to just one replica
+
+```bash
+kubectl scale --replicas=1 statefulset/facts
+```
+
+Then, check again what is the situation with the different components. May need to execute it a few times until the scaling finishes. Notice that the **Pod** is deleted but the **PersistentVolumeClaim** is not. 
+
+```bash
+kubectl get pod,svc,statefulset,pv,pvc
+```
+
+Let’s return to the browser and see if everything is fine there. Yes, it should be.
+
+
+Now, let’s scale up to three replicas
+
+```bash
+kubectl scale --replicas=3 statefulset/facts
+```
+
+Then, check again what is the situation with the different components. May need to execute it a few times until the scaling finishes. Notice that the claim to pod assignment does not change – **pod #2** (**facts-1**) is attached to the same claim.
+
+```bash
+kubectl get pod,svc,statefulset,pv,pvc
+```
+
+Let’s return to the browser and see if everything is fine there. Yes, it should be.
+
+
+## Clean Up
+
+```bash
+kubectl delete statefulset.apps/facts
+kubectl delete service/facts service/factsnp
+kubectl delete persistentvolumeclaim facts-data-facts-0 facts-data-facts-1 facts-data-facts-2
+kubectl delete persistentvolume pvssa pvssb pvssc
 ```
