@@ -81,6 +81,25 @@ rm /etc/kubernetes/manifests/static-pod.yaml
 ```
 
 
+# Multi-container Pods
+
+Pods often have just one container. However, we may want do add more than one. This may be due to the need of a helper process, or container with the same lifecycle, etc.
+
+There are three common **design patterns** for this.
+
+- Sidecar
+- Adapter
+- Ambassador
+
+
+
+
+
+
+
+
+
+
 
 
 
