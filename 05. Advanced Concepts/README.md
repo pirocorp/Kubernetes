@@ -261,8 +261,13 @@ spec:
     app: pod-init
 ```
 
+# Autoscaling
 
+Environments are not static but dynamic and changing. This applies to the running pods and the resources they need. Kubernetes, being a container orchestrator, has an answer. It offers the capability to perform autoscaling of resources. There are three types:
 
+- Scale out the pods by increasing their replica count
+- Scale up the pods by increasing their resources limits
+- Scale out the cluster by increasing the number of nodes
 
 
 
