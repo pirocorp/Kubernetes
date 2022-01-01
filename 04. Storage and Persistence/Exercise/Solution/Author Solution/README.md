@@ -30,7 +30,7 @@
   4.	**main.key** and **main.crt** should be mounted as a volume to the **/secret** folder inside the container
 
 
-Solution: 
+## Solution: 
 
 Before we create the configuration map, we must prepare the two files – **main.conf** and **port.conf**.
 
