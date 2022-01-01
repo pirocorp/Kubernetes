@@ -1,3 +1,98 @@
+# Static Pods
+
+- Static Pods are managed directly by the **kubelet**.
+- The API server is not looking after them.
+- The **spec** of a static Pod **cannot refer to other API objects**.
+- Their manifests are **standard** but are stored in a **specific folder**.
+- Usually, this is **/etc/kubernetes/manifests**.
+- And it is regulated by the **kublet configuration file**.
+- We can serve static Pods from the **local filesystem** or the **web**.
+- he Pod names will be **suffixed** with the **node hostname** with a leading hyphen.
+
+
+Static Pods are managed directly by the kubelet daemon on a specific node, without the API server observing them. Unlike Pods that are managed by the control plane (for example, a Deployment); instead, the kubelet watches each static Pod (and restarts it if it fails).
+
+Static Pods are always bound to one Kubelet on a specific node.
+
+The kubelet automatically tries to create a mirror Pod on the Kubernetes API server for each static Pod. This means that the Pods running on a node are visible on the API server, but cannot be controlled from there. The Pod names will be suffixed with the node hostname with a leading hyphen.
+
+
+## Example:
+
+With static pods, instead of passing it via the API server by using for example the kubectl tool, we save it to a special folder. Special means a one which to be dedicated for this and is registered and monitored by the kubelet service.
+
+
+First, log on to the control plane node. Then, let’s see some details about the **kubelet** process.
+
+```bash
+ps ax | grep /usr/bin/kubelet
+```
+
+We may notice that it is reading different parts of its configuration from different files. Let’s check the contents of the ```/var/lib/kubelet/config.yaml``` file
+
+```bash
+cat /var/lib/kubelet/config.yaml
+```
+
+There are some interesting settings here, but we are interested in this row. ```staticPodPath: /etc/kubernetes/manifests```. According to it, to create a static pod, must place its manifest into the stated folder. Should keep in mind that this will spin up the pod on the node in which folder we stored the manifest. Should we want the pod to run on another node, then we must save it in its special folder.
+
+
+Now, let’s see if there are any files in the folder. Four components of the control plane are in fact running as static pods (at least in a cluster, created by kubeadm)
+
+```bash
+ls -al /etc/kubernetes/manifests
+```
+
+Check the manifest of the etcd database for example
+
+```bash
+cat /etc/kubernetes/manifests/etcd.yaml
+```
+
+Create custom static pod
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: static-pod
+  labels:
+    app: static-pod
+spec:
+  containers:
+  - image: alpine
+    name: main
+    command: ["sleep"]
+    args: ["1d"]
+```
+
+Copy it in the special folder and wait a few seconds. Then execute. The pod ran no matter that we are working on control plane node. The name of the pod has the name of the node as a suffix. 
+
+
+```bash
+kubectl get pods -o wide
+```
+
+To delete the pod delete the manifest from the special folder where we copied it earlier
+
+
+```yaml
+rm /etc/kubernetes/manifests/static-pod.yaml
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Manifest files explanations (YAML)
 
 ## Part 1
