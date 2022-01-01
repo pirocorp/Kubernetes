@@ -541,53 +541,22 @@ kubectl delete -f part1/pvnfs10gb.yaml
 ```
 
 
+# Environment Variables
 
+- **Key-value pairs** used to pass data to the containers inside a pod.
+- Created in the manifest via **env** or **envFrom** blocks.
+- **Override** any environment variables in the container.
+- They may **reference** each other but then their **definition order is important**.
+- Reference is done via the **$(REFVAR)** construct
 
+When you create a Pod, you can set environment variables for the containers that run in the Pod. To set environment variables, include the ```env``` or ```envFrom``` field in the configuration file.
 
+Environment variables that you define in a Pod's configuration can be used elsewhere in the configuration, for example in commands and arguments that you set for the Pod's containers.
 
+***Note***: The environment variables set using the env or envFrom field override any environment variables specified in the container image.
 
+***Note***: Environment variables may reference each other, however ordering is important. Variables making use of others defined in the same context must come later in the list. Similarly, avoid circular references.
 
-
-
-
-
-
-
-
-## Part 2
-
-### Pod with no environment variables
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pod-no-env
-  labels:
-    app: environ
-spec:
-  containers:
-  - image: shekeriev/k8s-environ
-    name: cont-no-env
-    
- ---
- 
-apiVersion: v1
-kind: Service
-metadata:
-  name: svc-environ
-spec:
-  type: NodePort
-  ports:
-  - port: 80
-    nodePort: 30001
-    protocol: TCP
-  selector:
-    app: environ
-
-```
-
-### Pod with environment variables
 
 ```yaml
 apiVersion: v1
@@ -607,6 +576,74 @@ spec:
     - name: XYZ2
       value: "42"
 ```
+
+Send it to the cluster
+
+```bash
+kubectl apply -f pod-w-env.yaml
+```
+
+Llet’s describe it to see if the variables will appear there. Pay attention to the Environment section. Our variables are there.
+
+```bash
+kubectl describe pod pod-w-env
+```
+
+Clean up
+
+```bash
+kubectl delete -f pod-w-env.yaml
+```
+
+# Configuration Maps
+
+A ConfigMap is an API object used to store non-confidential data in key-value pairs. Pods can consume ConfigMaps as environment variables, command-line arguments, or as configuration files in a volume.
+
+A ConfigMap allows you to decouple environment-specific configuration from your container images, so that your applications are easily portable.
+
+A ConfigMap is not designed to hold large chunks of data. The data stored in a ConfigMap cannot exceed 1 MiB. If you need to store settings that are larger than this limit, you may want to consider mounting a volume or use a separate database or file service.
+
+A ConfigMap is an API object that lets you store configuration for other objects to use. Unlike most Kubernetes objects that have a ```spec```, a ConfigMap has ```data``` and ```binaryData``` fields. These fields accept key-value pairs as their values. Both the ```data``` field and the ```binaryData``` are optional. The ```data``` field is designed to contain UTF-8 byte sequences while the ```binaryData``` field is designed to contain binary data as base64-encoded strings. The keys stored in ```data``` must not overlap with the keys in the ```binaryData``` field.
+
+**Caution**: ConfigMap does not provide secrecy or encryption. If the data you want to store are confidential, use a Secret rather than a ConfigMap, or use additional (third party) tools to keep your data private.
+
+You can write a Pod ```spec``` that refers to a ConfigMap and configures the container(s) in that Pod based on the data in the ConfigMap. The Pod and the ConfigMap must be in the same namespace.
+
+***Note***: The spec of a static Pod cannot refer to a ConfigMap or any other API objects.
+
+There are four different ways that you can use a ConfigMap to configure a container inside a Pod:
+
+- Inside a container command and args
+- Environment variables for a container
+- Add a file in read-only volume, for the application to read
+- Write code to run inside the Pod that uses the Kubernetes API to read a ConfigMap
+
+## Using ConfigMaps as files from a Pod
+
+To consume a ConfigMap in a volume in a Pod:
+
+1. Create a ConfigMap or use an existing one. Multiple Pods can reference the same ConfigMap.
+2. Modify your Pod definition to add a volume under ```.spec.volumes[]```. Name the volume anything, and have a ```.spec.volumes[].configMap.name``` field set to reference your ConfigMap object.
+3. Add a ```.spec.containers[].volumeMounts[]``` to each container that needs the ConfigMap. Specify ```.spec.containers[].volumeMounts[].readOnly = true``` and ```.spec.containers[].volumeMounts[].mountPath``` to an unused directory name where you would like the ConfigMap to appear.
+4. Modify your image or command line so that the program looks for files in that directory. Each key in the ConfigMap data map becomes the filename under mountPath.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### ConfigMap
 
