@@ -126,6 +126,8 @@ spec:
 
 ## Solution
 
+Assuming that there is a NFS server available and reachable by the name ```nfs-server``` from all the nodes. Assuming that there are three exported and writable folders - /data/nfs/k8spv{a,b,c}.
+
 ```yaml
 apiVersion: v1
 kind: PersistentVolume
@@ -144,10 +146,8 @@ spec:
     - nfsvers=4.1
   nfs:
     path: /data/nfs/k8spva
-    server: nfs-server
-    
----
-    
+    server: nfs-server    
+---    
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -165,10 +165,8 @@ spec:
     - nfsvers=4.1
   nfs:
     path: /data/nfs/k8spvb
-    server: nfs-server
-    
----
-  
+    server: nfs-server    
+---  
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -186,10 +184,8 @@ spec:
     - nfsvers=4.1
   nfs:
     path: /data/nfs/k8spvc
-    server: nfs-server
-    
+    server: nfs-server    
 ---
-
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -200,6 +196,7 @@ spec:
       app: facts
   serviceName: facts 
   replicas: 3
+  # POD template
   template:
     metadata:
       labels:
@@ -215,6 +212,7 @@ spec:
         volumeMounts:
         - name: facts-data
           mountPath: /data
+  # VolumeClaim template
   volumeClaimTemplates:
   - metadata:
       name: facts-data
@@ -222,10 +220,8 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 2Gi
-          
+          storage: 2Gi          
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -236,10 +232,8 @@ spec:
   clusterIP: None
   ports:
   - port: 5000
-    protocol: TCP
-    
+    protocol: TCP    
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -251,10 +245,8 @@ spec:
   ports:
   - port: 5000
     targetPort: 5000
-    protocol: TCP
-    
+    protocol: TCP    
 ---
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -262,9 +254,7 @@ metadata:
 data:
   FACTS_SERVER: "service-be"
   FACTS_PORT: "5000"
-
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
