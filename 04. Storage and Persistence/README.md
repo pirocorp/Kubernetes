@@ -597,6 +597,13 @@ kubectl delete -f pod-w-env.yaml
 
 # Configuration Maps
 
+- Used to store **non-confidential data** in key-value pairs.
+- Pods can consume them as **environment variables**, **command-line arguments**, or as **configuration files in volumes**.
+- We use them to **separate configuration data** from **application code**.
+- They are not designed to store large chucks of data (**max 1 MiB**).
+- The name of a **ConfigMap** must be a **valid DNS subdomain** name.
+
+
 A ConfigMap is an API object used to store non-confidential data in key-value pairs. Pods can consume ConfigMaps as environment variables, command-line arguments, or as configuration files in a volume.
 
 A ConfigMap allows you to decouple environment-specific configuration from your container images, so that your applications are easily portable.
@@ -631,37 +638,6 @@ Each ConfigMap you want to use needs to be referred to in ```.spec.volumes```.
 
 If there are multiple containers in the Pod, then each container needs its own ```volumeMounts``` block, but only one ```.spec.volumes``` is needed per ConfigMap.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### ConfigMap
-
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -674,7 +650,7 @@ data:
   XYZ3: "3.14"
 ```
 
-Consuming ConfigMap
+We can load an environment variable with data coming from a ConfigMap
 
 ```yaml
 apiVersion: v1
@@ -695,8 +671,9 @@ spec:
         configMapKeyRef:
           name: environ-map-1
           key: XYZ2
-
 ```
+
+Get all keys from the config map and send them as variables.
 
 ```yaml
 apiVersion: v1
@@ -717,7 +694,53 @@ spec:
       #prefix: CM_ # Use this to prefix variables created from the ConfigMap
 ```
 
-### Secrets
+# Secrets
+
+- Contain a small amount of sensitive data such as a **password**, a **token**, or a **key**.
+- This way confidential data is separated from the application code.
+- Similar to **ConfigMaps** but are specifically intended to hold confidential data.
+- Consumed via **files in a volume**, **environment variables**, or by the kubelet while pulling images for the pod (**imagePullSecrets**).
+- Secrets can be **opaque**, **tls**, **token**, **service-account-token**, etc.
+
+
+A Secret is an object that contains a small amount of sensitive data such as a password, a token, or a key. Such information might otherwise be put in a Pod specification or in a container image. Using a Secret means that you don't need to include confidential data in your application code.
+
+Because Secrets can be created independently of the Pods that use them, there is less risk of the Secret (and its data) being exposed during the workflow of creating, viewing, and editing Pods. Kubernetes, and applications that run in your cluster, can also take additional precautions with Secrets, such as avoiding writing confidential data to nonvolatile storage.
+
+Secrets are similar to ConfigMaps but are specifically intended to hold confidential data.
+
+To use a Secret, a Pod needs to reference the Secret. A Secret can be used with a Pod in three ways:
+
+- As files in a volume mounted on one or more of its containers.
+- As container environment variable.
+- By the kubelet when pulling images for the Pod.
+
+## Types of Secret
+
+When creating a Secret, you can specify its type using the type field of a Secret resource, or certain equivalent kubectl command line flags (if available). The type of a Secret is used to facilitate programmatic handling of different kinds of confidential data.
+
+Kubernetes provides several builtin types for some common usage scenarios. These types vary in terms of the validations performed and the constraints Kubernetes imposes on them.
+
+| Value             	| Behavior                                                                                                                                                               	|
+|-------------------	|------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|
+|                   	| Empty string (default) is for backward compatibility, which means that no checks will be performed before mounting the hostPath volume.                                	|
+| DirectoryOrCreate 	| If nothing exists at the given path, an empty directory will be created there as needed with permission set to 0755, having the same group and ownership with Kubelet. 	|
+| Directory         	| A directory must exist at the given path                                                                                                                               	|
+| FileOrCreate      	| If nothing exists at the given path, an empty file will be created there as needed with permission set to 0644, having the same group and ownership with Kubelet.      	|
+| File              	| A file must exist at the given path                                                                                                                                    	|
+| Socket            	| A UNIX socket must exist at the given path                                                                                                                             	|
+| CharDevice        	|                                                                                                                                                                        	|
+
+## Opaque secrets
+
+**Opaque** is the default Secret type if omitted from a Secret configuration file. When you create a Secret using **kubectl**, you will use the **generic** subcommand to indicate an **Opaque** Secret type. For example, the following command creates an empty Secret of type **Opaque**.
+
+```bash
+kubectl create secret generic empty-secret
+kubectl get secret empty-secret
+```
+
+Create Secret From Manifest
 
 ```yaml
 apiVersion: v1
@@ -725,7 +748,7 @@ kind: Secret
 metadata:
   name: mysecrets
   namespace: default
-# Secrets (list of key-value pairs)
+# Secrets (list of key-value pairs) values are base64 encoded.
 data:
   password1: S3ViZXJuZXRlc1JvY2tzIQo=
   password2: U3VwZXJTZWNyZXRQQHNzdzByZAo=
