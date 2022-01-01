@@ -92,59 +92,14 @@ There are three common **design patterns** for this.
 - Ambassador
 
 
+# Sidecar Pattern
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Manifest files explanations (YAML)
-
-## Part 1
-
-### Static pod
-
-- Static Pods are managed directly by the kubelet
-- The spec of a static Pod cannot refer to other API objects
-- Their manifests are standard but are stored in a specific folder on controle plane node
-- Usually, this is /etc/kubernetes/manifests
-- And it is regulated by the kublet configuration file
-
-
-```yaml
-kind: Pod
-metadata:
-  name: static-pod
-  labels:
-    app: static-pod
-spec:
-  containers:
-  - image: alpine
-    name: main
-    command: ["sleep"]
-    args: ["1d"]
-```
-
-### Sidecar (Pattern)
-
-Sidecar containers enhance the main container. For example, it may sync the local file system with a remote repository. In any case, both share the same filesystem.
+- **Sidecar** containers enhance the main container
+- For example, it may sync the local file system with a remote repository
+- Or it may parse the logs of the main container and send them somewhere
+- In any case, both share the same filesystem
 
 ![image](https://user-images.githubusercontent.com/34960418/145599526-702a9b5d-d35e-4383-bc4b-56c56ddad6ba.png)
-
 
 ```yaml
 apiVersion: apps/v1
@@ -211,9 +166,10 @@ spec:
     app: sidecar
 ```
 
-### Adapter (Pattern)
+# Adapter Pattern
 
-Adapter containers are used to standardize and normalize the output
+Adapter containers are used to standardize and normalize the output. This may be done in order to prepare it for a monitoring system. This way, no matter the actual application or applications, the monitoring system will receive prepared data flow. 
+
 
 ![image](https://user-images.githubusercontent.com/34960418/145601960-9dc33487-d722-4a2f-a320-3626aa3ca147.png)
 
