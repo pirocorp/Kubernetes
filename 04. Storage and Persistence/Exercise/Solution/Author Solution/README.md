@@ -126,7 +126,7 @@ spec:
 
 ## Solution
 
-Assuming that there is a NFS server available and reachable by the name ```nfs-server``` from all the nodes. Assuming that there are three exported and writable folders - /data/nfs/k8spv{a,b,c}.
+Assuming that there is a NFS server available and reachable by the name ```nfs-server``` from all the nodes. Assuming that there are three exported and writable folders - ```/data/nfs/k8spv{a,b,c}```.
 
 ```yaml
 apiVersion: v1
