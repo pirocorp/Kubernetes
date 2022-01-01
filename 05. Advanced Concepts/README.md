@@ -204,9 +204,11 @@ spec:
     emptyDir: {}
 ```
 
-### Init Container
+# Init Container
 
 **Specialized containers** that **run before app containers** in a Pod. Contain utilities or setup scripts not present in an app image. **App Containers** are specified via **containers** section and the **Init Containers** are specified via **initContainers** section. Init Containers **always run to completion**. If one of them **fails**, the **kubelet** repeatedly **restarts it until it succeeds**. Each Init Container **must complete successfully** before the **next one starts**.
+
+To specify an init container for a Pod, add the **initContainers** field into the Pod specification, as an array of **container** items (similar to the app **containers** field and its contents). 
 
 
 ```yaml
@@ -258,6 +260,29 @@ spec:
   selector:
     app: pod-init
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Part 2
 
