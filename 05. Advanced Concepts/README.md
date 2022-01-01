@@ -561,7 +561,7 @@ And check the distribution of the pods again
 kubectl get pods -o wide
 ```
 
-Clen up
+Clean up
 
 ```bash
 kubectl taint node node-2.k8s demo-taint-
@@ -569,22 +569,11 @@ kubectl delete -f schedule-toleration.yaml
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-### Daemon Sets
+# [Daemon Sets](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
 
 **Daemon Sets** are like the **Deployments**, **Replication Controllers** and **Replica Sets**
 
-There is one important difference though – their workload goes to every node or only to specific nodes and with only one copy, so no multiple replicas spread across the cluster.
+A **DaemonSet** ensures that all (or some) Nodes run a copy of a Pod. As nodes are added to the cluster, Pods are added to them. As nodes are removed from the cluster, those Pods are garbage collected. Deleting a **DaemonSet** will clean up the Pods it created.
 
 ```yaml
 apiVersion: apps/v1
@@ -600,7 +589,7 @@ spec:
       labels: 
         app: daemon-set
     spec:
-      # Node selector limits nodes (worker nodes) that will receive a copy of the given pod
+      # Node selector limits nodes (worker nodes) that will receive a copy of the given pod.
       nodeSelector: 
         disk: samsung
       containers:
@@ -610,9 +599,17 @@ spec:
         - containerPort: 80
 ```
 
-### Job
+# [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/)
 
-There are situations in which we need to run tasks that start, do something, and then finish. This is covered by a special object type – Job
+- A **Job** creates one or more Pods and ensures that a specified number of them successfully terminate
+- As pods successfully complete, the Job tracks the successful completions
+- When a specified number of successful completions is reached, the Job is complete
+- Deleting a Job will clean up the Pods it created
+- The Job object will start a new Pod if the first Pod fails or is deleted
+- They can run Pods either in **sequence** or in **parallel**
+
+
+Job example:
 
 ```yaml
 apiVersion: batch/v1
@@ -673,9 +670,13 @@ spec:
       restartPolicy: Never
 ```
 
-### CronJob
+# [CronJob](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/)
 
-A CronJob creates Jobs on a repeating schedule. CronJobs are useful for creating periodic and recurring tasks, like running backups, reports generation, sending emails, etc.
+- A CronJob creates Jobs on a repeating schedule
+- One CronJob object is like one line of a crontab (cron table) file
+- CronJobs are useful for creating periodic and recurring tasks, like running backups, reports generation, sending emails, etc.
+
+CronJobs are meant for performing regular scheduled actions such as backups, report generation, and so on. Each of those tasks should be configured to recur indefinitely (for example: once a day / week / month); you can define the point in time within that interval when the job should start.
 
 ```yaml
 apiVersion: batch/v1
@@ -698,9 +699,21 @@ spec:
             image: shekeriev/sleeper
 ```
 
-## Part 3
 
-### Ingress and Ingress Controllers
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Ingress and Ingress Controllers
 
 Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource. We must have an Ingress controller to satisfy the Ingress
 
