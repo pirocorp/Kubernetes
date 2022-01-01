@@ -1,4 +1,4 @@
-# Static Pods
+# [Static Pods](https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/)
 
 - Static Pods are managed directly by the **kubelet**.
 - The API server is not looking after them.
@@ -85,7 +85,7 @@ rm /etc/kubernetes/manifests/static-pod.yaml
 
 Pods often have just one container. However, we may want do add more than one. This may be due to the need of a helper process, or container with the same lifecycle, etc.
 
-There are three common **design patterns** for this.
+There are [three common](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/) **design patterns** for this.
 
 - Sidecar
 - Adapter
@@ -204,7 +204,7 @@ spec:
     emptyDir: {}
 ```
 
-# Init Container
+# [Init Container](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/)
 
 **Specialized containers** that **run before app containers** in a Pod. Contain utilities or setup scripts not present in an app image. **App Containers** are specified via **containers** section and the **Init Containers** are specified via **initContainers** section. Init Containers **always run to completion**. If one of them **fails**, the **kubelet** repeatedly **restarts it until it succeeds**. Each Init Container **must complete successfully** before the **next one starts**.
 
@@ -261,37 +261,54 @@ spec:
     app: pod-init
 ```
 
-# Autoscaling
+# [Autoscaling](https://cloud.redhat.com/blog/kubernetes-autoscaling-3-common-methods-explained)
 
 Environments are not static but dynamic and changing. This applies to the running pods and the resources they need. Kubernetes, being a container orchestrator, has an answer. It offers the capability to perform autoscaling of resources. There are three types:
 
-- Scale out the pods by increasing their replica count
-- Scale up the pods by increasing their resources limits
-- Scale out the cluster by increasing the number of nodes
+- [Scale out the pods](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) by increasing their replica count.
+- [Scale up the pods](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) by increasing their resources limits.
+- [Scale out the cluster](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler) by increasing the number of nodes.
 
 
+Scale Out Pods (Horizontal Pod Autoscaler)
+
+The **Horizontal Pod Autoscaler (HPA)** automatically scales the number of pods in a replication controller, deployment, replica set or stateful set based on observed CPU utilization. It is implemented as a Kubernetes API **resource** and a **controller**. The resource determines the behavior of the controller. The controller periodically adjusts the number of replicas in a replication controller or deployment. The Horizontal Pod Autoscaler is implemented as a **control loop**, with a period controlled by a flag with default value set to **15 seconds**. Both upscale and downscale intervals are also controlled by flags and their default value is set to **5 minutes**.
 
 
+Scale Up Pods (Vertical Pod Autoscaler)
+
+The **Vertical Pod Autoscaler (VPA)** maintains the resource limits and requests for the containers in their pods up to date. It can adjust the requests based on the usage. It also maintains the ratio between requests and limits. Implemented via a **Custom Resource Definition (CRD)** object and has three components. 
+- **Recommender** monitors current and past resource consumption and provides recommended values. 
+- **Updater** checks which resources have correct resources set and if not, kills them in order to be recreated with updated values. 
+- **Admission** Plugin sets the correct resource requests on new pods
 
 
+Scale Out Cluster Nodes (Cluster Autoscaler)
+
+Like the HPA but for cluster nodes. Based on cluster utilization it can **change the number of nodes**. This is useful also for **cost optimization**. It checks for pods that cannot be scheduled on existing nodes. Then checks if node addition will solve the issue. In the same manner, if pods can be rescheduled on other nodes to utilize them better, they will be evicted from a node and then the node will be removed.
 
 
+## Horizontal Pod Autoscaler Example
 
+On a **custom made/standard Kubernetes** cluster install it by downloading the manifest
 
+```bash
+wget https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml -O metrics-server.yaml
+```
 
+Then open it and on line #137 add the following
 
+```bash
+--kubelet-insecure-tls
+```
 
+Save and close the file. Use it to install the [metrics server](https://github.com/kubernetes-sigs/metrics-server).
 
+```bash
+kubectl apply -f metrics-server.yaml
+```
 
-
-
-
-
-
-
-## Part 2
-
-### Autoscalling
+Autoscale deployment manifest
 
 ```yaml
 apiVersion: apps/v1
@@ -330,10 +347,8 @@ spec:
     nodePort: 30001
     protocol: TCP
   selector:
-    app: auto-scale
-    
+    app: auto-scale    
 ---
-
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -358,12 +373,123 @@ spec:
         averageUtilization: 10
 ```
 
+And create the resources
 
-### Scheduling
+```bash
+kubectl apply -f auto-scale-hpa.yaml
+```
+
+Check that all replicas are there by running
+
+```bash
+kubectl get pods
+```
+
+Ask for more information
+
+```bash
+kubectl get horizontalpodautoscalers auto-scale-deploy
+```
+
+Wait a few minutes for the metrics to be collected and ask again
+
+```bash
+kubectl get horizontalpodautoscalers auto-scale-deploy -o yaml
+```
+
+After a few minutes (at least 5) the system should scale down our deployment to one replica.
+
+```bash
+kubectl get pods -o wide
+kubectl get deployments
+```
+
+Now we can open second terminal in order to monitor the scaling process 
+
+```bash
+watch -n 1 kubectl get hpa,deployment
+```
+
+In the first terminal, we are going to simulate workload to trigger scale up
+
+```bash
+kubectl run -it --rm --restart=Never load-generator --image=busybox -- sh -c "while true; do wget -O - -q http://auto-scale-svc.default; done"
+```
+
+If switch to the other terminal, will see the scale up process in action. Return to the first terminal and press **Ctrl+C** to stop the load generator pod. Check current quantity of replicas.
+
+```bash
+kubectl get deployments
+```
+
+The scale down process will take some time (approx. 5 minutes). Close the second terminal. Clean up.
+
+```bash
+kubectl delete -f auto-scale-hpa.yaml
+```
+
+Disable the metrics add on a standard Kubernetes cluster, uninstall the metrics server.
+
+```bash
+kubectl delete -f metrics-server.yaml
+```
+
+# Scheduling
+
+## [Taints and Tolerations](https://user-images.githubusercontent.com/34960418/147854592-6b1ce2b3-bde1-49a8-88f3-3c1d3be7e5fd.png)
+
+
+Node affinity is a property of Pods that attracts them to a set of nodes (either as a preference or a hard requirement). Taints are the opposite -- they allow a node to repel a set of pods.
+
+Tolerations are applied to pods, and allow (but do not require) the pods to schedule onto nodes with matching taints.
+
+Taints and tolerations work together to ensure that pods are not scheduled onto inappropriate nodes. One or more taints are applied to a node; this marks that the node should not accept any pods that do not tolerate the taints.
 
 **Taints** are applied to nodes and allow them to repel pods. They have **key**, **value** and taint **effect** and are set like ```kubectl taint nodes node1 key1=value1:NoSchedule```. Effect must be ```NoSchedule``` , ```PreferNoSchedule``` or ```NoExecute```. 
 
 **Tolerations** are applied to pods and allow them to schedule on nodes with matching taints. They are specified with **key**, **operator** (**Exists** or **Equal**), **value** (if the operator is equal) and **effect**.
+
+***Note***: There are two special cases:
+
+- An empty ```key``` with operator ```Exists``` matches all keys, values and effects which means this will tolerate everything.
+- An empty ```effect``` matches all effects with key ```key1```.
+
+## [Node Selectors](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)
+
+- A pod can be **constrained** to run only on **particular nodes**.
+- One of the ways to do this is to use **node selectors**.
+- **nodeSelector** is a field part of the pod specification.
+- It specifies a **map of key-value pairs**.
+- For a pod to be able to run on a node, the node must have all **indicated key-value pairs** (it may have others as well).
+
+
+## Scheduling example by using taints and tolerations 
+
+
+Let’s first see if there are any existing taints in cluster by executing this. Pay attention to the **Taints** section.
+
+![image](https://user-images.githubusercontent.com/34960418/147854913-01c5d5af-af65-479f-a90e-2109da8e6f59.png)
+
+
+```bash
+kubectl describe node node-1.k8s
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ```yaml
