@@ -1,3 +1,35 @@
+# Health and Status Checks (Probes)
+
+Periodic checks executed by the **kubelet** against containers. Those checks are known as **probes**. They can be **liveness**, **readiness**, and **startup** probes. Their status can be either **Success**, **Failure**, or **Unknown**. Used for a better control over the container and pod lifecycle and better integration with other objects.
+
+## Check Methods
+
+Each probe type can use either **Exec**, **HTTP**, or **TCP** method
+
+- **Exec** is used to **exec a specified command** inside the container. It is considered **successful** if the **return code** is **0**.
+- **HTTP** makes a **GET request** against the pod’s **IP address** on a **specified port** and **path**. It is considered **successful** if the **status code is between 200 and 399**.
+- **TCP** performs a check against the pod’s **IP address** on a **specified port**. It is considered **successful** if the **port is open**.
+
+## Common Fields
+
+- **initialDelaySeconds** sets the number of seconds to wait before a probe to be initiated. **Defaults** to **0** with **minimal value** of **0**.
+- **periodSeconds** sets how often (in seconds) a probe to be performed. **Defaults** to **10** with **minimal value** of **1**.
+- **timeoutSeconds** sets the number of seconds before a probe times out. **Defaults** to **1** with **minimal value** of **1**.
+- **successThreshold** sets the minimum consecutive successes for a probe to be considered successful after a failure. **Defaults** to **1** with **minimal value** of **1**.
+- **failureThreshold** sets the number of times for Kubernetes to try failing probe before giving up (for **liveness – restart**, for **readiness – unready**). Defaults to **3** with **minimal value** of **1**.
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Manifest files explanations (YAML)
 
 ## Part 1
