@@ -251,3 +251,208 @@ kubectl get svc -n nginx-ingress
 And then open a browser tab and navigate to. ```https://demo.lab:<https-node-port>/service1```, ```https://demo.lab:<https-node-port>/service2```, ```https://demo.lab:<https-node-port>```. The HTTPS node port above is the one to which the 443 port is redirected. You should accept the warning for the security risk (using a self-signed certificate).
 
 
+# Another Ingress Controller. 
+
+Repeat the **fan out** example shown in the practice but with another **ingress controller of your choice** (not NGINX or HAProxy).
+
+## Solution
+
+Partial list of available ingress controllers can be seen [here](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/)
+
+For this solution, we will choose the [Contour](https://projectcontour.io) ingress controller (in fact it is not just an ingress controller but a HTTP proxy). It is based on the [Envoy proxy](https://www.envoyproxy.io/)
+
+
+Usually, the installation procedure is extremely simple. It is a matter of executing a single command (**skip this**)
+
+```bash
+kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
+```
+
+Instead, as we are working with on-premises cluster, we will download the manifest first
+
+```bash
+wget https://projectcontour.io/quickstart/contour.yaml
+```
+
+Then, open it and navigate to row **4944** (this should be start of the **envoy** service definition)
+
+There, change the following:
+-	Row **4958**, from ```externalTrafficPolicy: Local``` to ```externalTrafficPolicy: Cluster```
+-	Row **4970**, from ```type: LoadBalancer``` to ```type: NodePort```
+
+Save and close the file. Deploy it with
+
+```bash
+kubectl apply -f contour.yaml
+```
+
+After a while, we can check the status of the deployed pods and services with
+
+```bash
+kubectl get pods,svc -n projectcontour -o wide
+```
+
+Next, if we have more than one ingress controller, we must create a class. Prepare a contour-class.yaml manifest with the following content
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: contour
+spec:
+  controller: projectcontour.io/projectcontour/contour
+```
+
+And then deploy it with
+
+```bash
+kubectl apply -f contour-class.yaml
+```
+
+As we will see in a while, Contour provides more than just an ingress controller. Then, reuse the following manifests.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+  labels:
+    app: pod1
+spec:
+  containers:
+  - image: shekeriev/k8s-environ
+    name: main
+    env:
+    - name: TOPOLOGY
+      value: "POD1 -> SERVICE1"
+    - name: FOCUSON
+      value: "TOPOLOGY"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service1
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    app: pod1  
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+  labels:
+    app: pod2
+spec:
+  containers:
+  - image: shekeriev/k8s-environ
+    name: main
+    env:
+    - name: TOPOLOGY
+      value: "POD2 -> SERVICE2"
+    - name: FOCUSON
+      value: "TOPOLOGY"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service2
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    app: pod2
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: podd
+  labels:
+    app: podd
+spec:
+  containers:
+  - image: shekeriev/k8s-environ
+    name: main
+    env:
+    - name: TOPOLOGY
+      value: "PODd -> SERVICEd (default backend)"
+    - name: FOCUSON
+      value: "TOPOLOGY"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: serviced
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    app: podd
+```
+
+And deploy them
+
+```bash
+kubectl apply -f pod-svc.yaml
+```
+
+Finally, prepare ingress manifest
+
+```yaml
+apiVersion: networking.k8s.io/v1
+apiVersion: projectcontour.io/v1
+kind: HTTPProxy
+metadata:
+  name: contour-proxy
+spec:
+  ingressClassName: contour
+  virtualhost:
+    fqdn: demo.lab
+  routes:
+    - conditions:
+      - prefix: /service1
+      services:
+        - name: service1
+          port: 80
+      pathRewritePolicy:
+        replacePrefix:
+        - prefix: /service1
+          replacement: /
+    - conditions:
+      - prefix: /service2
+      services:
+        - name: service2
+          port: 80
+      pathRewritePolicy:
+        replacePrefix:
+        - prefix: /service2
+          replacement: /
+```
+
+Deploy it with 
+
+```yaml
+kubectl apply -f contour.yaml
+```
+
+And check the resulting object with
+
+```bash
+kubectl describe httpproxy
+```
+
+Get http-port by. And copying the appropriate value for the envoy service.
+
+```bash
+kubectl get svc -n projectcontour
+```
+
+Then, we can open a browser tab and navigate to
+-	Service 1 – ```http://<cluster-ip>:<http-port>/service1```
+-	Service 2 – ```http://<cluster-ip>:<http-port>/service2```
+The ```<cluster-ip>``` can be either of control plane node or worker node address
+The ```<http-port>``` from previous command
