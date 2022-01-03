@@ -729,10 +729,34 @@ Cclean up
 kubectl delete pod counter
 ```
 
-## Streaming Sidecar and Logging Agent
+## Node Level
+
+![image](https://user-images.githubusercontent.com/34960418/147955744-6567801a-c8ef-4594-8db8-9cae82cfd4ae.png)
+
+- Even though not an ideal solution it can do the job
+- We should pay attention to the following:
+  - When a container is restarted, the kubelet keeps one terminated container with its logs
+  - If a pod is evicted, all corresponding containers and their logs are deleted
+  - We should set log rotation to do some housekeeping
+  - Different container runtimes may have different requirements and capabilities
+  - Not all system components are the same, so do their logs
+  - Service based components log via systemd routines
+  - Container based components use files in /var/log
+
+
+## Node Logging Agent
+
+![image](https://user-images.githubusercontent.com/34960418/147955944-05d5bf87-6df9-4885-a9e6-2ab3acceff83.png)
+
+- This is considered cluster-level logging approach
+- For this, we deploy a node logging agent on each node
+- Typically, the logging agent is containerized and deployed via DaemonSet
+- The agent exposes the logs and pushes them to a backend
+
+
+## Streaming Sidecar
 
 ![image](https://user-images.githubusercontent.com/34960418/147954969-32844bf1-7cf7-4459-bcbb-2f463b34da62.png)
-
 
 - This is considered cluster-level logging approach
 - The sidecar container is publishing the log to its **stdout/stderr** and thus making it available for the **kubectl log** command.
@@ -740,18 +764,9 @@ kubectl delete pod counter
 - Used to overcome limitations like separating multiple logs.
 - We can have more than one sidecar container.
 
+By having your sidecar containers write to their own **stdout** and **stderr** streams, you can take advantage of the kubelet and the logging agent that already run on each node. The sidecar containers read logs from a file, a socket, or journald. Each sidecar container prints a log to its own **stdout** or **stderr** stream.
 
-
-
-
-
-
-
-
-
-##### Streaming Sidecar
-
-One application container with two different log files and two streaming sidecar containers – one for each log file
+This approach allows you to separate several log streams from different parts of your application, some of which can lack support for writing to **stdout** or **stderr**. The logic behind redirecting logs is minimal, so it's not a significant overhead. Additionally, because **stdout** and **stderr** are handled by the kubelet, you can use built-in tools like **kubectl logs**.
 
 ```yaml
 apiVersion: v1
@@ -794,3 +809,33 @@ spec:
   - name: varlog
     emptyDir: {}
 ```
+
+Send it to the cluster and check if started
+
+```bash
+kubectl get pods
+```
+
+Then, after a while, ask for the contents of each of the two files
+
+```bash
+kubectl exec counter -c main -- cat /var/log/1.log
+kubectl exec counter -c main -- cat /var/log/2.log
+```
+
+Now, we can see them using the ```kubectl log``` command and the appropriate sidecar container
+
+```bash
+kubectl logs counter -c sidecar-1
+kubectl logs counter -c sidecar-2
+```
+
+In the same manner each sidecar container may stream the logs to an external solution.
+
+
+
+
+
+
+
+
