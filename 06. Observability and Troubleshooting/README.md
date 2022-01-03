@@ -863,7 +863,7 @@ Not always everything is going according to plan and things break. The process o
 - Then, we must check the logs of the system components on the control plane and the workers
 - Keep in mind that depending on how a component is deployed (native service or container) the logs may be in different places
 
-## Application Troubleshooting ![image](https://user-images.githubusercontent.com/34960418/147957386-12706094-2aa1-4d65-aaee-0c08cc321437.png)
+## Application Troubleshooting
 
 - First, we should define where exactly is the problem
 - Is it the service
