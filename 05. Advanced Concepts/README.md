@@ -711,9 +711,13 @@ Types
 - ![image](https://user-images.githubusercontent.com/34960418/145839272-6393f239-c9b7-450e-b682-810d22130dbf.png)
 - TLS
 
-#### IngressClass
+## Ingress Controllers
 
-Ingress Controllers must be annotated with the appropriate Ingress Class. [image]
+- **Ingress controller**s are **not started automatically** with a cluster.
+- Kubernetes as a project supports and maintains **AWS**, **GCE**, and **nginx** ingress controllers.
+- Some of the others include **HAProxy**, **Istio**, **Contour**, etc.
+- We may deploy **any number of ingress controllers** within a cluster.
+- Ingress Controllers must be annotated with the appropriate **Ingress Class**.
 
 ![image](https://user-images.githubusercontent.com/34960418/145843008-8d64c7c6-d6e5-4805-a701-440fe24795b4.png)
 
