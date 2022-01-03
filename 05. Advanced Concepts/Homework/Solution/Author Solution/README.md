@@ -235,3 +235,19 @@ Apply fanout ingress plus all services and pods
 ```bash
 kubectl apply -f solution.yaml
 ```
+
+Check that the ingress resource was deployed correctly
+
+```bash
+kubectl describe ingress
+```
+
+Check the node port that we should use
+
+```bash
+kubectl get svc -n nginx-ingress
+```
+
+And then open a browser tab and navigate to. ```https://demo.lab:<https-node-port>/service1```, ```https://demo.lab:<https-node-port>/service2```, ```https://demo.lab:<https-node-port>```. The HTTPS node port above is the one to which the 443 port is redirected. You should accept the warning for the security risk (using a self-signed certificate).
+
+
