@@ -705,9 +705,9 @@ spec:
 
 Types
 - Single service (default backend)
-- Fanout
+- [Fanout](https://kubernetes.io/docs/concepts/services-networking/ingress/#simple-fanout)
 ![image](https://user-images.githubusercontent.com/34960418/145839121-8dff2f25-ac48-4f65-98d8-f3793cad7b7c.png)
-- Name based virtual hosting
+- [Name based virtual hosting](https://kubernetes.io/docs/concepts/services-networking/ingress/#name-based-virtual-hosting)
 - ![image](https://user-images.githubusercontent.com/34960418/145839272-6393f239-c9b7-450e-b682-810d22130dbf.png)
 - TLS
 
