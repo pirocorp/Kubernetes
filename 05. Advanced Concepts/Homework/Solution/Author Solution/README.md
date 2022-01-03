@@ -198,6 +198,7 @@ metadata:
   annotations:
     nginx.org/rewrites: "serviceName=service1 rewrite=/;serviceName=service2 rewrite=/"
 spec:
+  # TLS Configuration
   tls:
   - hosts:
     - demo.lab
