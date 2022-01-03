@@ -517,7 +517,7 @@ Clean up and then check another sample policy. Stop and remove the pod
 kubectl delete pod logtest1
 ```
 
-New Policy
+New Policy. Then, copy it to the control plane node (folder ```/var/lib/k8s-audit```)
 
 ```yaml
 apiVersion: audit.k8s.io/v1 # This is required.
@@ -589,32 +589,6 @@ rules:
     omitStages:
       - "RequestReceived"
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-###### Simple Audit Policy
-
-```yaml
-# Log all requests at the Metadata level.
-apiVersion: audit.k8s.io/v1
-kind: Policy
-rules:
-- level: Metadata
-```
-
-###### Audit Policy
 
 Change kube-apiserver manifest ```/etc/kubernetes/manifests/kube-apiserver.yaml```
 
@@ -641,82 +615,56 @@ Change parameters in ```kube-apiserver``` in section ```containers```
   - --audit-policy-file=/var/lib/k8s-audit/2-audit.yaml
 ```
 
-```yaml
-apiVersion: audit.k8s.io/v1 # This is required.
-kind: Policy
-# Don't generate audit events for all requests in RequestReceived stage.
-omitStages:
-  - "RequestReceived"
-rules:
-  # Log pod changes at RequestResponse level
-  - level: RequestResponse
-    resources:
-    - group: ""
-      # Resource "pods" doesn't match requests to any subresource of pods,
-      # which is consistent with the RBAC policy.
-      resources: ["pods"]
-  # Log "pods/log", "pods/status" at Metadata level
-  - level: Metadata
-    resources:
-    - group: ""
-      resources: ["pods/log", "pods/status"]
+Save and close the file. Sit back and watch when the API Server will restart
 
-  # Don't log requests to a configmap called "controller-leader"
-  - level: None
-    resources:
-    - group: ""
-      resources: ["configmaps"]
-      resourceNames: ["controller-leader"]
-
-  # Don't log watch requests by the "system:kube-proxy" on endpoints or services
-  - level: None
-    users: ["system:kube-proxy"]
-    verbs: ["watch"]
-    resources:
-    - group: "" # core API group
-      resources: ["endpoints", "services"]
-
-  # Don't log authenticated requests to certain non-resource URL paths.
-  - level: None
-    userGroups: ["system:authenticated"]
-    nonResourceURLs:
-    - "/api*" # Wildcard matching.
-    - "/version"
-
-  # Log the request body of configmap changes in kube-system.
-  - level: Request
-    resources:
-    - group: "" # core API group
-      resources: ["configmaps"]
-    # This rule only applies to resources in the "kube-system" namespace.
-    # The empty string "" can be used to select non-namespaced resources.
-    namespaces: ["kube-system"]
-
-  # Log configmap and secret changes in all other namespaces at the Metadata level.
-  - level: Metadata
-    resources:
-    - group: "" # core API group
-      resources: ["secrets", "configmaps"]
-
-  # Log all other resources in core and extensions at the Request level.
-  - level: Request
-    resources:
-    - group: "" # core API group
-    - group: "extensions" # Version of group should NOT be included.
-
-  # A catch-all rule to log all other requests at the Metadata level.
-  - level: Metadata
-    # Long-running requests like watches that fall under this rule will not
-    # generate an audit event in RequestReceived.
-    omitStages:
-      - "RequestReceived"
+```bash
+kubectl get pods -n kube-system -w
 ```
 
-#### Logging
+Once everything is up and running, let’s create a pod and see what happens. Start it with
 
-Logs help us understand what is happening in our applications and cluster. They are used for debugging problems and monitoring activity. Most applications use logging either on the stdout/stderr or in a file. Container engines/runtimes even though providing logging capabilities are usually not enough. We need to access the logs even if and after a container or node crashes. Thus, we need a cluster-level logging solution that will store logs elsewhere and they will have different lifecycle compared to the resources or nodes in the cluster.
+```bash
+kubectl run logtest2 --image=alpine -- sleep 1d
+```
 
-##### Basic Logging
+Now, check if the pod is running 
+
+```bash
+kubectl get pods
+```
+
+And then check the audit log
+
+```bash
+cat /var/log/k8s-audit/audit.log | grep logtest2 | jq
+```
+
+Check how many records are there.
+
+```bash
+cat /var/log/k8s-audit/audit.log | grep logtest2 | jq -s length
+```
+
+Clean up
+
+```bash
+kubectl delete pod logtest2
+```
+
+Change the configuration (```/etc/kubernetes/manifests/kube-apiserver.yaml```) of the API Server. And remove those blocks that we added earlier. Save and close the file.
+
+
+# [Logging](https://kubernetes.io/docs/concepts/cluster-administration/logging/)
+
+Logs help us understand what is happening in our applications and cluster. They are used for debugging problems and monitoring activity. Most applications use logging either on the **stdout/stderr** or in a **file**. Container engines/runtimes even though providing logging capabilities are usually not enough. We need to access the logs even if and after a container or node crashes. Thus, we need a **cluster-level logging** solution that will store logs elsewhere and they will have different lifecycle compared to the resources or nodes in the cluster.
+
+Application logs can help you understand what is happening inside your application. The logs are particularly useful for debugging problems and monitoring cluster activity. Most modern applications have some kind of logging mechanism. Likewise, container engines are designed to support logging. The easiest and most adopted logging method for containerized applications is writing to standard output and standard error streams.
+
+However, the native functionality provided by a container engine or runtime is usually not enough for a complete logging solution. For example, you may want access your application's logs if a container crashes; a pod gets evicted; or a node dies. In a cluster, logs should have a separate storage and lifecycle independent of nodes, pods, or containers. This concept is called cluster-level logging.
+
+Cluster-level logging architectures require a separate backend to store, analyze, and query logs. Kubernetes does not provide a native storage solution for log data. Instead, there are many logging solutions that integrate with Kubernetes. 
+
+## Basic Logging
 
 The most basic form of logging is for containers to emit messages on their **stdout/stderr**
 
@@ -732,6 +680,74 @@ spec:
     args: [/bin/sh, -c,
             'i=0; while true; do echo "$i: $(date)"; i=$((i+1)); if [ -f /stop.file ]; then exit; fi; sleep 5; done']
 ```
+
+This pod has one container which publishes a message every five seconds on its **stdout**. Start the pod.
+
+```bash
+kubectl apply -f basic-logging.yaml
+```
+
+Now check its logs with
+
+```bash
+kubectl logs counter
+```
+
+We can use the above command in follow mode as well
+
+```bash
+kubectl logs counter --follow
+```
+
+Press **Ctrl+C** to stop following. Ask for the logs again.
+
+```bash
+kubectl logs counter
+```
+
+Now, restart the container
+
+```bash
+kubectl exec counter -- touch /stop.file
+```
+
+And check again for the logs. This will return the logs of the current instance
+
+```bash
+kubectl logs counter
+```
+
+And now for the previous
+
+```bash
+kubectl logs counter --previous
+```
+
+Cclean up
+
+```bash
+kubectl delete pod counter
+```
+
+## Streaming Sidecar and Logging Agent
+
+![image](https://user-images.githubusercontent.com/34960418/147954969-32844bf1-7cf7-4459-bcbb-2f463b34da62.png)
+
+
+- This is considered cluster-level logging approach
+- The sidecar container is publishing the log to its **stdout/stderr** and thus making it available for the **kubectl log** command.
+- The sidecar container runs a logging agent, which is configured to pick up logs from an application container.
+- Used to overcome limitations like separating multiple logs.
+- We can have more than one sidecar container.
+
+
+
+
+
+
+
+
+
 
 ##### Streaming Sidecar
 
