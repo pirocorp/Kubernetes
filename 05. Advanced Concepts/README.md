@@ -886,19 +886,6 @@ kubectl get ingressclass
 
 Successfully installed and HAProxy ingress controller.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Single service
 
 ![image](https://user-images.githubusercontent.com/34960418/145848801-a6b3828a-adb0-44df-b870-df6daea0e797.png)
@@ -929,10 +916,8 @@ spec:
   - port: 80
     protocol: TCP
   selector:
-    app: pod1
-    
----
- 
+    app: pod1    
+--- 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -953,10 +938,44 @@ spec:
             name: service1
             port:
               number: 80
-
 ```
 
-#### Custom Path (Single service)
+Sent it to the cluster
+
+```bash
+kubectl apply -f nginx-single.yaml
+```
+
+Then can check if the resource is ready
+
+```bash
+kubectl get ingress
+```
+
+And why not, describe it with
+
+```bash
+kubectl describe ingress ingress-ctrl
+```
+
+Get the NodePort of the ingress service
+
+```bash
+kubectl get svc nginx-ingress -n nginx-ingress
+```
+
+For the HAProxy, you must execute
+
+```bash
+kubectl get svc haproxy-ingress -n haproxy-controller
+```
+
+*Please note that you should have a record in your **hosts file** that matches **demo.lab** to the **IP address of the control plane node**.*
+
+Open a browser tab and navigate to ```http://demo.lab:<node-port>```.
+
+
+## Custom Path (Single service)
 
 ![image](https://user-images.githubusercontent.com/34960418/145851656-f5f23898-07c9-41b9-8667-b6090074d223.png)
 
@@ -976,7 +995,7 @@ spec:
   - host: demo.lab
     http:
       paths:
-        # All request to demo.lab/service1 will be redirected to service1, port 80
+        # All request to demo.lab/service1 will be redirected to service1  port 80
       - path: /service1
         pathType: Prefix
         backend:
@@ -986,7 +1005,22 @@ spec:
               number: 80
 ```
 
-#### Default Backend (Single service)
+Send it to the cluster. It will overwrite the existing ingress controller.
+  
+```bash
+kubectl apply -f nginx-custom-path.yaml
+```
+  
+Check how it was changed.
+
+```bash
+kubectl describe ingress ingress-ctrl
+```
+
+Open a browser tab and navigate to ```http://demo.lab:<node-port>/service1```
+
+
+## Default Backend (Single service)
 
 ```yaml
 apiVersion: v1
@@ -1004,7 +1038,6 @@ spec:
       value: "PODd -> SERVICEd (default backend)"
     - name: FOCUSON
       value: "TOPOLOGY"
-
 ---
 apiVersion: v1
 kind: Service
@@ -1015,10 +1048,8 @@ spec:
   - port: 80
     protocol: TCP
   selector:
-    app: podd
-    
+    app: podd    
 ---
-
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -1047,7 +1078,22 @@ spec:
               number: 80
 ```
 
-#### Fanout
+Send it to the cluster (it will overwrite the existing one)
+
+```bash
+kubectl apply -f nginx-default-back.yaml
+```
+
+And then check how the ingress controller changed. Note the **Default backend** section and the **Rules** section. 
+
+```bash
+kubectl describe ingress ingress-ctrl
+```
+
+Open a browser tab and navigate to ```http://demo.lab:<node-port>```. It is working and showing different output. Check the previous URL - ```http://demo.lab:<node-port>/service1```. Also working.
+
+
+## Fanout
 
 ```yaml
 apiVersion: v1
@@ -1110,7 +1156,22 @@ spec:
               number: 80
 ```
 
-#### Name based virtual hosting
+Send it to cluster.
+
+```bash
+kubectl apply -f nginx-fan-out.yaml
+```
+
+Once sent to the cluster, check how the ingress controller has changed. Pay attention to the **Rules** section
+
+```bash
+kubectl describe ingress ingress-ctrl
+```
+
+Now, test all three **URLs**. Open a browser tab and navigate to ```http://demo.lab:<node-port>```. Now, check the **service1 URL** - ```http://demo.lab:<node-port>/service1```. And finally, check the service2 URL - ```http://demo.lab:<node-port>/service2```. All three are working.
+
+
+## Name based virtual hosting
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -1140,4 +1201,58 @@ spec:
             name: service2
             port:
               number: 80
+```
+
+Send it to the cluster.
+
+```bash
+kubectl apply -f nginx-name-vhost.yaml
+```
+
+Check how the ingress controller has changed. Pay attention to the **Rules** section.
+
+```bash
+kubectl describe ingress ingress-ctrl
+```
+
+Before testing, make sure that you have records for both ```demo.lab``` and ```awesome.lab``` in your hosts file. Then, open a browser and navigate to ```http://demo.lab:<node-port>```. It should work and show the contents of **service1**. Now, open another browser tab and navigate to ```http://awesome.lab:<node-port>```. It should work also and show the contents of ***service2***.
+
+
+## Clean Up
+
+Clean up ingress, pods and services
+
+```bash
+kubectl delete pods podd pod1 pod2
+kubectl delete svc serviced service1 service2
+kubectl delete ingress ingress-ctrl
+```
+
+### NGINX
+
+Delete the whole namespace
+
+```bash
+kubectl delete namespace nginx-ingress
+```
+
+Then the cluster role and cluster role binding
+
+```bash
+kubectl delete clusterrolebinding nginx-ingress
+kubectl delete clusterrole nginx-ingress
+```
+
+And finally, all custom resource definitions. Navigate back to the cloned repository and execute
+
+```bash
+kubectl delete -f common/crds/
+```
+
+### HAProxy
+
+Delete everything at once 
+
+```bash
+kubectl delete -f https://raw.githubusercontent.com/haproxytech/kubernetes-ingress/master/deploy/haproxy-ingress.yaml
 ```
