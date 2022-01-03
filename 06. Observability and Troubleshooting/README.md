@@ -28,38 +28,9 @@ Each probe type can use either **Exec**, **HTTP**, or **TCP** method
 - The **restart policy** is defined on **pod level** and applicable to **all containers** in the pod.
 - If no liveness probe is provided it is considered as if it was there and the return status is **Success**.
 
+The kubelet uses liveness probes to know when to restart a container. For example, liveness probes could catch a deadlock, where an application is running, but unable to make progress. Restarting a container in such a state can help to make the application more available despite bugs.
 
-## Readiness Probes
-
-- Indicate whether a container is **ready to respond to requests**.
-- If it **fails**, then the **endpoints controller removes** the **pod’s IP address** from the **endpoints** of **all services** that match the pod.
-- A pod is considered ready when all its containers are ready.
-- The default state, before the initial delay is Failure.
-- If no readiness probe is provided it is considered as if it was there and the return status is **Success**.
-
-
-
-# Startup Probes (startupProbe)
-
-- Indicate whether the application in the container is **started**.
-- If it fails, then **kubelet** kills the container.
-- After that, the container is **subject** to the **restart policy**.
-- All **other probes** are **disabled** if a startup probe is present **until it succeeds**.
-- If no startup probe is provided it is considered as if it was there and the return status is **Success**.
-
-
-
-
-
-# Manifest files explanations (YAML)
-
-## Part 1
-
-### Liveness Probes
-
-Indicate whether a container is running. If it fails, then kubelet kills the container. After that, the container is subject to the restart policy. It can be: Always, OnFailure, and Never. The default is Always. The restart policy is defined on pod level and applicable to all containers in the pod. If no liveness probe is provided, it is considered as if it was there and the return status is Success.
-
-#### Exec Probe
+### Exec Liveness Probe
 
 Exec is used to exec a specified command inside the container. If the return code is 0 is considered successful.
 
@@ -90,7 +61,7 @@ spec:
       periodSeconds: 10
 ```
 
-#### HTTP Probe
+### HTTP Liveness Probe
 
 HTTP makes a GET request against the pod’s IP address on a specified port and path. It is considered successful if the status code is between 200 and 399
 
@@ -119,11 +90,17 @@ spec:
       periodSeconds: 3
 ```
 
-### Readiness Probes
+## Readiness Probes
 
-Indicate whether a container is ready to respond to requests. If it fails, then the endpoints controller removes the pod’s IP address from the endpoints of all services that match the pod. A pod is considered ready when all its containers are ready. The default state, before the initial delay is Failure. If no readiness probe is provided it is considered as if it was there and the return status is Success.
+- Indicate whether a container is **ready to respond to requests**.
+- If it **fails**, then the **endpoints controller removes** the **pod’s IP address** from the **endpoints** of **all services** that match the pod.
+- A pod is considered ready when all its containers are ready.
+- The default state, before the initial delay is Failure.
+- If no readiness probe is provided it is considered as if it was there and the return status is **Success**.
 
-#### Exec Probe
+The kubelet uses readiness probes to know when a container is ready to start accepting traffic. A Pod is considered ready when all of its containers are ready. One use of this signal is to control which Pods are used as backends for Services. When a Pod is not ready, it is removed from Service load balancers.
+
+### Exec Readiness Probe
 
 Exec is used to exec a specified command inside the container. If the return code is 0 is considered successful.
 
@@ -209,7 +186,7 @@ spec:
     app: readiness-cmd
 ```
 
-#### HTTP Probe
+### HTTP Readiness Probe
 
 HTTP makes a GET request against the pod’s IP address on a specified port and path. It is considered successful if the status code is between 200 and 399
 
@@ -286,11 +263,17 @@ spec:
     app: readiness-cmd
 ```
 
-### Startup Probes
+## Startup Probes (startupProbe)
 
-Indicate whether the application in the container is started. If it fails, then kubelet kills the container. After that, the container is subject to the restart policy. All other probes are disabled if a startup probe is present until it succeeds. If no startup probe is provided it is considered as if it was there and the return status is Success.
+- Indicate whether the application in the container is **started**.
+- If it fails, then **kubelet** kills the container.
+- After that, the container is **subject** to the **restart policy**.
+- All **other probes** are **disabled** if a startup probe is present **until it succeeds**.
+- If no startup probe is provided it is considered as if it was there and the return status is **Success**.
 
-#### Exec Probe
+The kubelet uses startup probes to know when a container application has started. If such a probe is configured, it disables liveness and readiness checks until it succeeds, making sure those probes don't interfere with the application startup. This can be used to adopt liveness checks on slow starting containers, avoiding them getting killed by the kubelet before they are up and running.
+
+### Exec Startup Probe
 
 Exec is used to exec a specified command inside the container. If the return code is 0 is considered successful.
 
@@ -325,8 +308,7 @@ spec:
       periodSeconds: 5
 ```
 
-
-#### Mixed Probe
+### Mixed Startup Probe
 
 HTTP makes a GET request against the pod’s IP address on a specified port and path. It is considered successful if the status code is between 200 and 399
 
@@ -409,6 +391,10 @@ spec:
   selector:
     app: startup-mixed
 ```
+
+
+# Manifest files explanations (YAML)
+
 
 ## Part 2
 
