@@ -19,12 +19,33 @@ Each probe type can use either **Exec**, **HTTP**, or **TCP** method
 - **failureThreshold** sets the number of times for Kubernetes to try failing probe before giving up (for **liveness – restart**, for **readiness – unready**). Defaults to **3** with **minimal value** of **1**.
 
 
+## Liveness Probes 
+
+- Indicate whether a **container is running**.
+- If it fails, then **kubelet** kills the container.
+- After that, the container is **subject** to the **restart policy**.
+- It can be **Always**, **OnFailure**, and **Never**. The default is **Always**.
+- The **restart policy** is defined on **pod level** and applicable to **all containers** in the pod.
+- If no liveness probe is provided it is considered as if it was there and the return status is **Success**.
+
+
+## Readiness Probes
+
+- Indicate whether a container is **ready to respond to requests**.
+- If it **fails**, then the **endpoints controller removes** the **pod’s IP address** from the **endpoints** of **all services** that match the pod.
+- A pod is considered ready when all its containers are ready.
+- The default state, before the initial delay is Failure.
+- If no readiness probe is provided it is considered as if it was there and the return status is **Success**.
 
 
 
+# Startup Probes (startupProbe)
 
-
-
+- Indicate whether the application in the container is **started**.
+- If it fails, then **kubelet** kills the container.
+- After that, the container is **subject** to the **restart policy**.
+- All **other probes** are **disabled** if a startup probe is present **until it succeeds**.
+- If no startup probe is provided it is considered as if it was there and the return status is **Success**.
 
 
 
