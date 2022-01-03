@@ -699,23 +699,9 @@ spec:
             image: shekeriev/sleeper
 ```
 
+# [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) and [Ingress Controllers](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Ingress and Ingress Controllers
-
-Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource. We must have an Ingress controller to satisfy the Ingress
+**Ingress** exposes **HTTP** and **HTTPS** routes from outside the cluster to services within the cluster. **Traffic routing** is controlled by **rules** defined on the Ingress resource. We must have an **Ingress controller** to satisfy the Ingress.
 
 Types
 - Single service (default backend)
