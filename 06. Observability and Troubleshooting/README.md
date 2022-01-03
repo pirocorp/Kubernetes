@@ -729,7 +729,7 @@ Cclean up
 kubectl delete pod counter
 ```
 
-## Node Level
+## [Node Level](https://kubernetes.io/docs/concepts/cluster-administration/logging/#logging-at-the-node-level)
 
 ![image](https://user-images.githubusercontent.com/34960418/147955744-6567801a-c8ef-4594-8db8-9cae82cfd4ae.png)
 
@@ -744,7 +744,7 @@ kubectl delete pod counter
   - Container based components use files in /var/log
 
 
-## Node Logging Agent
+## [Node Logging Agent](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent)
 
 ![image](https://user-images.githubusercontent.com/34960418/147955944-05d5bf87-6df9-4885-a9e6-2ab3acceff83.png)
 
@@ -754,7 +754,7 @@ kubectl delete pod counter
 - The agent exposes the logs and pushes them to a backend
 
 
-## Streaming Sidecar
+## [Streaming Sidecar and Logging Agent](https://kubernetes.io/docs/concepts/cluster-administration/logging/#streaming-sidecar-container)
 
 ![image](https://user-images.githubusercontent.com/34960418/147954969-32844bf1-7cf7-4459-bcbb-2f463b34da62.png)
 
@@ -832,10 +832,22 @@ kubectl logs counter -c sidecar-2
 
 In the same manner each sidecar container may stream the logs to an external solution.
 
+### [Sidecar with Logging Agent](https://kubernetes.io/docs/concepts/cluster-administration/logging/#sidecar-container-with-a-logging-agent)
+
+![image](https://user-images.githubusercontent.com/34960418/147956411-65b12505-f836-4d1b-a9c2-cdf01ff6762f.png)
+
+- This is considered cluster-level logging approach
+- Used when the node-level logging agent doesn’t agree well with the application
+- For this, we create a sidecar container with a logging agent that is especially configured and adjusted to the application’s needs
+- These logs are not consumable by the kubectl log command
 
 
+### [Exposed Directly from the Application](https://kubernetes.io/docs/concepts/cluster-administration/logging/#exposing-logs-directly-from-the-application)
+
+![image](https://user-images.githubusercontent.com/34960418/147956664-3a1a9130-43f1-4111-b5bb-c7401984ecc1.png)
 
 
-
-
+- This is considered cluster-level logging approach
+- Every application pushes its logs to a backend
+- Simple solution which requires every application to support the common backend which may not always be feasible
 
