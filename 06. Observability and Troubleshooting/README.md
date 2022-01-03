@@ -424,32 +424,25 @@ You can pass a file with the policy to **kube-apiserver** using the ```--audit-p
 
 Audit backends persist audit events to an external storage. Two backends are supported by default. **Log backend** writes events into the filesystem. Writes audit events to a file in **JSONlines** format. **Webhook backend** sends events to an external HTTP API. Both require kube-apiserver flags to be configured. Log backend requires two volumes and volume mounts too.
 
+## Example:
 
+Samples are either inspired and/or taken directly from [here](https://kubernetes.io/docs/tasks/debug-application-cluster/debug-application-introspection/)
 
+For this, create a simple audit policy. It will log all requests on metadata level. This will include information like when, who, what, etc. but not the request or the response body
 
+```yaml
+# Log all requests at the Metadata level.
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+- level: Metadata
+```
 
+Then, copy it to the control plane node. Create a folder ```/var/lib/k8s-audit``` and copy it there. 
 
+Next, prepare a folder to store the logs, create ```/var/log/k8s-audit```.
 
-
-
-
-
-# Manifest files explanations (YAML)
-
-
-## Part 2
-
-### Auditing and Logging
-
-#### Auditing
-
-Actions in the cluster are captured in chronological order. They can be initiated by the users, applications, or control plane. Answers who did what and when on what and what happened. Audit records begin their existence in the kube-apiserver. Each request on each stage of its execution generated an event. It is pre-processed according to the policy and send to a backend. Following stages are available **RequestReceived**, **ResponseStarted**, **ResponseComplete**, and **Panic**. Audit logging may increase the memory consumption.
-
-##### Audit Policy
-
-Defines the rules about what events should be captured and what data they should include. During processing, an event is compared against the list of rules in order. First match sets the audit level of the event. The available audit levels are None, Metadata, Request, and RequestResponse. A policy to be valid, should have at least one rule.
-
-The policy is configured in the kube-apiserver manifest ```/etc/kubernetes/manifests/kube-apiserver.yaml```
+Change the configuration (```/etc/kubernetes/manifests/kube-apiserver.yaml```) of the **API Server**
 
 In the ```volumes``` section add
 
@@ -481,6 +474,135 @@ Add parameters to the ```kube-apiserver``` in section ```containers```
   - --audit-policy-file=/var/lib/k8s-audit/1-audit-simple.yaml
   - --audit-log-path=/var/log/k8s-audit/audit.log
 ```
+
+Save and close the file this will give instructions to the API Server where it is and where to store the logs. Sit back and watch when the API Server will restart. It may return an error a few times, but it will start working eventually.
+
+```bash
+kubectl get pods -n kube-system -w
+```
+
+Once everything is up and running, let’s create a pod and see what happens. Start it with.
+
+```bash
+kubectl run logtest1 --image=alpine -- sleep 1d
+```
+
+Now, check if the pod is running 
+
+```bash
+kubectl get pods
+```
+
+And then check the audit log. Plenty of events for such a simple task. The output is not quite readable
+
+```bash
+cat /var/log/k8s-audit/audit.log | grep logtest1
+```
+
+Install utility like jq and use it to get a better look at what happened.
+
+```bash
+cat /var/log/k8s-audit/audit.log | grep logtest1 | jq
+```
+
+Still too much information but at least it is more readable. Check how many records we have with.
+
+```bash
+cat /var/log/k8s-audit/audit.log | grep logtest1 | jq -s length
+```
+
+Clean up and then check another sample policy. Stop and remove the pod
+
+```bash
+kubectl delete pod logtest1
+```
+
+New Policy
+
+```yaml
+apiVersion: audit.k8s.io/v1 # This is required.
+kind: Policy
+# Don't generate audit events for all requests in RequestReceived stage.
+omitStages:
+  - "RequestReceived"
+rules:
+  # Log pod changes at RequestResponse level
+  - level: RequestResponse
+    resources:
+    - group: ""
+      # Resource "pods" doesn't match requests to any subresource of pods,
+      # which is consistent with the RBAC policy.
+      resources: ["pods"]
+  # Log "pods/log", "pods/status" at Metadata level
+  - level: Metadata
+    resources:
+    - group: ""
+      resources: ["pods/log", "pods/status"]
+
+  # Don't log requests to a configmap called "controller-leader"
+  - level: None
+    resources:
+    - group: ""
+      resources: ["configmaps"]
+      resourceNames: ["controller-leader"]
+
+  # Don't log watch requests by the "system:kube-proxy" on endpoints or services
+  - level: None
+    users: ["system:kube-proxy"]
+    verbs: ["watch"]
+    resources:
+    - group: "" # core API group
+      resources: ["endpoints", "services"]
+
+  # Don't log authenticated requests to certain non-resource URL paths.
+  - level: None
+    userGroups: ["system:authenticated"]
+    nonResourceURLs:
+    - "/api*" # Wildcard matching.
+    - "/version"
+
+  # Log the request body of configmap changes in kube-system.
+  - level: Request
+    resources:
+    - group: "" # core API group
+      resources: ["configmaps"]
+    # This rule only applies to resources in the "kube-system" namespace.
+    # The empty string "" can be used to select non-namespaced resources.
+    namespaces: ["kube-system"]
+
+  # Log configmap and secret changes in all other namespaces at the Metadata level.
+  - level: Metadata
+    resources:
+    - group: "" # core API group
+      resources: ["secrets", "configmaps"]
+
+  # Log all other resources in core and extensions at the Request level.
+  - level: Request
+    resources:
+    - group: "" # core API group
+    - group: "extensions" # Version of group should NOT be included.
+
+  # A catch-all rule to log all other requests at the Metadata level.
+  - level: Metadata
+    # Long-running requests like watches that fall under this rule will not
+    # generate an audit event in RequestReceived.
+    omitStages:
+      - "RequestReceived"
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ###### Simple Audit Policy
 
