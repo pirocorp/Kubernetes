@@ -1,4 +1,4 @@
-# Health and Status Checks ([Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
+# Health and Status Checks ([Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/))
 
 Periodic checks executed by the **kubelet** against containers. Those checks are known as **probes**. They can be **liveness**, **readiness**, and **startup** probes. Their status can be either **Success**, **Failure**, or **Unknown**. Used for a better control over the container and pod lifecycle and better integration with other objects.
 
@@ -851,3 +851,41 @@ In the same manner each sidecar container may stream the logs to an external sol
 - Every application pushes its logs to a backend
 - Simple solution which requires every application to support the common backend which may not always be feasible
 
+
+# [Troubleshooting](https://kubernetes.io/docs/tasks/debug-application-cluster/troubleshooting/)
+
+Not always everything is going according to plan and things break. The process of troubleshooting in Kubernetes is not that much different from other complex platforms. Here, we have two distinct domains – **cluster** and **application**. We should always check first the release notes for our version. Once we narrowed down the cause, we should start applying the corrective measures one at a time until the issue is resolved.
+
+## Cluster Troubleshooting
+
+- Common reasons include node power state, network connectivity, software version misalignment, data loss, bad configuration, etc.
+- First, we should check if all nodes are there and operational
+- Then, we must check the logs of the system components on the control plane and the workers
+- Keep in mind that depending on how a component is deployed (native service or container) the logs may be in different places
+
+## Application Troubleshooting ![image](https://user-images.githubusercontent.com/34960418/147957386-12706094-2aa1-4d65-aaee-0c08cc321437.png)
+
+- First, we should define where exactly is the problem
+- Is it the service
+  - It is not reachable
+  - It is not returning what is expected
+- Or is it the workload object
+  - What level and type of object
+  - What is its state
+
+## Troubleshooting Pods
+
+- Start with describing the pod.
+- Check the state of all containers inside the pod.
+- If it is in **pending** state, then it cannot be scheduled on a node. Usually, this is because of **lack of resources**.
+- If it is in **waiting** state, then it is scheduled, but still cannot run. Usually, this is because of a **wrong** or **missing image**.
+- It is in **running** state but doesn’t behave as expected. Usually, this is because of a **manifest error**.
+
+## [Troubleshooting Services](https://kubernetes.io/docs/tasks/debug-application-cluster/debug-service/)
+
+- Does the service exist
+- Is it defined correctly
+- Are there any endpoints at all and how many
+- Are those pods working
+- Is the service reachable by DNS name and/or IP 
+- Is the kube-proxy working
