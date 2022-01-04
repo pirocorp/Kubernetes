@@ -23,4 +23,4 @@ spec:
       volumes:
       - name: html
         configMap:
-          name: webchart-cm
+          name: {{ .Release.Name }}-cm
