@@ -150,3 +150,42 @@ spec:
     protocol: TCP
     targetPort: 5000
 ```
+
+Now, test both variants
+
+```bash
+kustomize build out/overlays/production/
+kustomize build out/overlays/test/
+```
+
+Everything seems to be fine. We can start both variants with.
+
+```bash
+kubectl apply -k out/overlays/production/
+kubectl apply -k out/overlays/test/
+```
+
+We can check the resources that were created with
+
+```bash
+kubectl get all -n homework
+```
+
+Everything seems to be fine. Let’s check the details of the namespace
+
+```bash
+kubectl get ns homework --show-labels
+```
+
+Open two browser tabs and navigate to
+
+```bash
+-	http://<cluster-ip>:30001 for production
+-	http://<cluster-ip>:32002 for test
+```
+
+Clean Up
+
+```bash
+kubectl delete ns homework
+```
