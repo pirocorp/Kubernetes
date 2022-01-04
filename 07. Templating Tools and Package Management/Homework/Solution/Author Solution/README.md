@@ -179,10 +179,8 @@ kubectl get ns homework --show-labels
 
 Open two browser tabs and navigate to
 
-```bash
--	http://<cluster-ip>:30001 for production
--	http://<cluster-ip>:32002 for test
-```
+-	```http://<cluster-ip>:30001``` for production.
+-	```http://<cluster-ip>:32002``` for test.
 
 Clean Up
 
