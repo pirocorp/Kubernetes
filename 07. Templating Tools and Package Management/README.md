@@ -378,9 +378,9 @@ kubectl delete -k $OVERLAYS/production
 - Chart is organized as a collection of files inside of a directory
 - The directory name is the name of the chart without versioning information
 
+## Chart Directory Structure
 
-
-## 
+![image](https://user-images.githubusercontent.com/34960418/148059973-46ab0129-cb43-466d-aef2-e568d874d9ff.png)
 
 
 
