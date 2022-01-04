@@ -1,52 +1,9 @@
-# Manifest files explanations (YAML)
+# Manual Approach (using [sed](https://www.gnu.org/software/sed/manual/sed.html))
 
-## Part 1
+![image](https://user-images.githubusercontent.com/34960418/148054368-3da900a8-c995-4555-857a-581fc09e112a.png)
 
-### Using ```sed``` with parameterized manifests
 
-#### Example for converting standart manifest into parameterized.
-
-##### Standart Manifest
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: appa
-spec:
-  replicas: 1
-  selector:
-    matchLabels: 
-      app: appa
-  template:
-    metadata:
-      labels:
-        app: appa
-    spec:
-      containers:
-      - name: main
-        image: shekeriev/k8s-environ:latest
-        env:
-        - name: APPROACH
-          value: "STATIC"
-        - name: FOCUSON
-          value: "APPROACH"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: appa
-spec:
-  type: NodePort
-  ports:
-  - port: 80
-    nodePort: 30001
-    protocol: TCP
-  selector:
-    app: appa
-```
-
-##### Parameterized manifest
+Manifest with placeholders prepared for ```sed```.
 
 - The replicas value is parameterized
 - The image and tag are parameterized
@@ -59,7 +16,6 @@ kind: Deployment
 metadata:
   name: appa
 spec:
-  # replicas value is parameterized
   replicas: %replicas%
   selector:
     matchLabels: 
@@ -71,11 +27,9 @@ spec:
     spec:
       containers:
       - name: main
-        # The image and tag are parameterized
         image: %image%:%tag%
         env:
-        # The APPROACH environment variable is parameterized
-        - name: APPROACH          
+        - name: APPROACH
           value: "%approach%"
         - name: FOCUSON
           value: "APPROACH"
@@ -88,28 +42,98 @@ spec:
   type: NodePort
   ports:
   - port: 80
-    # The NodePort is parameterized
     nodePort: %nodeport%
     protocol: TCP
   selector:
     app: appa
 ```
 
-##### Using ```sed``` with parameterized manifests
-
-To send it to file
+If send it as it is to the cluster, will see that it will result in error as it is not valid. But having it prepared in this way, can change or adjust it on the fly. Can execute this command to change, for example the number of replicas
 
 ```bash
-sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%approach%/MANUAL/ ; s/%nodeport%/30001/' 2-appa.yaml > 3-appa.yaml
+sed s/%replicas%/3/ appa.yaml
 ```
 
-To send it to cluster
+
+This way, we set just one placeholder and saw the new version of the manifest. In order to set all of them, must either execute a sequence of commands (skip this)
 
 ```bash
-sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%approach%/MANUAL/ ; s/%nodeport%/30001/' 2-appa.yaml | kubectl apply -f -
+sed s/%replicas%/3/ 2-appa.yaml | sed s@%image%@shekeriev/k8s-environ@ | sed s/%tag%/latest/ | sed s/%approach%/MANUAL/ | sed s/%nodeport%/30001/
 ```
 
-### Using Kustomize with manifests
+Or execute an extended (this is one of the possible ways) command (use this)
+
+```bash
+sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%approach%/MANUAL/ ; s/%nodeport%/30001/' appa.yaml
+```
+
+Here (in either of two versions), there two things to notice. 
+
+First, we are replacing **the first occurrence** of a placeholder. Should we want to replace all, we must change the rules. For example, instead of this ```s/%nodeport%/30001/``` we should have this ```s/%nodeport%/30001/g```.
+
+Second, notice how is changed the separator in one of the rules. Was done because have the same character as part of the value that is using.
+
+
+We can either use the above command (either of its versions) to store the new version of the manifest (skip this for now)
+
+```bash
+sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%approach%/MANUAL/ ; s/%nodeport%/30001/' appa.yaml > new-appa.yaml
+```
+
+Or just send it to the cluster (use this approach)
+
+```bash
+sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/latest/ ; s/%approach%/MANUAL/ ; s/%nodeport%/30001/' appa.yaml | kubectl apply -f -
+```
+
+Open a browser tab and navigate to the following address ```http://<control-plane-ip>:30001```. It is working. 
+
+Now, let’s change the values of the placeholders with the following command.
+
+```bash
+sed 's/%replicas%/3/ ; s@%image%@shekeriev/k8s-environ@ ; s/%tag%/green/ ; s/%approach%/MANUAL/ ; s/%nodeport%/30001/' appa.yaml | kubectl apply -f -
+```
+
+Return to the browser tab and refresh. It is still working but looking a little bit different. So, this appears to be a valid approach of templating. There is one drawback though, we must submit values for all placeholders before we can use the manifest even if we want to change just one. 
+
+Clean Up 
+
+```bash
+kubectl delete deployment appa
+kubectl delete service appa
+```
+
+
+# [Kustomize](https://kustomize.io/)
+
+- Native Kubernetes configuration management
+- Template-free way to customize application configuration
+- Simplifies the use of off-the-shelf applications
+- Built into **kubectl** as **apply -k**
+
+![image](https://user-images.githubusercontent.com/34960418/148058002-cf97fa5c-7c09-4989-a322-d1fa52c03dc2.png)
+
+
+
+## Installing Kustomize
+
+Under any **Linux** distribution, we can download it (the latest version) with
+
+```bash
+curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+```
+
+For other versions or operating systems, should check [here](https://github.com/kubernetes-sigs/kustomize/releases).
+
+
+Once downloaded, we must make it executable and move it to a folder that is part of our executable path. We can check if the process went as expected by executing.
+
+```bash
+kustomize version
+```
+
+## Using Kustomize
+
 
 ![image](https://user-images.githubusercontent.com/34960418/147357972-a133c2f2-4542-4d50-be8a-d6a2f9c9f2f1.png)
 
