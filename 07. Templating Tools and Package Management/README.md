@@ -581,7 +581,7 @@ spec:
     app: appa
 ```
 
-#### Create helm chart
+### Create helm chart
 
 Chart directory structure
 
@@ -656,6 +656,12 @@ replicasCount: 1
 approachVar: "Helm Charts! :)"
 focusOnVar: "APPROACH"
 nodePort: 30001
+```
+
+Let’s test our newly created chart
+
+```bash
+helm show all <chart name>
 ```
 
 Install chart. In the above example chart name is appchart. Release name is user provided
