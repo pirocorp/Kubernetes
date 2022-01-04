@@ -195,6 +195,8 @@ Create a **Helm** chart  that spins a **NGINX**-based deployment with **3 replic
 
 ## Solution
 
-Create directory structure
+Create this directory structure.
+
+
 
 ![image](https://user-images.githubusercontent.com/34960418/148069783-80a078bc-1d48-4e53-9d36-dcce9b6b2b31.png)
