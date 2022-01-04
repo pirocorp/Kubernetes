@@ -45,4 +45,6 @@ spec:
 
 ## Solution:
 
-Create this directory structure![image](https://user-images.githubusercontent.com/34960418/148066995-f4edfb2c-f02a-4d5a-bbc0-b90a14b26bc9.png)
+Create this directory structure.
+
+![image](https://user-images.githubusercontent.com/34960418/148067138-9203fbb1-0dfa-42ec-8edf-eaf57c8de10c.png)
