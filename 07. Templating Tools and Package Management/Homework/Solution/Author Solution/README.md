@@ -187,3 +187,14 @@ Clean Up
 ```bash
 kubectl delete ns homework
 ```
+
+
+# Create a Helm chart 
+
+Create a **Helm** chart  that spins a **NGINX**-based deployment with **3 replicas** by default. It must mount a default **index.html** (with a **text** and a **picture**) page from a **ConfigMap**. The web server should be exposed via NodePort service on port 31000 by default. At least the **text of the default page, number of replicas**, and **service port** should be parametrized.
+
+## Solution
+
+Create directory structure
+
+![image](https://user-images.githubusercontent.com/34960418/148069783-80a078bc-1d48-4e53-9d36-dcce9b6b2b31.png)
