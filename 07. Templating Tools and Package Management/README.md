@@ -382,12 +382,164 @@ kubectl delete -k $OVERLAYS/production
 
 ![image](https://user-images.githubusercontent.com/34960418/148059973-46ab0129-cb43-466d-aef2-e568d874d9ff.png)
 
+## Helm Installation
+
+There are multiple ways to install Helm and perhaps the easiest one is by downloading the binary file. For any **64-bit** **Linux** distribution this can be done in the following way.
+
+```bash
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+```
+
+Latest version for other OSes can be downloaded from [here](https://github.com/helm/helm/releases/latest).
+Other options and further instructions can be found [here](https://v3.helm.sh/docs/intro/install/).
+
+Once, we have it installed, we can test if it is working by executing
+
+```bash
+helm version
+```
+
+## Register Repository
+
+Before can start working with charts, must register one or more repositories.
+
+The easiest way to find some, is to use the [ArtifactHub](https://artifacthub.io/).
+
+Enter **nginx** in the search box and press Enter. A list of **nginx** related charts will appear. The first one should be a one provided by **Bitnami**. Click on it (or visit this URL: https://artifacthub.io/packages/helm/bitnami/nginx). There, in the beginning, are the instructions on how to add the repository.
+
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+```
+
+Now, can list all locally registered repositories (it should be just this one)
+
+```bash
+helm repo list
+```
+
+To see where the information about the repository has been stored use
+
+```bash
+helm env
+```
+
+Let’s check what is behind the **HELM_REPOSITORY_CACHE** and **HELM_REPOSITORY_CONFIG** variables
+
+The first one (**HELM_REPOSITORY_CACHE**) points to a folder, where information (the packages they provide) about the registered repositories will be stored including the charts that we use
+
+The second one (**HELM_REPOSITORY_CONFIG**) points to a file which contains information about the registered repositories.
 
 
+## Install Chart From Repository
 
 
+Now, let’s install the chart that we wanted
 
-### Chart From Existing Manifest
+```bash
+helm install my-nginx-1 bitnami/nginx
+```
+
+We can notice two sets of information. The first one, right after our command, is a short information on what we deployed. The second one, contains detailed instructions on how to interact with what we deployed.
+
+
+Let’s see what we have so far. Our only chart (in fact a **release**, as it is deployed in the cluster) is shown
+
+```bash
+helm list
+```
+
+Get detailed information about the release with. Have seen this information already
+
+```bash
+helm status my-nginx-1
+```
+
+Let’s use the **kubectl** to check what we have
+
+```bash
+kubectl get pods,svc
+```
+
+One pod and a service which appears to be of type **LoadBalancer** by default. Is this all? We can check with
+
+```bash
+helm get manifest my-nginx-1
+```
+
+There is one more object – a **ConfigMap**. It is used to store some additional configuration for nginx. Let’s try this command. Way more than we saw earlier. Which of the options (**all**, **hooks**, **manifest**, **notes** or **values**) to use, depends on what we are looking for.
+
+```bash
+helm get all my-nginx-1
+```
+
+Let’s try to access the default web page of the **nginx** instance. Ask for the service first.
+
+```bash
+kubectl get service my-nginx-1
+```
+
+Open a browser tab and navigate to ```http://<control-plane-ip:port> ```. Okay, it is the default page.
+
+
+## Configure Chart From Repository
+
+Go to the chart’s [page](https://artifacthub.io/packages/helm/bitnami/nginx). Explore the **Parameters** section. Go to the **custom NGINX application parameters** sub-section. And more specially in the **staticSiteConfigmap**. We can use it to pass a custom index page to the nginx chart. Create a second nginx release but this time with a custom index page.
+
+First, create the configuration map with
+
+```bash
+kubectl create configmap my-nginx-2-index --from-literal=index.html='<h1>Hello from NGINX chart :)</h1>'
+```
+
+Check that it is there, and the content is as expected
+
+```bash
+kubectl get cm
+kubectl get cm my-nginx-2-index -o yaml
+```
+
+Sure, everything is just fine. Now, install the chart but this time execute this
+
+```bash
+helm install my-nginx-2 bitnami/nginx --set staticSiteConfigmap=my-nginx-2-index --dry-run
+```
+
+This will do as stated – a dry run and show to us what will be the outcome. It seems that everything is fine, so let’s re-execute the command but without the **--dry-run** option.
+
+```bash
+helm install my-nginx-2 bitnami/nginx --set staticSiteConfigmap=my-nginx-2-index
+```
+
+Check what we have by now with
+
+```bash
+helm list
+kubectl get pods,svc
+```
+
+Copy the service port and open a browser tab and navigate to ```http://<control-plane-ip:port>```. Our custom index page is there.
+
+## Clean Up Chart
+
+Remove the releases by executing
+
+```bash
+helm uninstall my-nginx-1 my-nginx-2
+```
+
+We can then check with
+
+```bash
+kubectl get pods,svc,cm
+```
+
+Most of the resources are gone, but configuration map is not. Because it was created separately and not as part of the chart. Remove it
+
+```bash
+kubectl delete cm my-nginx-2-index
+```
+
+## Create Chart from Manifest
 
 Original manifest
 
