@@ -134,12 +134,12 @@ kustomize version
 
 ## Using Kustomize
 
-
 ![image](https://user-images.githubusercontent.com/34960418/147357972-a133c2f2-4542-4d50-be8a-d6a2f9c9f2f1.png)
 
-#### Base Variant Kustomization
 
-Kustomization contains the base structure of our customizable application
+### Base Variant Kustomization
+
+Kustomization contains the base structure of our customizable application. Let’s create the base customization file (**base/kustomization.yaml**).
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -247,7 +247,7 @@ To delete it from cluster
 kustomize build $BASE | kubectl delete -f -
 ```
 
-#### Staging overlay
+### Staging overlay
 
 Kustomization
 
@@ -309,7 +309,7 @@ or
 kubectl delete -k $OVERLAYS/staging
 ```
 
-#### Production overlay
+### Production overlay
 
 Kustomization
 
@@ -355,7 +355,37 @@ Delete production variant
 kubectl delete -k $OVERLAYS/production
 ```
 
-## Part 2 (Helm)
+# [Helm](https://helm.sh/)
+
+- It is a **package manager** for Kubernetes.
+- Its packages are called **charts**.
+- Charts help us define, install, and upgrade complex applications.
+- They are easy to create, version, share, and publish.
+- Charts are **organized in repositories**.
+- Repositories may be accessed either **directly** or via a **hub**.
+- One such hub is the **ArtifactHUB** (https://artifacthub.io/).
+
+[Architecture](https://helm.sh/docs/topics/architecture/) - Two parts in one executable – client and library
+
+![image](https://user-images.githubusercontent.com/34960418/148059263-b2c0a6f3-15d0-40af-9dd3-21001aad6a31.png)
+
+[Charts](https://helm.sh/docs/topics/charts/)
+
+- Collection of files that describe a related set of Kubernetes resources
+- A single chart might be used to deploy something simple like a single pod with nginx, redis, etc.
+- Or a set of different resources. For example, a full web app stack with HTTP servers, databases, caches, and so on
+- They are created as a set of files with particular names and structure and then packaged into versioned archives
+- Chart is organized as a collection of files inside of a directory
+- The directory name is the name of the chart without versioning information
+
+
+
+## 
+
+
+
+
+
 
 ### Chart From Existing Manifest
 
