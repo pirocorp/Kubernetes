@@ -311,7 +311,7 @@ kubeadm join [IP]:6443 --token [TOKEN] --discovery-token-ca-cert-hash sha256:[HA
 Join the node to the cluster (yours may be different).
 
 ```bash
-kubeadm join 192.168.81.211:6443 --token 8qu2va.le6ndhtt9mdpbmow \
+kubeadm join 192.168.0.53:6443 --token 8qu2va.le6ndhtt9mdpbmow \
         --discovery-token-ca-cert-hash sha256:9d2642aeda7a1c210b26db639bbf0272e4bfa59b895904162b948c055cb39402
 ```
 
