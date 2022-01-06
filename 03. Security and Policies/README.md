@@ -433,7 +433,7 @@ spec:
     limits.memory: 2Gi
 ```
 
-# Network Policies
+# [Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
 
 Make sure that our cluster is using a **Network plugin** that supports **Network Policies**. Partial list of them can be found [here](https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/) (**Flannel** plugin does not support network policies).
 
