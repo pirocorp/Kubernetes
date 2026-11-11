@@ -16,6 +16,13 @@ dotnet build src/GlobexReviews/GlobexReviews.csproj -c Release
 work="$(mktemp -d)"
 api_pid="" model_pid=""
 cleanup() {
+  local status=$?
+  if test "$status" -ne 0; then
+    echo "--- C# API error log ---" >&2
+    tail -n 120 "$work/api.log" >&2 || true
+    echo "--- Inference fixture log ---" >&2
+    tail -n 120 "$work/model.log" >&2 || true
+  fi
   for pid in "$api_pid" "$model_pid"; do
     if test -n "$pid"; then kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; fi
   done
