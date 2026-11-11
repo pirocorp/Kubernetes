@@ -1,3 +1,10 @@
+# NOTE (2026): Recycle -> Retain (Recycle е остаряла/deprecated политика).
+# Преди (Recycle): автоматично изчистване на данните; PV може да се използва отново.
+# Сега (Retain): данните остават; при изтриване на PVC, PV става Released.
+# Запазваме данните, но повторното използване на PV изисква ръчно управление.
+# Важно: Retain влиза в действие едва когато съответният PVC бъде изтрит.
+# Сравнителна таблица Recycle vs Retain: виж README.md в тази директория.
+
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -10,7 +17,7 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
   mountOptions:
     - nfsvers=4.1
   nfs:
@@ -29,7 +36,7 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
   mountOptions:
     - nfsvers=4.1
   nfs:
@@ -48,7 +55,7 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
   mountOptions:
     - nfsvers=4.1
   nfs:
@@ -67,7 +74,7 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
   mountOptions:
     - nfsvers=4.1
   nfs:
