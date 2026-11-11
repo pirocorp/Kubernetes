@@ -185,10 +185,14 @@ API връща **HTTP 202** с `reviewId`, а publisher записва стру�
 │   ├── generate_reviews.py
 │   ├── init_env.py
 │   ├── check_external.py
+│   ├── check_grafana.py
+│   ├── verify_knative_callbacks.py
 │   └── mock_model.py
 ├── scripts/
 │   ├── verify-local.sh
-│   └── verify-kafka.sh
+│   ├── verify-kafka.sh
+│   ├── verify-model.sh
+│   └── verify-knative-callbacks.sh
 ├── openshift/
 │   ├── README.md
 │   ├── workload.yaml
