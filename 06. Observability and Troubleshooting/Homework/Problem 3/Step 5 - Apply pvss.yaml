@@ -1,3 +1,13 @@
+# NOTE (2026): Recycle is deprecated in Kubernetes. These four statically
+# provisioned NFS PersistentVolumes now use Retain instead.
+# With Retain, deleting a PVC leaves its PV in Released state and preserves the
+# underlying NFS data; the PV is NOT automatically wiped or reusable.
+# To reuse the storage, inspect and back up/clean the NFS contents as needed,
+# delete the Released PV object, then recreate the PV for a new claim.
+# For automated reclamation, consider an appropriate CSI/dynamic provisioner
+# and StorageClass rather than the deprecated built-in recycler.
+# Reference: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaiming
+
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -10,7 +20,7 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
   mountOptions:
     - nfsvers=4.1
   nfs:
@@ -29,7 +39,7 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
   mountOptions:
     - nfsvers=4.1
   nfs:
@@ -48,7 +58,7 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
   mountOptions:
     - nfsvers=4.1
   nfs:
@@ -67,7 +77,7 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
   mountOptions:
     - nfsvers=4.1
   nfs:
