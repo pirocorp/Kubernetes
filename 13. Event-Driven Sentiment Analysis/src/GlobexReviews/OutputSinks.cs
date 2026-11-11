@@ -58,7 +58,8 @@ public sealed class OutputSinks(IConfiguration config, IHttpClientFactory factor
         var org = config["INFLUX_ORG"] ?? throw new InvalidOperationException("INFLUX_ORG missing");
         var bucket = config["INFLUX_BUCKET"] ?? throw new InvalidOperationException("INFLUX_BUCKET missing");
 
-        // review_id tag offers idempotent retries in this SMALL synthetic data set.
+        // Stable review_id tag AND stable review SubmittedAt timestamp make retries
+        // update the same time-series point in this SMALL synthetic data set.
         // High-cardinality ID tags are not recommended for production InfluxDB.
         var line = $"review_sentiment,category={EscapeTag(reading.Category)},review_id={EscapeTag(reading.ReviewId)} " +
                    $"score={reading.Score.ToString("R", CultureInfo.InvariantCulture)} " +
