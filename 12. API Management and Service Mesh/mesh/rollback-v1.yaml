@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: m12-agency
+  labels: {training: module12}
+spec:
+  hosts: [m12-agency]
+  gateways: [mesh]
+  http:
+    - timeout: 4s
+      route:
+        - destination:
+            host: m12-agency
+            subset: v1
+            port: {number: 8080}
+          weight: 100

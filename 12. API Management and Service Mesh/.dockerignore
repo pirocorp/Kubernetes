@@ -1,0 +1,7 @@
+**/bin
+**/obj
+.runtime
+.git
+.env
+**/__pycache__
+*.pyc
