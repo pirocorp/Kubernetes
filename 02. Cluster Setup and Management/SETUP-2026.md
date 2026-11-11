@@ -512,16 +512,36 @@ sudo ls -lh /var/backups/kubernetes/etcd-snapshot.db
 
 **Expected:** etcdctl reports a saved snapshot, and a non-empty local snapshot file exists. Test restoring snapshots only in disposable or dedicated recovery environments. Copy backups to encrypted/off-node storage with an established retention policy.
 
-### 11.3 Inspect snapshot
+### 11.3 Install matching etcdutl and inspect the snapshot
 
-Use a compatible **etcdutl** utility for the etcd version on your cluster (etcdutl can be obtained from the matching upstream etcd release). Verify the installed binary before use:
+**etcdctl** takes network snapshots; **etcdutl** validates and restores local snapshot files. The original course used etcdctl restore, which is deprecated. Download the **matching etcd version** for this kubeadm cluster, identified from its static etcd Pod's image, directly from an official etcd release. Perform this step on **cp1** before any destructive restore.
 
 ~~~bash
+ETCD_POD="$(kubectl -n kube-system get pods -l component=etcd -o jsonpath='{.items[0].metadata.name}')"
+ETCD_IMAGE="$(kubectl -n kube-system get pod "$ETCD_POD" -o jsonpath='{.spec.containers[0].image}')"
+printf 'etcd image: %s\n' "$ETCD_IMAGE"
+
+# Example: registry.k8s.io/etcd:3.6.5-0 -> v3.6.5
+ETCD_VER="v$(printf '%s' "$ETCD_IMAGE" | awk -F: '{print $NF}' | cut -d- -f1)"
+case "$(uname -m)" in
+  x86_64)  ETCD_ARCH=amd64 ;;
+  aarch64) ETCD_ARCH=arm64 ;;
+  *) echo "Unsupported lab CPU architecture; select correct upstream release manually"; exit 1 ;;
+esac
+
+printf 'Downloading etcd version %s for %s\n' "$ETCD_VER" "$ETCD_ARCH"
+curl -fL --retry 3 \
+  "https://github.com/etcd-io/etcd/releases/download/$ETCD_VER/etcd-$ETCD_VER-linux-$ETCD_ARCH.tar.gz" \
+  -o "$HOME/etcd-tools.tar.gz"
+mkdir -p "$HOME/etcd-tools"
+tar -xzf "$HOME/etcd-tools.tar.gz" -C "$HOME/etcd-tools" --strip-components=1
+sudo install -m 0755 "$HOME/etcd-tools/etcdutl" /usr/local/bin/etcdutl
+
 etcdutl version
 sudo etcdutl snapshot status /var/backups/kubernetes/etcd-snapshot.db -w table
 ~~~
 
-**Expected:** status includes snapshot revision, key count and size. If etcdutl is not installed, install the matching version from [upstream etcd releases](https://github.com/etcd-io/etcd/releases); do not assume a distribution-provided etcd-client is version-compatible.
+**Expected:** etcdutl reports the version extracted from the live etcd image, and snapshot status displays revision, key count and size. If the image tag does not match an official release archive, inspect the image version and use a matching compatible etcdutl release. Verify downloaded release artifacts/checksums as appropriate for your environment. Keep the snapshot on secure storage; it contains cluster state and secrets.
 
 ## 12. etcd restore — isolated recovery exercise
 
@@ -566,12 +586,14 @@ Only proceed when the original kube-apiserver and etcd containers are actually s
 ~~~bash
 sudo etcdutl snapshot restore \
   /var/backups/kubernetes/etcd-snapshot.db \
-  --data-dir /var/lib/etcd-restore
+  --data-dir /var/lib/etcd-restore \
+  --bump-revision 1000000000 \
+  --mark-compacted
 
 sudo ls -ld /var/lib/etcd-restore
 ~~~
 
-**Expected:** etcdutl creates a new etcd data directory. Do not delete the original /var/lib/etcd during the lab; it is a fallback.
+**Expected:** etcdutl creates a new etcd data directory. The revision bump and compaction marker help invalidate stale Kubernetes watchers after restoring older state. Do not delete the original /var/lib/etcd during the lab; it is a fallback. Use this only on the disposable single-control-plane lab.
 
 ### Point static etcd at the restored directory
 
