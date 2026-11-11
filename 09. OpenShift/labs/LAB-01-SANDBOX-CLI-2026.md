@@ -130,11 +130,17 @@ oc projects
 **Не е създаден нито един cluster object.** Ако си ползвал **път A**, излез от OpenShift и премахни *само изолирания файл*, никога стандартния `~/.kube/config`:
 
 ```bash
-oc logout
-test -n "$OPENSHIFT_LAB_KCFG_DIR" && test "$KUBECONFIG" = "$OPENSHIFT_LAB_KCFG_DIR/config"
-rm -f -- "$KUBECONFIG"
-rmdir -- "$OPENSHIFT_LAB_KCFG_DIR"
-unset KUBECONFIG OPENSHIFT_LAB_KCFG_DIR
+if test -z "${OPENSHIFT_LAB_KCFG_DIR:-}" || test -z "${KUBECONFIG:-}" || \
+   test "$KUBECONFIG" != "$OPENSHIFT_LAB_KCFG_DIR/config" || \
+   test ! -d "$OPENSHIFT_LAB_KCFG_DIR" || \
+   test ! -f "$KUBECONFIG"; then
+  echo "Safety guard failed: NOT changing credentials or deleting files" >&2
+else
+  oc logout
+  rm -f -- "$KUBECONFIG"
+  rmdir -- "$OPENSHIFT_LAB_KCFG_DIR"
+  unset KUBECONFIG OPENSHIFT_LAB_KCFG_DIR
+fi
 ```
 
 `oc logout` обезсилва текущия контекст/сесия според възможностите на identity provider. При активен Web Terminal затвори само своя терминален session/tab. Не изтривай Project, pods на средата или чужди resources.
