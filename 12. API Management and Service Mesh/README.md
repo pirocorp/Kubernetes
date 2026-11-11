@@ -111,8 +111,6 @@ bash scripts/start.sh
 bash scripts/stop.sh
 ```
 
-**Възпроизвеждане преди PR merge:** checkout-ни branch `feat/module-12-apim-service-mesh-2026` вместо `main`, ако още съществува. След merge стандартният `main` ще съдържа файловете.
-
 ## 7. Файлова структура
 
 ```text
