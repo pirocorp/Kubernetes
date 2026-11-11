@@ -1,5 +1,7 @@
 > **Kubernetes 1.37 execution track (2026):** [Start with the complete course roadmap — COURSE-2026.md](./COURSE-2026.md). Modules **00–08** have modern executable guides, required prerequisites, expected results, checks and cleanup. **09 OpenShift is excluded** from this review. Older examples below are retained as historical notes.
 
+> **Additional learning:** [Module 09 — OpenShift](./09.%20OpenShift/README.md) · [Module 10 — API-First Development & API Management](./10.%20API-First%20Development%20and%20API%20Management/README.md). These modules are **separate from the 00–08 Kubernetes 1.37 audit scope**.
+
 # Kubernetes
 
 ## Containerization
