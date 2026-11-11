@@ -11,6 +11,7 @@ WORKDIR /app
 COPY --from=build /out/ ./
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
-# No fixed USER: restricted OpenShift SCC can inject an arbitrary non-root UID.
-# This app does not write to /app or require root.
+# The app uses an unprivileged numeric UID and never needs to write /app.
+# OpenShift may assign a different arbitrary UID under restricted SCC.
+USER 10001
 ENTRYPOINT ["dotnet", "ProductsApi.dll"]
