@@ -1,3 +1,5 @@
+> **Kubernetes 1.37 (2026):** For actual repository filenames, full task order, expected results and cleanup, follow [CORE-2026.md](../../CORE-2026.md). The historical files disagree on the Service target port (80/5000/5500); the current lab consistently uses **Service 5000 → Pod 5000, NodePort 32000**.
+
 # Task 1
 
 Execute a series of commands to
@@ -52,11 +54,13 @@ kubectl set selector service homework-svc app=hw --namespace homework
 
 ## Task 2
 
+> **Working directory:** `01. Core Concepts/Homework/` for the commands below. Remove previous `namespace/homework` from Task 1 so this exercise starts cleanly. Apply the Namespace first.
+
 Create manifests for every object (the namespace, the two pods, and the service) from task 1 and apply them one by one
 
 Solution:
 
-hw-ns.yaml
+homework-namespace.yaml
 
 ```yaml
 apiVersion: v1
@@ -64,7 +68,7 @@ kind: Namespace
 metadata:
   name: homework
 ```
-hw-pod-1.yaml
+homework-1-pod.yaml
 
 ```yaml
 apiVersion: v1
@@ -82,7 +86,7 @@ spec:
     name: homework-1
 ```
 
-hw-pod-2.yaml
+homework-2-pod.yaml
 
 ```yaml
 apiVersion: v1
@@ -100,7 +104,7 @@ spec:
     name: homework-2
 ```
 
-kubectl apply -f hw-svc.yaml
+Service manifest (corresponding file: `Homework/Task 2/homework-svc.yaml`):
 
 ```yaml
 apiVersion: v1
@@ -123,13 +127,15 @@ spec:
 ```
 
 ```bash
-kubectl apply -f hw-ns.yaml
-kubectl apply -f hw-pod-1.yaml
-kubectl apply -f hw-pod-2.yaml
-kubectl apply -f hw-svc.yaml
+kubectl apply -f "Task 2/homework-namespace.yaml"
+kubectl apply -f "Task 2/homework-1-pod.yaml"
+kubectl apply -f "Task 2/homework-2-pod.yaml"
+kubectl apply -f "Task 2/homework-svc.yaml"
 ```
 
 ## Task 3
+
+> **NOTE (2026):** The first version applies one multi-document YAML (Namespace first). For the second, create `namespace/homework` before using `kubectl apply -f "Task 2/"` (file enumeration order is not a safe dependency). Run the variants separately.
 
 Is there a way to submit those manifests at once? Find and demonstrate two ways of doing it
 
@@ -138,13 +144,13 @@ Solution:
 Under Windows
 
 ```cmd
-kubectl apply -R -f .\task2\
+kubectl apply -f "Task 3/Task 3A.yaml"
 ```
 
 Or the following under UNIX-like OSes
 
 ```bash
-kubectl apply -R -f task2/
+kubectl apply -f "Task 2/"
 ```
 
 ## Task 4

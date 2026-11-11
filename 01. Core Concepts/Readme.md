@@ -1,3 +1,5 @@
+> **Kubernetes 1.37 lab (2026):** Start with [CORE-2026.md](./CORE-2026.md) for all four Module 01 homework tasks, correct Service/Pod/NodePort mappings, prerequisite checks, step-by-step commands and cleanup. The following conceptual course notes are preserved as background.
+
 # Kubernetes Objects
 
 - Kubernetes objects are persistent entities.
