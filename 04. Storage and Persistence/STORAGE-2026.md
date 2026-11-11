@@ -116,10 +116,15 @@ From your workstation, open `http://<reachable-node-ip>:30001` (replace the plac
 ### Clean up the lab without erasing NFS data
 
 ```bash
-kubectl delete -f "04. Storage and Persistence/Exercise/Solution/Problem 2/solution.yaml" --ignore-not-found
-# StatefulSet PVCs are retained by default; inspect their names before deleting:
+# Remove workloads and namespaced resources first; do NOT delete the PVs yet.
+kubectl delete deployment fe-deploy --ignore-not-found
+kubectl delete statefulset pod-be --ignore-not-found
+kubectl delete service facts service-be service-fe --ignore-not-found
+kubectl delete configmap service-be-map --ignore-not-found
+# StatefulSet PVCs are retained by default; delete them explicitly.
 kubectl get pvc
 kubectl delete pvc facts-data-pod-be-0 facts-data-pod-be-1 facts-data-pod-be-2 --ignore-not-found
+# PVs with Retain now become Released, and NFS data remains.
 kubectl get pv
 ```
 
