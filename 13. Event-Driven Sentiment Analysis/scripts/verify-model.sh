@@ -31,7 +31,7 @@ cleanup() {
 trap cleanup EXIT
 python3 tools/mock_model.py > "$work/model.log" 2>&1 &
 model_pid="$!"
-ASPNETCORE_URLS=http://127.0.0.1:5080 REVIEWS_MODE=local SENTIMENT_MODEL_URL=http://127.0.0.1:8090/predict   dotnet run --no-build -c Release --no-launch-profile   --project src/GlobexReviews/GlobexReviews.csproj > "$work/api.log" 2>&1 &
+ASPNETCORE_URLS=http://127.0.0.1:5080 REVIEWS_MODE=local SENTIMENT_MODEL_URL=http://127.0.0.1:8090/predict   dotnet src/GlobexReviews/bin/Release/net10.0/GlobexReviews.dll > "$work/api.log" 2>&1 &
 api_pid="$!"
 for i in $(seq 1 30); do
   if python3 - <<'PY'
