@@ -84,6 +84,7 @@ app.MapPost("/v1/products", async (HttpRequest request) =>
 app.Run();
 
 record Product(string Id, string Name, decimal Price, string Currency);
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 record NewProduct(
     [property: JsonRequired] string Name,
     [property: JsonRequired] decimal Price,
