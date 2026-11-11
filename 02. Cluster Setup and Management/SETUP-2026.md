@@ -6,38 +6,36 @@
 
 ## Target architecture
 
-## Lab topology and choices
+This guide modernizes the historical course with **Kubernetes 1.37**, **containerd 2.x**, **Calico 3.33**, VXLAN encapsulation, BGP disabled and NetworkPolicy support. Flannel is a **separate fresh-lab alternative**, never installed on the Calico cluster.
 
-The original course has **two independent lab topologies**, not one cluster converted in place. Use fresh VM instances or a clean reset when changing between them.
+### Lab topology and choices
 
 | Lab | Machines | Example hostnames / private IP addresses |
 | --- | --- | --- |
 | A — standard | 1 control plane + 2 workers | cp1: 192.168.56.11, wk1: .21, wk2: .22 |
-| B — HA | 3 control planes + 3 workers + 1 HAProxy | cp1: .11, cp2: .12, cp3: .13, wk1: .21, wk2: .22, wk3: .23, lb: .10 |
+| B — HA | 3 control planes + 3 workers + HAProxy | cp1: .11, cp2: .12, cp3: .13, wk1: .21, wk2: .22, wk3: .23, lb: .10 |
 
-All example IPs expand the prefix **192.168.56.**; replace them with your real private subnet. Choose a network compatible with your VM provider's network mode. **Never assign these example addresses blindly.** A single HAProxy host is an API entry-point single point of failure; Lab B tests resilient control-plane/etcd membership, **not** end-to-end load-balancer HA.
+All addresses expand **192.168.56.**. Substitute the real IP addresses on your VM network. Lab B uses the DNS name **lb.k8s.lab** to point to HAProxy. **One HAProxy VM is a single point of failure**, even though etcd/control plane run in HA.
 
-**Common cluster networks:** Pod CIDR = 10.244.0.0/16, default Service CIDR = 10.96.0.0/12; neither may overlap real infrastructure. An external DNS name, for example lb.k8s.lab, should resolve to the real HAProxy IP in Lab B.
+**Executable OS example:** Ubuntu Server **24.04 LTS**, on separate VMs or hosts with systemd and apt. Debian 12/13 are possible but require verifying distribution-specific package sources. The guide does not assume a particular hypervisor or physical subnet.
 
-**Workstation:** a separate host with SSH access and a compatible kubectl client; optional Helm is needed for the Headlamp lab.
+**Subnet choices:** Pod CIDR **10.244.0.0/16**, Service CIDR **10.96.0.0/12**; both must be distinct from physical/VPN networks. VXLAN between nodes requires **UDP 4789**; BGP is disabled.
 
-### VM checklist before running commands
+### Provisioning the VMs
 
-For **each** VM, create an OS installation (for example Ubuntu Server 24.04 LTS), assign hostname and static/DHCP-reserved IP, configure working DNS/NTP, verify VM-to-VM connectivity, and enable SSH. Recommended lab allocations: **2 vCPU / 2 GiB+ RAM** per control plane (more if addons need it), **2 vCPU / 2 GiB+** per worker, separate OS disks with adequate free space. The HAProxy VM can be smaller. These are illustrative lab resources, not sizing for production.
+Create the required VMs with your chosen hypervisor (e.g. bridged/routed virtual NICs), install Ubuntu Server 24.04, enable OpenSSH, give each a unique hostname, sudo-enabled admin account and IP reachable from the other nodes. For this lab, allocate at least **2 vCPU, 2 GiB RAM** plus adequate disk per Kubernetes node; more resources may be needed for workloads. Use a smaller separate VM for the HAProxy lab. IP configuration depends on your actual hypervisor, DHCP, gateway and NIC; configure static addressing or DHCP reservations *during provisioning*. Do not run example addresses on an unrelated real network.
 
-For example, **only on cp1** after validating its address:
+On **each** node set its unique hostname; here is the cp1 example:
 
 ~~~bash
-hostnamectl
-ip -brief address
-timedatectl
-getent hosts cp1.k8s.lab
-
-# Run on cp1; substitute your actual FQDN:
 sudo hostnamectl set-hostname cp1.k8s.lab
+hostnamectl
+ip -brief addr
+ip route
+timedatectl
 ~~~
 
-Repeat with the corresponding name on each other VM. Use working DNS; if this is an isolated disposable lab without DNS, populate consistent /etc/hosts mappings on **every** VM, such as:
+Use functioning DNS or put consistent mappings into **/etc/hosts on every node and your workstation**. Replace example addresses where necessary:
 
 ~~~text
 192.168.56.10 lb.k8s.lab lb
@@ -49,47 +47,71 @@ Repeat with the corresponding name on each other VM. Use working DNS; if this is
 192.168.56.23 wk3.k8s.lab wk3
 ~~~
 
-Confirm name resolution and SSH connectivity from your workstation. Only create the nodes required by the selected lab. These names do not have to match Kubernetes node metadata exactly; inspect kubectl get nodes before using names in later operations.
+Confirm on every relevant node:
 
-### Required network access (simplified)
+~~~bash
+getent hosts cp1.k8s.lab
+ping -c 2 cp1.k8s.lab
+# From your workstation, replacing user with your SSH account:
+ssh user@cp1.k8s.lab
+~~~
 
-| Source → destination | Port / protocol | Purpose |
+A node's actual kubelet name can differ from the short/FQDN form above; always get authoritative node names from **kubectl get nodes** and substitute them in the maintenance exercises.
+
+### Network access matrix
+
+| Direction | Protocol/port | Purpose |
 | --- | --- | --- |
-| workstation, nodes → API endpoint/control planes | TCP 6443 | Kubernetes API |
-| control plane ↔ control plane (Lab B) | TCP 2379–2380 | stacked etcd peer/client |
-| control plane → nodes | TCP 10250 | kubelet API |
-| nodes ↔ nodes | UDP 4789 | **Calico VXLAN** |
-| workers → HAProxy (Lab B) | TCP 6443 | API endpoint |
+| workstation/nodes → API endpoint | TCP 6443 | Kubernetes API |
+| control-plane ↔ control-plane (Lab B) | TCP 2379–2380 | stacked etcd |
+| control plane → nodes | TCP 10250 | kubelet |
+| nodes ↔ nodes | UDP 4789 | Calico VXLAN |
 
-Other ports may be required for specific addons; use the full [official port matrix](https://kubernetes.io/docs/reference/networking/ports-and-protocols/). Apply *narrow* host-firewall rules instead of disabling security without understanding your environment.
+Allow DNS, NTP, HTTPS image pulls and exercise-specific NodePorts as applicable. Use tight firewall rules rather than indiscriminately disabling host security. See the [Kubernetes port reference](https://kubernetes.io/docs/reference/networking/ports-and-protocols/).
 
+### Lab execution order
 
-- One control-plane node and one or more worker nodes, on separate Linux VMs or hosts.
-- Debian 12/13 or Ubuntu 24.04 LTS as examples of modern Linux distributions. Check your actual OS, kernel, runtime and CNI support before use.
-- Kubernetes **v1.37** installed using the versioned **pkgs.k8s.io** repository.
-- A Kubernetes CRI-compatible runtime: **containerd** (prefer a supported 2.x release).
-- **Calico v3.33.0** for Pod networking and NetworkPolicy, installed through the Tigera Operator.
-- One non-overlapping Pod CIDR: **10.244.0.0/16** for this example, adjusted to your actual LAN/VPN/service networks as necessary.
+1. **Lab A:** on cp1, wk1 and wk2, perform **sections 0–3**.
+2. On cp1 initialize Kubernetes (**section 4**) and install Calico (**section 5**); then join workers (**section 6**) and verify (**section 7**).
+3. Try workstation access, Headlamp, node maintenance, etcd backup and policy exercises (**sections 8–11 and 15–16**).
+4. **etcd restore (section 12)** is destructive; use a disposable copy of Lab A, **not** the HA lab.
+5. **Upgrade (section 13)** starts from an independent **1.36.x** cluster, not from an already installed 1.37 cluster.
+6. **Lab B:** use freshly prepared VMs for 3 control planes + 3 workers + HAProxy, applying common sections 0–3 and then section 14.
+7. **Flannel (section 17):** use a different fresh cluster. Never install it on top of Calico.
 
-The example builds a **lab cluster, not a production HA deployment**. For production, add HA control plane, stable endpoint/load balancer, backups, monitoring, network hardening and a documented upgrade plan.
+## 0. Preflight (all Kubernetes nodes)
 
-## 0. Preflight (all nodes)
+Check that the OS, subnet, routing, DNS, NTP, SSH, disk and RAM are ready, and that all nodes have unique names, VM IPs and machine IDs.
 
-Check:
-- Unique hostnames, IP addresses, MAC addresses and machine IDs; working DNS/hosts resolution and time synchronization.
-- Network connectivity among nodes and the required [Kubernetes ports](https://kubernetes.io/docs/reference/networking/ports-and-protocols/), plus ports required by your selected CNI.
-- A supported CPU architecture, adequate memory and disk capacity, and a routable node-to-node network.
-- The Pod CIDR and Kubernetes Service CIDR do **not** overlap physical, VPN or other routed networks.
-- Kubernetes 1.37 expects a compatible CRI implementation and modern Linux cgroup configuration.
+Kubernetes 1.37 expects modern cgroup behavior. **cgroup2fs** is the expected result for the cgroup version command below. The kubelet normally refuses to start on cgroup v1 with the current defaults.
 
-Kubelet normally refuses to start when swap is enabled, unless explicitly configured to support it. For a simple lab, disable swap on **each Kubernetes VM/node** (not necessarily on a separate homelab host):
+~~~bash
+uname -r
+stat -fc %T /sys/fs/cgroup/
+hostname -f
+ip route
+getent hosts cp1.k8s.lab
+timedatectl status
+free -h
+df -h /
+~~~
+
+Disable swap on **each Kubernetes VM/node** (not on an unrelated Ubuntu homelab host):
 
 ~~~bash
 sudo swapoff -a
-swapon --show
+swapon --show  # Expected: no output
 ~~~
 
-Make the swap change persistent using the actual distribution's configuration (for example, the relevant /etc/fstab entry or systemd swap units). Verify after reboot.
+Persist the change on these disposable VMs. Back up fstab and comment swap mounts (adjust other swap/zram managers separately if installed):
+
+~~~bash
+sudo cp -a /etc/fstab /etc/fstab.before-k8s-lab
+sudo sed -i -E '/^[[:space:]]*[^#][^[:space:]]+[[:space:]]+[^[:space:]]+[[:space:]]+swap[[:space:]]/s/^/# disabled for kubeadm lab: /' /etc/fstab
+grep -v '^#' /etc/fstab
+~~~
+
+After any reboot check **swapon --show** again. Do not apply these swap changes to a shared production host.
 
 ## 1. Configure kernel networking (all nodes)
 
