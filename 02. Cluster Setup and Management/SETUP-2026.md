@@ -136,50 +136,54 @@ sysctl net.ipv4.ip_forward
 
 These are conventional bridge-networking settings for a lab; your CNI and host network setup may have additional requirements.
 
-## 2. Install and configure containerd (all nodes)
+## 2. Install and configure containerd 2.x (all Kubernetes nodes)
 
-Install **containerd**, not the Docker Engine + built-in dockershim combination used in the historical guide. Docker Engine requires a separate **cri-dockerd** adapter when used as a Kubernetes runtime.
-
-Example for Debian/Ubuntu using distribution packages:
+The historical course used Docker Engine and its former built-in runtime integration. Kubernetes now uses **CRI-compatible runtimes**; install **containerd 2.x**, *not* Docker Engine. This procedure is for **fresh Ubuntu Server 24.04 LTS VMs** and adds Docker's **signed APT repository solely to install containerd.io** (without Docker Engine). For Debian, replace the repository with Docker's Debian repository after verifying distribution support.
 
 ~~~bash
 sudo apt-get update
-sudo apt-get install -y containerd
+sudo apt-get install -y ca-certificates curl gpg
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null <<'EOF'
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: noble
+Components: stable
+Architectures: amd64 arm64
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+sudo apt-get update
+sudo apt-get install -y containerd.io
 containerd --version
-sudo mkdir -p /etc/containerd
+~~~
+
+**Expected:** containerd 2.x is installed. If you have a different Ubuntu architecture, replace the Architectures line with the correct supported architecture before running apt update. If containerd is not 2.x, **stop and resolve the runtime installation** rather than guessing the matching TOML settings.
+
+Generate a configuration for the **actually installed** containerd version. Enable systemd cgroups for runc (correct for a modern cgroup v2 + systemd host):
+
+~~~bash
+sudo install -m 0755 -d /etc/containerd
 sudo containerd config default | sudo tee /etc/containerd/config.toml >/dev/null
+sudo sed -i -E 's/^([[:space:]]*SystemdCgroup[[:space:]]*=[[:space:]]*)false/\1true/' /etc/containerd/config.toml
+
+grep -n 'SystemdCgroup = true' /etc/containerd/config.toml
+grep -n 'disabled_plugins' /etc/containerd/config.toml
 ~~~
 
-**Review the installed containerd version before continuing.** Prefer a supported 2.x version. If the OS package supplies 1.x, consult the [containerd installation guide](https://github.com/containerd/containerd/blob/main/docs/getting-started.md) to choose a supported version appropriate to your OS.
-
-Edit **/etc/containerd/config.toml** and ensure:
-- The Kubernetes CRI integration is **enabled** (no CRI entry in disabled_plugins).
-- The runc runtime uses **SystemdCgroup = true**.
-- The configuration section matches the installed version:
-
-~~~toml
-# containerd 2.x (fragment only; edit the generated config)
-[plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc.options]
-  SystemdCgroup = true
-~~~
-
-For containerd 1.x the corresponding path is:
-
-~~~toml
-# containerd 1.x (fragment only)
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-  SystemdCgroup = true
-~~~
-
-Do not blindly paste both fragments into the file. Keep the other required defaults from the generated configuration.
+The matching containerd **2.x** table is [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc.options]. Confirm **SystemdCgroup = true**, and that the CRI plugins are not disabled. If the generated config is different, inspect the correct table instead of mixing 1.x and 2.x configuration fragments.
 
 ~~~bash
 sudo systemctl enable --now containerd
 sudo systemctl restart containerd
-sudo systemctl status containerd --no-pager
+sudo systemctl is-active containerd
+sudo ctr plugins ls | grep -i cri
 ~~~
 
-Check that the container runtime uses a CRI-compatible socket (the usual containerd endpoint is **unix:///run/containerd/containerd.sock**). For details see [Kubernetes container runtimes](https://kubernetes.io/docs/setup/production-environment/container-runtimes/).
+**Expected:** service status is **active**, with no CRI plugin errors. Kubernetes uses the socket **unix:///run/containerd/containerd.sock**. A separate **cri-dockerd** adapter would be needed if choosing Docker Engine instead; we do not use it.
 
 ## 3. Install kubeadm, kubelet and kubectl (all nodes)
 
@@ -197,7 +201,11 @@ echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.
   sudo tee /etc/apt/sources.list.d/kubernetes.list
 
 sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl
+apt-cache madison kubeadm
+K8S_PKG_VERSION="$(apt-cache madison kubeadm | awk '$3 ~ /^1[.]37[.]/ {print $3; exit}')"
+test -n "$K8S_PKG_VERSION" || { echo "ERROR: no Kubernetes 1.37 package available"; return 1 2>/dev/null || exit 1; }
+printf 'Chosen package: %s\n' "$K8S_PKG_VERSION"
+sudo apt-get install -y "kubelet=$K8S_PKG_VERSION" "kubeadm=$K8S_PKG_VERSION" "kubectl=$K8S_PKG_VERSION"
 sudo apt-mark hold kubelet kubeadm kubectl
 
 kubeadm version
@@ -206,13 +214,15 @@ kubectl version --client
 
 The APT commands above are for **new** nodes. When upgrading an existing cluster, follow the version-by-version [kubeadm upgrade procedure](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/) rather than jumping directly from an older release.
 
+
+**Expected:** kubeadm and kubectl identify as v1.37.x. At the reference date, the upstream patch release is **1.37.1**; use the package that your verified repository offers and record the full version string (including the package suffix) for installing that *same version* on other nodes. Refresh it deliberately when upgrading — never allow unplanned version drift.
 ## 4. Initialize the control plane (control-plane node only)
 
-Choose and verify the actual **private IP** of your control-plane node. Replace the placeholder below; do not run it literally.
+This example uses **192.168.56.11** (Lab A's cp1). Replace it with your actual control-plane IP if different.
 
 ~~~bash
 sudo kubeadm init \
-  --apiserver-advertise-address=<CONTROL_PLANE_PRIVATE_IP> \
+  --apiserver-advertise-address=192.168.56.11 \
   --pod-network-cidr=10.244.0.0/16 \
   --cri-socket=unix:///run/containerd/containerd.sock
 ~~~
