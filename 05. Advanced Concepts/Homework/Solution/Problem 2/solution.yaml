@@ -96,7 +96,7 @@ spec:
     service:
       name: serviced
       port:
-        number: 443
+        number: 80
   rules:
   - host: demo.lab
     http:
@@ -107,12 +107,12 @@ spec:
           service:
             name: service1
             port:
-              number: 443
+              number: 80
       - path: /service2
         pathType: Prefix
         backend:
           service:
             name: service2
             port:
-              number: 443
+              number: 80
 
