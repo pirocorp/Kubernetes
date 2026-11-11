@@ -210,7 +210,8 @@ oc get deploy,svc,pvc,secret
 ## 9. Критерии за приемане
 
 - [ ] Обясняваш защо Secret (и base64 ≠ encryption) е по-добър от фиксирана парола в Git.
-- [ ] PVC Bound, Pod Ready, Service 3306, 3 SQL реда.
+- [ ] PVC Bound, Pod Ready, Service 3306, 3 SQL реда след изпълнение на включения `seed.sql`.
+- [ ] Избран и изпълнен **един** от методите за database deployment — CLI или Web Console.
 - [ ] След Pod deletion: нов Pod, същите SQL данни.
 - [ ] Не използваш root-only image, hostPath, cluster-admin или публична Route за DB.
 - [ ] Cleanup изтрива **само** собствените objects и storage.
