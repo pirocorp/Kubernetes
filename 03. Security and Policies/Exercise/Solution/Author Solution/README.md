@@ -1,3 +1,5 @@
+> **Kubernetes 1.37 (2026):** Use [SECURITY-2026.md](../../../SECURITY-2026.md) for reproducible X.509 user kubeconfigs, RBAC, quotas and both NetworkPolicy resources. The historical certificate and API endpoint `192.168.0.71` embedded below belong to the old lab — **do not copy them**. Use your own cluster CA and current kubeconfig. The modern lab uses Calico from Module 02.
+
 # Create and register two Kubernetes uses – Ivan (ivan) and Mariana (mariana) who are part of the Gurus (gurus) group
 
 Create the two users
@@ -176,26 +178,26 @@ kubectl describe quota -n projectx
 We can create the required role with
 
 ```bash
-kubectl create role role-hw -n projectx --verb="*" --resource=pods,services,deployments.apps,replicasets.apps
+kubectl create role devguru -n projectx --verb="*" --resource=pods,services,deployments.apps,replicasets.apps
 ```
 
 Then check what we have created
 
 ```bash
-kubectl describe role role-hw -n projectx
+kubectl describe role devguru -n projectx
 ```
 
 Now, we can bind the role either to each user individually (use either this one)
 
 ```bash
-kubectl create rolebinding roleb-hw-ivan -n projectx --role role-hw --user ivan
-kubectl create rolebinding roleb-hw-mariana -n projectx --role role-hw --user mariana
+kubectl create rolebinding roleb-hw-ivan -n projectx --role devguru --user ivan
+kubectl create rolebinding roleb-hw-mariana -n projectx --role devguru --user mariana
 ```
 
 Or create a role binding to the group (or this one)
 
 ```bash
-kubectl create rolebinding roleb-hw-gurus -n projectx --role role-hw --group gurus
+kubectl create rolebinding roleb-hw-gurus -n projectx --role devguru --group gurus
 ```
 
 And then check what we can do as ivan
@@ -472,7 +474,7 @@ kubectl apply -n projectx -f np-cons.yaml
 Finally, connect to the client pod
 
 ```bash
-kubectl exec -n projectx -it client – sh
+kubectl exec -n projectx -it client -- sh
 ```
 
 And test again
