@@ -32,9 +32,18 @@ python3 tools/mesh_sim.py > .runtime/router.log 2>&1 &
 printf '%s\n' "$!" > .runtime/router.pid
 python3 tools/partner_gateway.py > .runtime/gateway.log 2>&1 &
 printf '%s\n' "$!" > .runtime/gateway.pid
-sleep 2
-if ! python3 tools/verify.py basic; then
-  echo "Startup validation failed. Check .runtime/*.log and stop the lab." >&2
+# Processes start asynchronously. Retry health checks with a finite bound.
+ready=false
+for attempt in $(seq 1 20); do
+  if python3 tools/verify.py basic > .runtime/verify.log 2>&1; then
+    ready=true
+    break
+  fi
+  sleep 1
+done
+cat .runtime/verify.log
+if test "$ready" != true; then
+  echo "Startup validation failed. Check .runtime/*.log, then run bash scripts/stop.sh." >&2
   exit 1
 fi
 echo "Travelz local lab ready: portal :5100, agency :5101/:5102, router :5200, gateway :5300."
