@@ -32,6 +32,10 @@ def shape(schema, obj, trail="$"):
     if "enum" in schema and obj not in schema["enum"]:
         raise AssertionError(f"{trail}: invalid enum value {obj}")
     if isinstance(obj, dict):
+        if schema.get("additionalProperties") is False:
+            extra = set(obj) - set(schema.get("properties", {}))
+            if extra:
+                raise AssertionError(f"{trail}: additional properties are not permitted: {sorted(extra)}")
         for name in schema.get("required", []):
             if name not in obj:
                 raise AssertionError(f"{trail}: missing {name}")
