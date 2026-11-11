@@ -51,7 +51,17 @@ PY
 done
 python3 tools/verify.py --base-url http://127.0.0.1:5080 --timeout 60
 python3 tools/check_external.py --minimum-approved 3
-docker compose exec -T kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
-echo "PASS real Kafka fan-out, PostgreSQL writes and InfluxDB time-series"
+python3 tools/check_grafana.py
+TOPICS="$(docker compose exec -T kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list)"
+GROUPS="$(docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list)"
+printf '%s\n' "$TOPICS"
+printf '%s\n' "$GROUPS"
+for topic in globex.reviews reviews.moderated reviews.denied reviews.sentiment; do
+  grep -Fqx "$topic" <<< "$TOPICS" || { echo "Missing Kafka topic $topic" >&2; exit 1; }
+done
+for group in m13-moderation m13-sentiment; do
+  grep -Fqx "$group" <<< "$GROUPS" || { echo "Missing Kafka consumer group $group" >&2; exit 1; }
+done
+echo "PASS real Kafka fan-out, PostgreSQL, InfluxDB and provisioned Grafana"
 echo "Grafana: http://127.0.0.1:3300 (admin credentials in local .env)."
 echo "Cleanup: docker compose down ; docker compose down -v ONLY if you want to delete demo volumes."
