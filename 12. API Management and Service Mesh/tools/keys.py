@@ -27,6 +27,7 @@ def bootstrap():
 def check_ports():
     for port in (5100, 5101, 5102, 5200, 5300):
         with socket.socket() as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
                 sock.bind(("127.0.0.1", port))
             except OSError as e:
