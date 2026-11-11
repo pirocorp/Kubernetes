@@ -10,7 +10,7 @@ import urllib.request
 def request(base, method, path, payload=None):
     body = json.dumps(payload).encode() if payload is not None else None
     headers = {"Content-Type": "application/json"} if payload is not None else {}
-    if os.getenv("INGEST_KEY") and path == "/reviews":
+    if os.getenv("INGEST_KEY") and path.startswith("/reviews"):
         headers["X-Api-Key"] = os.environ["INGEST_KEY"]
     req = urllib.request.Request(
         base.rstrip("/") + path, method=method, data=body, headers=headers
