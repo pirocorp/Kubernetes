@@ -73,5 +73,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print("Teaching-only partner gateway http://127.0.0.1:5300", flush=True)
-    ThreadingHTTPServer(("127.0.0.1", 5300), Handler).serve_forever()
+    bind = os.getenv("GATEWAY_BIND", "127.0.0.1")
+    port = int(os.getenv("GATEWAY_PORT", "5300"))
+    print(f"Teaching-only partner gateway http://{bind}:{port}", flush=True)
+    ThreadingHTTPServer((bind, port), Handler).serve_forever()
