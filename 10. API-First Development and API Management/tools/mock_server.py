@@ -68,7 +68,9 @@ class Handler(BaseHTTPRequestHandler):
             isinstance(body, dict)
             and all(field in body for field in required)
             and isinstance(body.get("name"), str)
-            and 1 <= len(body["name"].strip()) <= 100
+            and bool(body["name"].strip())
+            and len(body["name"]) <= 100
+            and set(body) <= set(CONTRACT["components"]["schemas"]["NewProduct"]["properties"])
             and type(body.get("price")) in (int, float)
             and body["price"] >= 0
             and body.get("currency") == "EUR"
