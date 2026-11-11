@@ -1,5 +1,7 @@
 # Basic Cluster Operations
 
+> **Historical course material (Kubernetes 1.21–1.22, Debian 10).** The original lab commands below are retained unchanged for reference, but are not an up-to-date installation procedure. For a new Kubernetes v1.37 lab cluster, use [SETUP-2026.md](./SETUP-2026.md) instead.
+
 [Requirements](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#before-you-begin)
 
 # Debian 10 Based Kubernetes Template
