@@ -51,7 +51,7 @@ app.MapPost("/v1/placeorder", async Task<IResult> (HttpContext context) =>
     if (lifecycle is "deprecated" or "sunset")
     {
         // Illustrative training policy dates. Not actual Globex retirement dates.
-        var deprecatedAt = new DateTimeOffset(2027, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var deprecatedAt = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var sunsetAt = new DateTimeOffset(2027, 6, 30, 0, 0, 0, TimeSpan.Zero);
         context.Response.Headers["Deprecation"] = "@" +
             deprecatedAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
