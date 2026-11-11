@@ -1,0 +1,75 @@
+# Fallback for clusters where OpenShift Virtualization is not available.
+# It teaches Route cutover only; it is NOT a VM replacement.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: m09-fallback-html
+  labels:
+    lab: module09virt
+data:
+  index.html: |
+    <!doctype html>
+    <html lang="en"><head><meta charset="utf-8"><title>Legacy fallback</title></head>
+    <body><h1>Legacy fallback container - OpenShift Module 09</h1></body></html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: m09-fallback
+  labels:
+    lab: module09virt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: m09-fallback
+  template:
+    metadata:
+      labels:
+        app: m09-fallback
+        lab: module09virt
+        module09-role: legacy-fallback
+    spec:
+      containers:
+        - name: httpd
+          image: registry.access.redhat.com/ubi9/httpd-24:latest
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: html
+              mountPath: /var/www/html/index.html
+              subPath: index.html
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            initialDelaySeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 512Mi
+      volumes:
+        - name: html
+          configMap:
+            name: m09-fallback-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: m09-legacy
+  labels:
+    lab: module09virt
+spec:
+  type: ClusterIP
+  selector:
+    module09-role: legacy-fallback
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
