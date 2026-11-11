@@ -10,4 +10,6 @@ WORKDIR /app
 COPY --from=build /out/ ./
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
+# Compatible with a non-root runtime. OpenShift may assign another arbitrary UID.
+USER 10001
 ENTRYPOINT ["dotnet", "Travelz.dll"]
