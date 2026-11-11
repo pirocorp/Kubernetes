@@ -29,7 +29,7 @@ test -f scripts/start.sh
 | `APP_MODE` | Порт | Основен endpoint | Роля |
 |---|---:|---|---|
 | `agency-v1` | 5101 | `GET /api/travels/{city}` | Legacy quotes за hotel/flight/car |
-| `agency-v2` | 5102 | `GET /api/travels/{city}` | Нова версия с `insuranceIncluded` |
+| `agency-v2` | 5102 | `GET /api/travels/{city}` | Нова версия с включена застраховка (`insuranceIncluded=true`) |
 | `portal` | 5100 | `GET /portal/{city}` | Клиент на Agency service |
 | Локален routing simulator | 5200 | `GET /api/travels/{city}` | Обяснява weighted routing; **не е Istio** |
 | Partner gateway simulator | 5300 | `GET /partner/travels/{city}` | Обяснява API management; **не е 3scale** |
