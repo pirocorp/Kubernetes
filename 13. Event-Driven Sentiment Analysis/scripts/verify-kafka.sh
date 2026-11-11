@@ -53,9 +53,9 @@ python3 tools/verify.py --base-url http://127.0.0.1:5080 --timeout 60
 python3 tools/check_external.py --minimum-approved 3
 python3 tools/check_grafana.py
 TOPICS="$(docker compose exec -T kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list)"
-GROUPS="$(docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list)"
+KAFKA_GROUP_LIST="$(docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list)"
 printf '%s\n' "$TOPICS"
-printf '%s\n' "$GROUPS"
+printf '%s\n' "$KAFKA_GROUP_LIST"
 for topic in globex.reviews reviews.moderated reviews.denied reviews.sentiment; do
   grep -Fqx "$topic" <<< "$TOPICS" || { echo "Missing Kafka topic $topic" >&2; exit 1; }
 done
