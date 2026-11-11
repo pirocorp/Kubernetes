@@ -65,6 +65,8 @@ spec:
 
 HTTP makes a GET request against the pod’s IP address on a specified port and path. It is considered successful if the status code is between 200 and 399
 
+> **NOTE (2026):** Updated the frozen `k8s.gcr.io/liveness` image and its `/server` argument to the [official Kubernetes agnhost example](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request). With `args: [liveness]`, `/healthz` on port `8080` initially returns HTTP 200, then HTTP 500 after approximately 10 seconds, allowing the liveness probe to demonstrate container restarts.
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -75,9 +77,11 @@ metadata:
 spec:
   containers:
   - name: liveness
-    image: k8s.gcr.io/liveness
+    # Kubernetes' old k8s.gcr.io registry was frozen in 2023.
+    # Use the maintained agnhost HTTP liveness example instead.
+    image: registry.k8s.io/e2e-test-images/agnhost:2.40
     args:
-    - /server
+    - liveness
     # Http livenessProbe at /healthz
     livenessProbe:
       httpGet:
