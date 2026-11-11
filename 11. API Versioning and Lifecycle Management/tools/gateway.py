@@ -22,7 +22,7 @@ UPSTREAM = os.getenv("M11_API_URL", "http://127.0.0.1:8080").rstrip("/")
 if min(len(API_KEY), len(ADMIN_KEY)) < 16:
     raise SystemExit("Set API_KEY and ADMIN_KEY with at least 16 characters")
 stats = Counter()
-DEPRECATION_DATE = datetime(2027, 1, 1, tzinfo=timezone.utc)
+DEPRECATION_DATE = datetime(2026, 1, 1, tzinfo=timezone.utc)
 SUNSET_DATE = datetime(2027, 6, 30, tzinfo=timezone.utc)
 
 
