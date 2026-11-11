@@ -3,11 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "node --check server.js"
   },
   "dependencies": {
     "express": "5.1.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"
+  },
+  "engines": {
+    "node": ">=22 <23",
+    "npm": ">=10 <12"
   }
 }
