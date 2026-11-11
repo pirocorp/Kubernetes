@@ -30,6 +30,7 @@ spec:
       name: facts-data
     spec:
       accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ""
       resources:
         requests:
           storage: 1Gi

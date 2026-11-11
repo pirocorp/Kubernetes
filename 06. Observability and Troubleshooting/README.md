@@ -1,3 +1,5 @@
+> **Kubernetes 1.37 (2026):** For a self-contained, executable walkthrough of Homework scenarios 2, 3 and 4 (including solution manifests, NFS server setup, expected status and cleanup), start with [LAB-2026.md](./LAB-2026.md). The original DOCX/ZIP examples and screenshots are historical; do not reinstall Flannel on a cluster that already uses Calico.
+
 # Health and Status Checks ([Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/))
 
 Periodic checks executed by the **kubelet** against containers. Those checks are known as **probes**. They can be **liveness**, **readiness**, and **startup** probes. Their status can be either **Success**, **Failure**, or **Unknown**. Used for a better control over the container and pod lifecycle and better integration with other objects.
