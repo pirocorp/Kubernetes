@@ -56,11 +56,10 @@ app.MapPost("/v1/placeorder", async (HttpContext context) =>
         return Results.Json(new ApiError("gone", "Version v1 has been retired"),
             statusCode: StatusCodes.Status410Gone);
 
-    if (!await TryReadOrder(context.Request))
+    using var document = await ParseOrder(context.Request);
+    if (document is null)
         return Results.BadRequest(new ApiError("validation_error", "Invalid order payload"));
 
-    var document = await ReadOrder(context.Request);
-    using (document)
     {
         var root = document.RootElement;
         if (!ValidText(root, "firstName", 80) ||
@@ -80,11 +79,10 @@ app.MapPost("/v1/placeorder", async (HttpContext context) =>
 
 app.MapPost("/v2/placeorder", async (HttpContext context) =>
 {
-    if (!await TryReadOrder(context.Request))
+    using var document = await ParseOrder(context.Request);
+    if (document is null)
         return Results.BadRequest(new ApiError("validation_error", "Invalid order payload"));
 
-    var document = await ReadOrder(context.Request);
-    using (document)
     {
         var root = document.RootElement;
         if (!ValidText(root, "fullName", 160) ||
@@ -104,29 +102,23 @@ app.MapPost("/v2/placeorder", async (HttpContext context) =>
 // A single process is sufficient to demonstrate version compatibility, not HA or persistence.
 app.Run();
 
-static async Task<bool> TryReadOrder(HttpRequest request)
+static async Task<JsonDocument?> ParseOrder(HttpRequest request)
 {
-    // Validate JSON once using a buffered body, then reset for the parser below.
-    request.EnableBuffering();
     if (request.ContentLength is > 8192)
-        return false;
+        return null;
     try
     {
-        using var doc = await JsonDocument.ParseAsync(request.Body);
-        return doc.RootElement.ValueKind == JsonValueKind.Object;
+        var doc = await JsonDocument.ParseAsync(request.Body);
+        if (doc.RootElement.ValueKind == JsonValueKind.Object)
+            return doc;
+        doc.Dispose();
+        return null;
     }
     catch (JsonException)
     {
-        return false;
-    }
-    finally
-    {
-        request.Body.Position = 0;
+        return null;
     }
 }
-
-static Task<JsonDocument> ReadOrder(HttpRequest request) =>
-    JsonDocument.ParseAsync(request.Body);
 
 static bool ValidText(JsonElement root, string property, int maxLength) =>
     root.TryGetProperty(property, out var value) &&
