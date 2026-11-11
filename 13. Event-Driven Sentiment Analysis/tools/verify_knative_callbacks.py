@@ -6,7 +6,7 @@ import time
 import urllib.error
 import urllib.request
 
-BASE = "http://127.0.0.1:5080"
+BASE = os.getenv("M13_CALLBACK_BASE_URL", "http://127.0.0.1:5081")
 payload = {"productId": "callback-1", "category": "clothing", "text": "I love this excellent item"}
 def post(path, item):
     req = urllib.request.Request(BASE + path, method="POST", data=json.dumps(item).encode(),
