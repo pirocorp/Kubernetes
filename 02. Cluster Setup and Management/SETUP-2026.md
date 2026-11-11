@@ -242,26 +242,29 @@ kubectl get nodes -o wide
 
 At this stage, a **NotReady** node can be expected until a CNI plugin is installed. **Do not commit admin.conf, kubeconfig private keys, or bootstrap tokens to Git.**
 
-## 5. Install Calico 3.33 networking (control-plane node only)
+## 5. Install Calico v3.33.0 — VXLAN / BGP disabled (control-plane node only)
 
-**Chosen CNI for the whole course:** Calico Open Source 3.33, **VXLAN encapsulation, BGP disabled**, Pod CIDR **10.244.0.0/16**. This CNI supports the later NetworkPolicy exercises. This is the default for both standard and HA labs.
+Our standard and HA labs both use **Calico Open Source v3.33.0 with VXLAN encapsulation**, with **BGP explicitly disabled**. Calico provides CNI connectivity and enforcement of standard Kubernetes NetworkPolicy, which is required by module 03 of the original course.
 
-Calico uses UDP **4789** between nodes for VXLAN. Allow that protocol in the node-to-node firewall. Do not install Flannel into the same lab cluster. Calico also needs to manage its own cali*/vxlan.calico interfaces; check [host requirements](https://docs.tigera.io/calico/latest/getting-started/kubernetes/requirements) if you use NetworkManager or a custom host firewall.
+**Requirement:** nodes communicate bidirectionally over UDP 4789 (VXLAN). The CNI IP pool **10.244.0.0/16** matches --pod-network-cidr in kubeadm init and does not overlap with the Service subnet **10.96.0.0/12**. Allow Calico to manage its cali* and vxlan.calico interfaces (especially when NetworkManager is enabled).
 
-The following commands install the v3.33.0 **Tigera Operator**, following its [official installation instructions](https://docs.tigera.io/calico/latest/getting-started/kubernetes/self-managed-onprem/onpremises):
+The Tigera Operator is recommended because it manages the Calico lifecycle. As of Kubernetes 1.36+, Calico's native v3 API CRDs use the GA MutatingAdmissionPolicy API. These are the official pinned manifests from the 3.33.0 release:
 
 ~~~bash
 kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.33.0/manifests/v3_projectcalico_org.yaml
 kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.33.0/manifests/tigera-operator.yaml
 
-curl -fLO https://raw.githubusercontent.com/projectcalico/calico/v3.33.0/manifests/custom-resources.yaml
+kubectl get deployments -n tigera-operator
 ~~~
 
-**Do not apply the downloaded custom resources unchanged.** Edit the existing Installation resource (normally named default) inside custom-resources.yaml. It must include these values under spec:
+Rather than telling the reader to manually alter unknown fields in a downloaded sample, **create a complete Installation resource** with our agreed settings. On cp1, where kubectl has admin access:
 
-~~~yaml
-# Illustrative extract from the existing Installation resource; keep the
-# other operator-supplied fields and any additional resources intact.
+~~~bash
+cat > "$HOME/calico-installation.yaml" <<'EOF'
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: default
 spec:
   calicoNetwork:
     bgp: Disabled
@@ -271,34 +274,39 @@ spec:
         encapsulation: VXLAN
         natOutgoing: Enabled
         nodeSelector: all()
+EOF
+
+kubectl apply -f "$HOME/calico-installation.yaml"
 ~~~
 
-Do not add a *second* Installation resource to the file. The CIDR must match the kubeadm --pod-network-cidr and must not overlap LAN, VPN or service networks.
+No BGP mesh is deployed. The operator sets up Calico networking and its related resources; it may take some time for images and Pods to start. **Do not install Flannel in the same cluster**.
 
 ~~~bash
-grep -nE "bgp:|cidr:|encapsulation:|natOutgoing:|nodeSelector:" custom-resources.yaml
-# Review the whole file with your editor and confirm it contains the values above:
-kubectl create -f custom-resources.yaml
-
 kubectl get installation.operator.tigera.io default -o yaml
 kubectl get tigerastatus
 kubectl get pods -n tigera-operator
-kubectl get pods -n calico-system
+kubectl get pods -n calico-system -o wide
+kubectl get pods -n kube-system -l k8s-app=kube-dns -o wide
 kubectl get nodes -o wide
 ~~~
 
-**Expected:** the Installation reports bgp: Disabled and VXLAN for 10.244.0.0/16; the Calico components and CoreDNS become healthy and the node reports Ready. Cluster initialization and image pulls may take time; investigate actual errors instead of repeatedly reapplying or installing a second CNI.
+**Expected:**
+- Installation spec shows **bgp: Disabled**, **encapsulation: VXLAN**, Pod CIDR **10.244.0.0/16**.
+- Operator/Tigera statuses show Available/healthy; Calico Pods reach Running/Ready.
+- CoreDNS becomes Running/Ready, and cp1 becomes Ready.
 
 If troubleshooting:
 
 ~~~bash
 kubectl describe installation.operator.tigera.io default
-kubectl describe nodes
 kubectl get events -A --sort-by=.lastTimestamp
+kubectl describe nodes
 kubectl get pods -A -o wide
 ~~~
 
-If a new cluster uses a different Pod CIDR, edit **both** kubeadm init and Calico Installation before the first CNI deployment.
+If the selected VM subnet overlaps 10.244.0.0/16, choose another non-overlapping Pod CIDR and update **both** kubeadm and the Installation resource *before creating the cluster*.
+
+**Why changed from Flannel?** The original module 02 used Flannel as a simpler overlay. Calico's built-in NetworkPolicy support lets the same cluster complete module 03 without replacing the CNI. The optional Flannel-only install is in section 17.
 
 ## 6. Join worker nodes
 
@@ -835,9 +843,10 @@ kubectl -n policy-lab wait --for=condition=Ready pod/allowed pod/blocked --timeo
 kubectl -n policy-lab rollout status deployment/web
 ~~~
 
-Apply this namespaced **Ingress** policy: the NGINX Pods are selected and only traffic from Pods labelled access=granted in the same namespace may reach TCP/80.
+Apply this namespaced **Ingress** policy. It targets the NGINX Pods and allows connections only from same-namespace Pods labelled access=granted, to TCP port 80.
 
-~~~yaml
+~~~bash
+cat > "$HOME/policy-lab.yaml" <<'EOF'
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -857,12 +866,9 @@ spec:
       ports:
         - protocol: TCP
           port: 80
-~~~
+EOF
 
-Save as policy-lab.yaml, then:
-
-~~~bash
-kubectl apply -f policy-lab.yaml
+kubectl apply -f "$HOME/policy-lab.yaml"
 kubectl -n policy-lab get networkpolicy
 kubectl -n policy-lab exec allowed -- wget -qO- -T 3 http://web
 kubectl -n policy-lab exec blocked -- wget -qO- -T 3 http://web
