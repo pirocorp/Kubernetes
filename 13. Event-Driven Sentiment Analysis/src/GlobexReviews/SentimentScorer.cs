@@ -26,6 +26,6 @@ public sealed class SentimentScorer(IConfiguration config, IHttpClientFactory fa
             model.Score is < -1 or > 1 || string.IsNullOrWhiteSpace(model.Model))
             throw new JsonException("Inference model returned invalid score/label");
         return new SentimentReading(review.Id, review.Category,
-            model.Label, model.Score, model.Model, DateTimeOffset.UtcNow);
+            model.Label, model.Score, model.Model, review.SubmittedAt);
     }
 }
