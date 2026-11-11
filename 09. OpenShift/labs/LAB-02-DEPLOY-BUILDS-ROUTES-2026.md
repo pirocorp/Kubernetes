@@ -6,7 +6,7 @@
 
 ## 1. Preflight
 
-Ползвай Sandbox от [Red Hat](https://developers.redhat.com/developer-sandbox). Първо изпълни [Lab 09-A](./LAB-01-SANDBOX-CLI-2026.md) за безопасен login с изолиран KUBECONFIG. Тук следва **пълен self-contained source setup**; при изолирана среда без Git repo, файловете са дадени по-долу. Нужни са работещи `oc`, `curl`, Bash, достъп към публичния UBI registry и Python package index от cluster Builds. Използваните image tags са `ubi9/httpd-24:latest` и `ubi9/python-312:latest`: Python 3.12 е фиксиран на minor ниво, но tags **не са immutable digests**, затова при execution записвай разрешения digest и не твърдиш production pin.
+Ползвай Sandbox от [Red Hat](https://developers.redhat.com/developer-sandbox). Първо изпълни [Lab 09-A](./LAB-01-SANDBOX-CLI-2026.md) за безопасен login с изолиран KUBECONFIG. Тук следва **пълен self-contained source setup**; при изолирана среда без Git repo, файловете са дадени по-долу. Нужни са работещи `oc`, `curl`, `git`, Bash, достъп към публичния UBI registry и Python package index от cluster Builds. Използваните image tags са `ubi9/httpd-24:latest` и `ubi9/python-312:latest`: Python 3.12 е фиксиран на minor ниво, но tags **не са immutable digests**, затова при execution записвай разрешения digest и не твърдиш production pin.
 
 ```bash
 oc whoami
@@ -16,9 +16,15 @@ oc auth can-i create deployments.apps
 oc auth can-i create services
 oc auth can-i create routes.route.openshift.io
 oc auth can-i create buildconfigs.build.openshift.io
+oc auth can-i create imagestreams.image.openshift.io
+oc auth can-i create builds.build.openshift.io
+oc auth can-i create configmaps
 oc get deployment,svc,route,cm,bc,is
 mkdir -p lab09b/source
 cd lab09b
+git clone --depth=1 https://github.com/pirocorp/Kubernetes.git "$PWD/course-reference"
+cp "$PWD/course-reference/09. OpenShift/labs/examples/httpd-deployment/image.yaml" ./image.yaml
+test -s image.yaml
 ```
 
 **Очаквано:** валиден собствен Project; create permissions = `yes`. Ако BuildConfig е забранен, изпълни само B1 и отбележи B2 като блокиран от разрешенията. **Не** ползвай `oc adm policy add-scc-to-user`. Имената `m09-*` трябва да са свободни.
@@ -87,7 +93,7 @@ spec:
   - {name: http, port: 8080, targetPort: http}
 ```
 
-Създай локален файл с име `image.yaml` и горното YAML съдържание; не са нужни други файлове.
+**Готов файл:** [image.yaml](./examples/httpd-deployment/image.yaml) е включен в хранилището и вече е копиран с командите от preflight. YAML е показан тук, за да можеш да го прочетеш и разбереш; не е нужно да го въвеждаш на ръка.
 
 ```bash
 oc apply --dry-run=client -f image.yaml
@@ -149,12 +155,14 @@ oc new-app --image-stream=m09-source:latest --name=m09-source -l app=m09-source
 oc set env deployment/m09-source APP_MODULE=app:app APP_VERSION=v1
 oc rollout status deployment/m09-source --timeout=240s
 oc get svc m09-source -o yaml
+SOURCE_SVC_PORT="$(oc get svc m09-source -o jsonpath='{.spec.ports[0].port}')"
+test "$SOURCE_SVC_PORT" = "8080" || { echo "Очакван Service port 8080, получен: $SOURCE_SVC_PORT; провери Service и container configuration" >&2; false; }
 ```
 
-**Очаквано:** Build phase `Complete`, ImageStream `m09-source:latest`, Deployment Ready, Service на **8080**. Ако генерираният Service има различен port/name, използвай реалния `Service.spec.ports` вместо да копираш на сляпо последващия Route command.
+**Очаквано:** Build phase `Complete`, ImageStream `m09-source:latest`, Deployment Ready, Service на **8080**. Ако портът е различен от очакваните 8080, **спри и диагностицирай** генерирания Service и container port преди Route; следващата команда използва проверения `SOURCE_SVC_PORT`.
 
 ```bash
-oc create route edge m09-source --service=m09-source --port=8080 --insecure-policy=Redirect
+oc create route edge m09-source --service=m09-source --port="$SOURCE_SVC_PORT" --insecure-policy=Redirect
 SOURCE_HOST="$(oc get route m09-source -o jsonpath='{.spec.host}')"
 curl -fsS "https://$SOURCE_HOST/healthz"
 curl -fsS "https://$SOURCE_HOST/"
@@ -179,9 +187,46 @@ oc logs deployment/m09-source --tail=30
 5. Name/label: `m09-git`; Resource type: **Deployment** (не DeploymentConfig); Route: **Enabled**; Create.
 6. Намери Build и прегледай log до **Complete**; виж `oc get bc,is,deploy,svc,route` и `oc rollout status deploy/m09-git --timeout=240s`.
 7. Намери Route hostname: `oc get route m09-git -o jsonpath='{.spec.host}'`. В браузър посети `https://HOST/healthz`; очаква се `ok`. Ако Route не е генериран, създай го с реалния Service port.
-8. Cleanup: `oc delete route/m09-git deploy/m09-git svc/m09-git bc/m09-git is/m09-git --ignore-not-found`, проверявай и други обекти, създадени от wizard, преди да изтриваш.
+8. Cleanup: `oc delete route/m09-git deploy/m09-git svc/m09-git bc/m09-git is/m09-git --ignore-not-found`; провери и евентуални Build records с `oc get builds -l buildconfig=m09-git` и изтрий само собствените. Не пипай друг Project.
 
 **Обяснение:** Git S2I и Binary S2I произвеждат еднакъв клас image, но първият клонира source от Git, а вторият качва локална директория. При UI различия ползвай реалните полета `Git Repo URL / Context Dir / Builder / Name / Deployment / Route` — не се доверявай на снимка от 2023 г.
+
+### 3.4. Git source deployment чрез `oc` (без ръчно избиране на builder)
+
+Оригиналната учебна пътека включва и **създаване на приложение от Git чрез CLI**. След B2 ImageStream `m09-python-312:latest` вече е наличен. Следната команда посочва изрично source repository, context directory и builder, вместо да разчита на автоматично разпознаване:
+
+```bash
+oc new-app "m09-python-312:latest~https://github.com/pirocorp/Kubernetes.git#main" \
+  --context-dir='09. OpenShift/labs/examples/python-hello' \
+  --strategy=source --name=m09-git-cli -l app=m09-git-cli
+oc get buildconfig m09-git-cli
+oc get builds -l buildconfig=m09-git-cli
+oc logs -f buildconfig/m09-git-cli
+oc rollout status deployment/m09-git-cli --timeout=240s
+oc get service m09-git-cli -o yaml
+```
+
+**Очаквано:** Build phase `Complete`, създадени BuildConfig, ImageStream, Deployment и Service. Потвърди Service порт 8080 **преди** Route:
+
+```bash
+M09_GIT_PORT="$(oc get svc m09-git-cli -o jsonpath='{.spec.ports[0].port}')"
+test "$M09_GIT_PORT" = "8080"
+oc create route edge m09-git-cli --service=m09-git-cli --port="$M09_GIT_PORT" --insecure-policy=Redirect
+M09_GIT_HOST="$(oc get route m09-git-cli -o jsonpath='{.spec.host}')"
+curl -fsS "https://$M09_GIT_HOST/healthz" | grep ok
+```
+
+**Troubleshooting:** ако първият Build остане Pending/Failed, виж `oc get builds -l buildconfig=m09-git-cli`, `oc describe bc m09-git-cli` и `oc logs build/ИМЕ`; провери project quota и достъпността на GitHub. `#main` е **подвижна** Git референция: за повторение на идентичен source използвай `#<commit-SHA>` от конкретния checkout вместо `#main`. Това упражнение не изисква собствено GitHub хранилище.
+
+Cleanup **само на CLI варианта**:
+
+```bash
+oc delete route/m09-git-cli deployment/m09-git-cli service/m09-git-cli --ignore-not-found
+oc delete buildconfig/m09-git-cli imagestream/m09-git-cli --ignore-not-found
+oc get builds -l buildconfig=m09-git-cli
+```
+
+Ако има останали Build objects, изтрий ги по реалните имена и провери, че не остават ресурси с prefix `m09-git-cli`.
 
 ## 4. B3 — Scaling, rolling update и metrics
 
@@ -226,18 +271,19 @@ oc get hpa
 ## 6. Cleanup (само личните ресурси от този lab)
 
 ```bash
-oc delete route/m09-image route/m09-source --ignore-not-found
-oc delete deployment/m09-image deployment/m09-source --ignore-not-found
-oc delete service/m09-image service/m09-source --ignore-not-found
+oc delete route/m09-image route/m09-source route/m09-git-cli --ignore-not-found
+oc delete deployment/m09-image deployment/m09-source deployment/m09-git-cli --ignore-not-found
+oc delete service/m09-image service/m09-source service/m09-git-cli --ignore-not-found
 oc delete configmap/m09-html --ignore-not-found
-oc delete buildconfig/m09-source --ignore-not-found
-oc delete imagestream/m09-source imagestream/m09-python-312 --ignore-not-found
+oc delete buildconfig/m09-source buildconfig/m09-git-cli --ignore-not-found
+oc delete imagestream/m09-source imagestream/m09-python-312 imagestream/m09-git-cli --ignore-not-found
 oc get builds -l buildconfig=m09-source
+oc get builds -l buildconfig=m09-git
 oc get deploy,svc,route,bc,is,cm
 cd ..
 ```
 
-Ако има останали build records, премахни **само** имената от `oc get builds -l buildconfig=m09-source` (не изтривай всички Builds). Локалната директория `lab09b/` съдържа само тези source files и може да се изтрие след проверка на `pwd`. **Не** изтривай Project, чужди приложения или стандартния kubeconfig.
+Ако има останали build records, премахни **само** имената от `oc get builds -l buildconfig=m09-source` (не изтривай всички Builds). Локалната директория `lab09b/` съдържа само тези source files и може да се изтрие след проверка на `pwd`. **Не** изтривай Project, чужди приложения или стандартния kubeconfig. Локалната директория `lab09b/course-reference` е само checkout от Git; може да се запази за следващите упражнения или да се премахне **след проверка**, че не си добавял собствени файлове.
 
 ## 7. Acceptance criteria / version scope
 
