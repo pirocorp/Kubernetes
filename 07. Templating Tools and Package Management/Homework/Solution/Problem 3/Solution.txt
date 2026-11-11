@@ -1,1 +1,9 @@
-helm install demo webchart
+# From this Problem 3 directory:
+helm lint ./webchart
+helm template demo ./webchart
+helm install demo ./webchart
+
+# Expected: three Pods (default), ConfigMap with index.html and logo.svg,
+# and a NodePort Service on port 31000. Access http://<node-ip>:31000
+kubectl get deploy,pods,svc,cm
+helm uninstall demo
