@@ -7,8 +7,8 @@ test -f .env || { echo "Run python3 tools/init_env.py and docker compose up firs
 python3 - <<'PY'
 import socket,sys
 with socket.socket() as s:
-  try: s.bind(("127.0.0.1",5080))
-  except OSError as err: sys.exit(f"Port 5080 busy: {err}")
+  try: s.bind(("127.0.0.1",5081))
+  except OSError as err: sys.exit(f"Port 5081 busy: {err}")
 PY
 set -a
 . .env
