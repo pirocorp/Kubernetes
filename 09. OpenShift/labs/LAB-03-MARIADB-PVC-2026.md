@@ -122,11 +122,28 @@ spec:
 
 **Смисъл:** PVC е отделен от Pod, а Deployment е с `Recreate`, за да избегнем едновременно стартиране на две MariaDB instances върху една filesystem data directory. Това е **учебно single-instance решение**, не HA database архитектура.
 
-## 4. Изпълнение и проверки
+## 4. Deployment — избери един от двата начина
+
+И двата метода използват **същия** [db.yaml](./examples/mariadb/db.yaml) и вече създадения Secret `m09-db-creds`. **Изпълни само един метод**, а после общите проверки в 4.3.
+
+### 4.1. Метод A — чрез `oc` CLI (препоръчван)
 
 ```bash
 oc apply --dry-run=client -f db.yaml
 oc apply -f db.yaml
+```
+
+### 4.2. Метод B — чрез OpenShift Web Console
+
+1. Провери, че Secret `m09-db-creds` е създаден от раздел 2.
+2. В личния Project отвори **+Add → Import YAML** (или съответния YAML editor в наличната версия).
+3. Отвори [db.yaml](./examples/mariadb/db.yaml), постави **целия файл** и избери **Create**. YAML не съдържа пароли.
+4. В **Workloads → Deployments** потърси `m09-db`; в **Storage → PersistentVolumeClaims** — `m09-db-data`.
+5. Ако липсва Import YAML в дадена конзола, изпълни Метод A. **Не** създавай втори DB deployment със същите или други имена.
+
+### 4.3. Общи проверки
+
+```bash
 oc get pvc m09-db-data
 oc rollout status deployment/m09-db --timeout=300s
 oc get pods -l app=m09-db
@@ -135,19 +152,7 @@ oc get endpointslice -l kubernetes.io/service-name=m09-db
 oc logs deployment/m09-db --tail=50
 ```
 
-**Очаквано:** PVC е `Bound`, 1/1 DB Pod Ready, endpoint за TCP 3306; логовете показват успешна MariaDB initialization. Ако PVC е `Pending`, виж `oc describe pvc m09-db-data`. Ако image не се изтегли, виж `oc describe pod -l app=m09-db`. Ако SCC или файлова permission откаже достъп, **не** пускай DB като root — установи дали избраният image и StorageClass поддържат arbitrary UIDs.
-
-### 4.1. Алтернативен deployment през Web Console
-
-Официалният Red Hat курс разглежда и инсталация на база данни **през GUI**. Ако искаш да упражниш този път, изпълни го **вместо** реда `oc apply -f db.yaml` по-горе (не създавай отделен втори екземпляр):
-
-1. Увери се, че `m09-db-creds` вече е създаден с командите от раздел 2.
-2. Web Console → личния Project → **+Add / Import YAML** (или съответната опция за YAML ресурси).
-3. Отвори локално [db.yaml](./examples/mariadb/db.yaml), копирай **целия файл** в редактора и избери **Create**. Тук няма Secret стойности.
-4. В Workloads → Deployments намери `m09-db`; в Storage → PersistentVolumeClaims намери `m09-db-data`.
-5. Върни се към CLI проверките `oc rollout status deployment/m09-db`, `oc get pvc m09-db-data` и `oc get endpointslice -l kubernetes.io/service-name=m09-db`.
-
-**Критерий:** и двата метода създават същите ресурси. Изпълни точно **един** от тях. Ако GUI не предлага YAML import, използвай CLI метода, който е пълен и независим от това меню.
+**Очаквано:** PVC `Bound`, 1/1 DB Pod Ready, endpoint за TCP 3306 и успешна MariaDB initialization в логовете. Ако PVC е `Pending`, виж `oc describe pvc m09-db-data`; ако image не се изтегли, `oc describe pod -l app=m09-db`. Ако SCC или filesystem permissions откажат достъп, **не** пускай DB като root — установи дали image и StorageClass поддържат arbitrary UIDs.
 
 ## 5. SQL schema и реална заявка
 
