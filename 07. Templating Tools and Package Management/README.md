@@ -549,6 +549,9 @@ kubectl delete cm my-nginx-2-index
 
 ## Create Chart from Manifest
 
+> **NOTE (2026):** The following generic `appchart` walkthrough is retained from the course. Its third-party `shekeriev/k8s-environ:latest` image is **not version-pinned**; before deploying in a long-lived environment, choose and verify an immutable image tag or digest. The separate [homework NGINX chart](./Homework/Solution/Problem%203/webchart/) now defaults to an explicitly versioned image.
+
+
 Original manifest
 
 ```yaml
@@ -635,9 +638,9 @@ spec:
         image: shekeriev/k8s-environ:latest
         env:
         - name: APPROACH
-          value: {{ .Values.approachVar }}
+          value: {{ .Values.approachVar | quote }}
         - name: FOCUSON
-          value: {{ .Values.focusOnVar }}
+          value: {{ .Values.focusOnVar | quote }}
 ```
 
 service.yaml
@@ -669,17 +672,19 @@ nodePort: 30001
 Let’s test our newly created chart
 
 ```bash
-helm show all <chart name>
+helm show all ./appchart
+helm lint ./appchart
+helm template demo ./appchart
 ```
 
-Install chart. In the above example chart name is appchart. Release name is user provided
+Install chart from the directory containing `appchart/`. Use a lowercase release name and an explicit `./` for the local chart path:
 
 ```bash
-helm install <release name> <chart name>
+helm install demo ./appchart
 ```
 
 Install chart with custom parameters.
 
 ```bash
-helm install testRelease appchart --set nodePort=30002 --set replicasCount=3
+helm install demo-custom ./appchart --set nodePort=30002 --set replicasCount=3
 ```

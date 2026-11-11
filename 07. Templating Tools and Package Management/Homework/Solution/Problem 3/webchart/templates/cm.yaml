@@ -3,6 +3,21 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-cm
 data:
-  index.html: <h1>{{ .Values.greetingMessage }}</h1><img src="https://www.linuxadictos.com/wp-content/uploads/nginx-1.jpg" alt="nginx logo">
-
-
+  # NOTE (2026): Serve both HTML and the picture from this ConfigMap.
+  # The historical remote JPG could disappear or require internet access.
+  index.html: |-
+    <!doctype html>
+    <html lang="en">
+      <head><meta charset="utf-8"><title>NGINX Helm lab</title></head>
+      <body>
+        <h1>{{ .Values.greetingMessage }}</h1>
+        <img src="/logo.svg" alt="Kubernetes Helm lab illustration" width="240" height="120">
+      </body>
+    </html>
+  logo.svg: |-
+    <svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120">
+      <rect width="240" height="120" rx="12" fill="#e9f7ef"/>
+      <circle cx="60" cy="60" r="35" fill="#168a4a"/>
+      <text x="60" y="69" font-size="24" fill="white" text-anchor="middle" font-family="sans-serif">K8s</text>
+      <text x="108" y="69" font-size="26" fill="#14532d" font-family="sans-serif">Helm</text>
+    </svg>

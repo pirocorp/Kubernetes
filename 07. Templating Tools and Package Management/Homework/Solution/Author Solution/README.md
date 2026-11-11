@@ -204,21 +204,25 @@ webchart/Chart.yaml
 ```yaml
 apiVersion: v2
 name: webchart
-description: A simple Nginx-based Helm chart for Kubernetes
-# Chart type. A chart can be either an 'application' or a 'library' chart
+description: A simple NGINX-based Helm chart for Kubernetes
 type: application
-# Version of the chart
-version: 0.1.0
-# Version of the application. In our case - Nginx 1.21.4
-appVersion: "1.21.4"
+# Chart version; bumped because the image and tutorial are updated.
+version: 0.2.0
+# Default NGINX application version (image tag is explicitly configurable).
+appVersion: "1.30.6"
 ```
 
 webchart/values.yaml
 
 ```yaml
 replicasCount: 3
-greetingMessage: Hello from NGINX chart :)
+greetingMessage: "Hello from NGINX chart :)"
 nodePort: 31000
+# NOTE (2026): Explicit version instead of implicit nginx:latest.
+# Update the tag deliberately when refreshing this learning example.
+image:
+  repository: nginx
+  tag: "1.30.6-alpine-slim"
 ```
 
 webchart/templates/svc.yaml
@@ -246,7 +250,24 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-cm
 data:
-  index.html: <h1>{{ .Values.greetingMessage }}</h1><img src="https://www.linuxadictos.com/wp-content/uploads/nginx-1.jpg" alt="nginx logo">
+  # NOTE (2026): Serve both HTML and the picture from this ConfigMap.
+  # The historical remote JPG could disappear or require internet access.
+  index.html: |-
+    <!doctype html>
+    <html lang="en">
+      <head><meta charset="utf-8"><title>NGINX Helm lab</title></head>
+      <body>
+        <h1>{{ .Values.greetingMessage }}</h1>
+        <img src="/logo.svg" alt="Kubernetes Helm lab illustration" width="240" height="120">
+      </body>
+    </html>
+  logo.svg: |-
+    <svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120">
+      <rect width="240" height="120" rx="12" fill="#e9f7ef"/>
+      <circle cx="60" cy="60" r="35" fill="#168a4a"/>
+      <text x="60" y="69" font-size="24" fill="white" text-anchor="middle" font-family="sans-serif">K8s</text>
+      <text x="108" y="69" font-size="26" fill="#14532d" font-family="sans-serif">Helm</text>
+    </svg>
 ```
 
 webchart/templates/deployment.yaml
@@ -268,7 +289,7 @@ spec:
     spec:
       containers:
       - name: main
-        image: nginx
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         ports:
         - containerPort: 80
         volumeMounts:
@@ -280,10 +301,14 @@ spec:
           name: {{ .Release.Name }}-cm
 ```
 
-Can deploy the chart with (for example with one replica instead of three)
+**NOTE (2026):** The executable chart uses a versioned NGINX image (`nginx:1.30.6-alpine-slim`) instead of implicit `nginx:latest`. Its ConfigMap serves both `index.html` and `logo.svg` locally, so the page's picture does not depend on a third-party URL. The chart is named `webchart`, and the replicas setting is **`replicasCount`** (not `replicaCount`).
+
+From the `07. Templating Tools and Package Management/Homework/Solution/Problem 3/` directory, validate/render and install the chart, for example with one replica instead of three:
 
 ```bash
-helm install homework hwchart --set replicaCount=1
+helm lint ./webchart
+helm template homework ./webchart --set replicasCount=1
+helm install homework ./webchart --set replicasCount=1
 ```
 
 Check the deployed resources
@@ -292,7 +317,7 @@ Check the deployed resources
 kubectl get pods,svc,cm,deploy
 ```
 
-Open a browser tab and navigate to ```http://<cluster-ip>:31000```. App should be there and working. 
+Open a browser tab and navigate to ```http://<node-ip>:31000``` (replace `<node-ip>` with an address reachable from your workstation). You should see the greeting text and an embedded SVG picture. 
 
 Clean Up
 

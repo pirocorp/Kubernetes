@@ -1,3 +1,8 @@
 replicasCount: 3
-greetingMessage: Hello from NGINX chart :)
+greetingMessage: "Hello from NGINX chart :)"
 nodePort: 31000
+# NOTE (2026): Explicit version instead of implicit nginx:latest.
+# Update the tag deliberately when refreshing this learning example.
+image:
+  repository: nginx
+  tag: "1.30.6-alpine-slim"
