@@ -258,9 +258,9 @@ Example for **a new disposable lab namespace** (Kubernetes v1.25+):
 
 ```bash
 kubectl create namespace security-lab
-kubectl label namespace security-lab \\
-  pod-security.kubernetes.io/enforce=baseline \\
-  pod-security.kubernetes.io/warn=restricted \\
+kubectl label namespace security-lab \
+  pod-security.kubernetes.io/enforce=baseline \
+  pod-security.kubernetes.io/warn=restricted \
   pod-security.kubernetes.io/audit=restricted
 kubectl get namespace security-lab --show-labels
 # Clean up when finished:
