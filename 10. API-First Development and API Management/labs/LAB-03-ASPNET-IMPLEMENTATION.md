@@ -40,7 +40,7 @@ curl -fsS -H "X-Api-Key: $API_KEY" http://127.0.0.1:8080/v1/products
 python3 tools/contract_check.py --base-url http://127.0.0.1:8080
 ```
 
-**Очаквано:** `GET /healthz` → `ok`; catalog с Keyboard/Mouse; contract suite проверява `200`, `401`, `404`, `201` и структурите `Product`, `ProductList`, `ApiError`.
+**Очаквано:** `GET /healthz` → `ok`; catalog с Keyboard/Mouse; contract suite проверява `200`, `401`, `404`, `201`, `400` (включително липсващо задължително поле) и структурите `Product`, `ProductList`, `ApiError`.
 
 ### Негативен тест
 
