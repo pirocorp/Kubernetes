@@ -1,3 +1,6 @@
+# NOTE (2026): Recycle is deprecated; Retain preserves NFS data after PVC deletion.
+# With Retain, the PV becomes Released and requires manual reclamation.
+# storageClassName: "" binds static PVs even if the cluster has a default StorageClass.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -10,7 +13,8 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
   mountOptions:
     - nfsvers=4.1
   nfs:
@@ -31,7 +35,8 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
   mountOptions:
     - nfsvers=4.1
   nfs:
@@ -52,7 +57,8 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
   mountOptions:
     - nfsvers=4.1
   nfs:
@@ -91,6 +97,7 @@ spec:
       name: facts-data
     spec:
       accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ""
       resources:
         requests:
           storage: 2Gi
