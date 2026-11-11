@@ -26,7 +26,7 @@ cleanup() {
   rm -rf -- "$work"
 }
 trap cleanup EXIT
-ASPNETCORE_URLS=http://127.0.0.1:5080 REVIEWS_MODE=knative  dotnet src/GlobexReviews/bin/Release/net10.0/GlobexReviews.dll > "$work/app.log" 2>&1 &
+ASPNETCORE_URLS=http://127.0.0.1:5081 REVIEWS_MODE=knative  dotnet src/GlobexReviews/bin/Release/net10.0/GlobexReviews.dll > "$work/app.log" 2>&1 &
 pid="$!"
 for i in $(seq 1 30); do
   if python3 - <<'PY'
