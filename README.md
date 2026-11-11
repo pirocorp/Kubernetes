@@ -191,6 +191,8 @@ kubectl [command] [TYPE] [NAME] [flags]
 
 #### Resource types
 
+> **NOTE (2026):** This resource table is a historical snapshot, not a current Kubernetes v1.37 API inventory. Run `kubectl api-resources` against your own cluster to see the resources it actually serves. In particular, the `PodSecurityPolicy` entry below was **removed in v1.25**.
+
 | NAME                            | SHORTNAMES | APIGROUP                     | NAMESPACED | KIND                           |
 |---------------------------------|------------|------------------------------|------------|--------------------------------|
 | bindings                        |            |                              | true       | Binding                        |
@@ -239,7 +241,7 @@ kubectl [command] [TYPE] [NAME] [flags]
 | networkpolicies                 | netpol     | networking.k8s.io            | true       | NetworkPolicy                  |
 | runtimeclasses                  |            | node.k8s.io                  | false      | RuntimeClass                   |
 | poddisruptionbudgets            | pdb        | policy                       | true       | PodDisruptionBudget            |
-| podsecuritypolicies             | psp        | policy                       | false      | PodSecurityPolicy              |
+| podsecuritypolicies             | psp        | policy                       | false      | PodSecurityPolicy (removed v1.25) |
 | clusterrolebindings             |            | rbac.authorization.k8s.io    | false      | ClusterRoleBinding             |
 | clusterroles                    |            | rbac.authorization.k8s.io    | false      | ClusterRole                    |
 | rolebindings                    |            | rbac.authorization.k8s.io    | true       | RoleBinding                    |
@@ -249,6 +251,23 @@ kubectl [command] [TYPE] [NAME] [flags]
 | csinodes                        |            | storage.k8s.io               | false      | CSINode                        |
 | storageclasses                  | sc         | storage.k8s.io               | false      | StorageClass                   |
 | volumeattachments               |            | storage.k8s.io               | false      | VolumeAttachment               |
+
+**NOTE (2026) — PodSecurityPolicy → Pod Security Admission:** `PodSecurityPolicy` (PSP) was deprecated in Kubernetes v1.21 and removed in v1.25. The built-in **Pod Security Admission** controller enforces Pod Security Standards through **Namespace labels** (`privileged`, `baseline`, `restricted`) in `enforce`, `warn`, or `audit` modes. It is an admission controller, **not** a replacement resource type in the table above. PSP rules are not guaranteed to map one-to-one to these predefined standards.
+
+Example for **a new disposable lab namespace** (Kubernetes v1.25+):
+
+```bash
+kubectl create namespace security-lab
+kubectl label namespace security-lab \
+  pod-security.kubernetes.io/enforce=baseline \
+  pod-security.kubernetes.io/warn=restricted \
+  pod-security.kubernetes.io/audit=restricted
+kubectl get namespace security-lab --show-labels
+# Clean up when finished:
+kubectl delete namespace security-lab
+```
+
+With this example, Pods that violate the **baseline** standard are rejected; violations of **restricted** trigger warnings and audit annotations. Use the [official Pod Security Admission documentation](https://kubernetes.io/docs/concepts/security/pod-security-admission/) and [PodSecurityPolicy removal guide](https://kubernetes.io/docs/concepts/security/pod-security-policy/) for details.
 
 #### Output options
   
