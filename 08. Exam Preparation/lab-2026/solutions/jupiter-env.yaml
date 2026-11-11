@@ -1,0 +1,38 @@
+# Training-only credentials: NOT suitable for real secrets.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+  namespace: exam-jupiter
+data:
+  MODE: "exam"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-credentials
+  namespace: exam-jupiter
+type: Opaque
+stringData:
+  PASSWORD: "demo-only"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: env-check
+  namespace: exam-jupiter
+spec:
+  containers:
+  - name: checker
+    image: busybox:1.36
+    command: ["/bin/sh", "-c"]
+    args:
+    - |
+      test "$MODE" = "exam" && test "$PASSWORD" = "demo-only" &&
+        echo configuration-ok
+      sleep 3600
+    envFrom:
+    - configMapRef:
+        name: app-settings
+    - secretRef:
+        name: api-credentials
