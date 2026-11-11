@@ -631,99 +631,185 @@ kubectl -n kube-system get cm kubeadm-config -o yaml
 
 For real disaster recovery, follow upstream guidance on **revision bump / mark compacted** and restart relevant control-plane components so cached watches do not retain stale state. This instructional exercise does not claim to cover production restoration. Clean up local temporary files and recovery directories only after verifying success.
 
-## 13. Kubernetes upgrade lab — kubeadm 1.36 → 1.37
+## 13. Kubernetes upgrade lab — v1.36.x → v1.37.x
 
-This is a **separate lab**: it requires an existing **healthy Kubernetes 1.36.x** cluster. You **cannot** meaningfully perform a 1.36→1.37 upgrade on the v1.37 cluster installed above. To follow the original exercise, create a dedicated 1.36 lab first (adjust the versioned APT repo and the CNI release to ones compatible with 1.36), or carry out a **1.37.x patch upgrade** with the corresponding documented steps.
+**This is a separate lab with an existing healthy v1.36.x cluster.** You cannot upgrade a v1.37 cluster *to the same minor version* and call that a v1.36→v1.37 exercise. Kubernetes does not support skipping minor versions.
 
-**No skipping minor releases.** Read [official kubeadm 1.36→1.37 instructions](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/) and release notes before upgrading.
+### 13.1 Prepare the source 1.36 lab (clean VMs)
 
-### Preparation
+Use **fresh cp1/wk1/wk2 VMs**, following the OS, addressing, swap, cgroup and containerd instructions in sections 0–2. For this *source lab only*, install Kubernetes 1.36 packages, not 1.37. Configure the v1.36 APT repository below on **all three** nodes:
 
-On a healthy cluster:
+~~~bash
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gpg
+sudo mkdir -p -m 755 /etc/apt/keyrings
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.36/deb/Release.key |
+  sudo gpg --batch --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.36/deb/ /' |
+  sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+sudo apt-get update
+apt-cache madison kubeadm
+K8S_SRC_PKG="$(apt-cache madison kubeadm | awk '$3 ~ /^1[.]36[.]/ {print $3; exit}')"
+test -n "$K8S_SRC_PKG" || { echo "No 1.36 package found"; exit 1; }
+sudo apt-get install -y "kubeadm=$K8S_SRC_PKG" "kubelet=$K8S_SRC_PKG" "kubectl=$K8S_SRC_PKG"
+sudo apt-mark hold kubeadm kubelet kubectl
+~~~
+
+Use the *same source package patch* across the three machines. On cp1 initialize Kubernetes as in **section 4**, install **Calico 3.33 / VXLAN / BGP Disabled** exactly as in **section 5** (Calico 3.33 is tested against Kubernetes 1.36), join workers as in **section 6**, and verify in section 7. Now you have an actual source cluster ready for the following upgrade.
+
+### 13.2 Preparation and backup
+
+Run on cp1 or a trusted workstation:
 
 ~~~bash
 kubectl get nodes -o wide
 kubectl get pods -A
 kubectl get pdb -A
 kubectl version
+kubectl get tigerastatus
 ~~~
 
-Back up etcd (section 11), capture kubeadm configuration, check CNI compatibility, and confirm enough spare worker resources to drain nodes.
+Verify every node is Ready and the API is healthy. Complete the **etcd backup (section 11)**; record a copy of the **kubeadm-config ConfigMap**, the Calico version and the current versions. Ensure workloads have enough remaining capacity for drain.
 
-### Change the Kubernetes APT minor repository on all nodes
+### 13.3 Switch the APT repo to 1.37 on each node
 
-The repo installed for 1.36 includes **only** packages for that minor release. On each node, update the APT line to:
-
-~~~text
-deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.37/deb/ /
-~~~
-
-Then:
+Perform on cp1, wk1 and wk2, before their individual package upgrade, without yet replacing the 1.36 packages:
 
 ~~~bash
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.37/deb/ /' |
+  sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update
 apt-cache madison kubeadm
+
+K8S_TARGET_PKG="$(apt-cache madison kubeadm | awk '$3 ~ /^1[.]37[.]/ {print $3; exit}')"
+test -n "$K8S_TARGET_PKG" || { echo "No 1.37 package found"; exit 1; }
+K8S_TARGET_VER="$(printf '%s' "$K8S_TARGET_PKG" | cut -d- -f1)"
+printf 'Chosen target package: %s / release v%s\n' "$K8S_TARGET_PKG" "$K8S_TARGET_VER"
 ~~~
 
-Choose the **exact latest 1.37 patch package** shown by the package manager; replace 1.37.x-* in the examples below with the actual available version string.
+**Record one target K8S_TARGET_PKG** from cp1. Verify it is available from apt on *all* nodes and assign the exact same version on each terminal (the package version suffix varies by repository). The variables are session-local: re-run the selection before each procedure or explicitly export the recorded value.
 
-### First control-plane node (cp1)
+### 13.4 Upgrade the first control plane cp1
+
+On **cp1**, with the variables above set:
 
 ~~~bash
 sudo apt-mark unhold kubeadm
-sudo apt-get install -y 'kubeadm=1.37.x-*'
+sudo apt-get install -y "kubeadm=$K8S_TARGET_PKG"
 sudo apt-mark hold kubeadm
 kubeadm version
 
 sudo kubeadm upgrade plan
-# Only when the upgrade plan is healthy, substitute your selected patch:
-sudo kubeadm upgrade apply v1.37.x
+sudo kubeadm upgrade apply "v$K8S_TARGET_VER"
 ~~~
 
-After successful control-plane upgrade, perform the node-local kubelet upgrade, ideally from a workstation whose kubectl can reach the API:
+**Expected:** kubeadm reports a successful v1.37.x control-plane upgrade. **Only after** this succeeds, move to the kubelet on cp1.
+
+From the workstation with cluster-admin kubectl:
 
 ~~~bash
-# On workstation:
 kubectl drain cp1.k8s.lab --ignore-daemonsets
+~~~
 
-# On cp1:
+On cp1:
+
+~~~bash
 sudo apt-mark unhold kubelet kubectl
-sudo apt-get install -y 'kubelet=1.37.x-*' 'kubectl=1.37.x-*'
+sudo apt-get install -y "kubelet=$K8S_TARGET_PKG" "kubectl=$K8S_TARGET_PKG"
 sudo apt-mark hold kubelet kubectl
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
-
-# On workstation:
-kubectl uncordon cp1.k8s.lab
-kubectl get nodes
 ~~~
 
-On **additional control-plane nodes in HA**, perform the kubeadm package upgrade **one at a time** but use **sudo kubeadm upgrade node** (not a second upgrade apply). Then drain, update kubelet/kubectl, restart kubelet, uncordon and verify the node before moving on.
-
-### Worker nodes — one at a time
+Back on workstation:
 
 ~~~bash
-# Workstation:
-kubectl drain wk1.k8s.lab --ignore-daemonsets
+kubectl uncordon cp1.k8s.lab
+kubectl get nodes -o wide
+kubectl get pods -A
+~~~
 
-# On wk1:
-sudo apt-mark unhold kubeadm kubectl
-sudo apt-get install -y 'kubeadm=1.37.x-*' 'kubectl=1.37.x-*'
-sudo apt-mark hold kubeadm kubectl
+**Expected:** cp1 returns Ready at the selected target version; check component health before proceeding.
+
+### 13.5 Additional control planes (if running this lab on the HA topology)
+
+For **cp2**, then **cp3**, do the following *one node at a time*. This differs from cp1 because additional control planes run **kubeadm upgrade node**, not kubeadm upgrade apply.
+
+On a workstation, drain the selected control plane:
+
+~~~bash
+kubectl drain cp2.k8s.lab --ignore-daemonsets
+~~~
+
+On cp2 (ensure 1.37 repository, K8S_TARGET_PKG variable and chosen patch are set):
+
+~~~bash
+sudo apt-mark unhold kubeadm
+sudo apt-get install -y "kubeadm=$K8S_TARGET_PKG"
+sudo apt-mark hold kubeadm
 sudo kubeadm upgrade node
-
-sudo apt-mark unhold kubelet
-sudo apt-get install -y 'kubelet=1.37.x-*'
-sudo apt-mark hold kubelet
+sudo apt-mark unhold kubelet kubectl
+sudo apt-get install -y "kubelet=$K8S_TARGET_PKG" "kubectl=$K8S_TARGET_PKG"
+sudo apt-mark hold kubelet kubectl
 sudo systemctl daemon-reload
 sudo systemctl restart kubelet
+~~~
 
-# Workstation:
+On workstation:
+
+~~~bash
+kubectl uncordon cp2.k8s.lab
+kubectl get nodes -o wide
+kubectl -n kube-system get pods -l component=etcd -o wide
+~~~
+
+**Expected:** cp2 Ready, etcd quorum retained. Repeat with cp3 by replacing **cp2** with **cp3**. Never drain two of the three control planes simultaneously.
+
+### 13.6 Upgrade workers — wk1, then wk2 (and wk3 in HA lab)
+
+From workstation:
+
+~~~bash
+kubectl drain wk1.k8s.lab --ignore-daemonsets
+~~~
+
+On wk1 (K8S_TARGET_PKG set from 13.3):
+
+~~~bash
+sudo apt-mark unhold kubeadm
+sudo apt-get install -y "kubeadm=$K8S_TARGET_PKG"
+sudo apt-mark hold kubeadm
+sudo kubeadm upgrade node
+
+sudo apt-mark unhold kubelet kubectl
+sudo apt-get install -y "kubelet=$K8S_TARGET_PKG" "kubectl=$K8S_TARGET_PKG"
+sudo apt-mark hold kubelet kubectl
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+~~~
+
+From workstation:
+
+~~~bash
 kubectl uncordon wk1.k8s.lab
 kubectl get nodes -o wide
 ~~~
 
-Repeat for each worker. Verify API, DNS, workload networking, CNI pods, and application readiness at the end. For detailed draining caveats, version skew and patch upgrade variants, defer to the official 1.37 upgrade task.
+Repeat on wk2 (and wk3 for the HA scenario), one node at a time, using actual names from kubectl get nodes. If drain blocks due to PodDisruptionBudgets or local data, **resolve the constraint**, do not add --force or --delete-emptydir-data blindly.
+
+### 13.7 Verify the upgrade
+
+~~~bash
+kubectl get nodes -o wide
+kubectl get pods -A -o wide
+kubectl get tigerastatus
+kubectl get --raw='/readyz'
+kubectl version
+~~~
+
+**Expected:** all control planes and workers Ready on 1.37.x, with healthy Calico and CoreDNS. Review any deprecated APIs and changed defaults from the [1.37 upgrade guidance](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/). Keep an etcd backup and a documented recovery path before upgrading any non-lab cluster.
 
 ## 14. High-availability lab — fresh cluster with stacked etcd
 
