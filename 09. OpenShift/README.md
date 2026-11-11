@@ -1,2 +1,17 @@
-![OpenShift](./OpenShift.png)
-![OpenShift](./OpenShift%20-%20Components.png)
+# Module 09 — OpenShift
+
+> **Начални учебни бележки:** [INTRO-2026.md — OpenShift от нулата, по видеолекция и пълния транскрипт](./INTRO-2026.md).
+>
+> Въведението включва сравнение Kubernetes vs OpenShift, два Mermaid диаграмни модела, описание на Red Hat Developer Sandbox demo, въпроси от аудиторията и технически уточнения. Използва предоставения пълен транскрипт и трите оригинални слайда.
+>
+> Модернизацията на Module 09, изборът на OpenShift/OKD версия, lab среда и пълните изпълними упражнения **все още не са започнали**. Останалите материали ще определят обхвата; не се променят Modules 00–08 или `COURSE-2026.md`.
+
+## Оригинални слайдове от видеото
+
+![OpenShift — технологии](./OpenShift.png)
+
+![OpenShift — основни компоненти](./OpenShift%20-%20Components.png)
+
+![Kubernetes vs OpenShift — сравнение от видеото](./Kubernetes%20vs%20OpenShift.png)
+
+За поясненията, проверките и Mermaid схемите отвори [INTRO-2026.md](./INTRO-2026.md).
