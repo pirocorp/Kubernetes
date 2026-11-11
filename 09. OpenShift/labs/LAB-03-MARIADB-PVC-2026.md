@@ -8,7 +8,7 @@
 
 ## 1. Preflight
 
-Активен [Red Hat Developer Sandbox](https://developers.redhat.com/developer-sandbox), личен Project, `oc` от конзолата (същия cluster), Bash и `openssl`. Не използвай Cluster Setup кластер от Modules 00–08.
+Активен [Red Hat Developer Sandbox](https://developers.redhat.com/developer-sandbox), личен Project, `oc` от конзолата (същия cluster), Bash, `git` и `openssl`. Не използвай Cluster Setup кластер от Modules 00–08.
 
 ```bash
 oc whoami
@@ -21,6 +21,11 @@ oc auth can-i create services
 oc get storageclass
 oc get resourcequota
 oc get deploy/m09-db pvc/m09-db-data secret/m09-db-creds 2>/dev/null || true
+git clone --depth=1 https://github.com/pirocorp/Kubernetes.git m09-course
+export M09_MARIADB_DIR="$PWD/m09-course/09. OpenShift/labs/examples/mariadb"
+test -s "$M09_MARIADB_DIR/db.yaml"
+test -s "$M09_MARIADB_DIR/seed.sql"
+cp "$M09_MARIADB_DIR/db.yaml" ./db.yaml
 ```
 
 **Очаквано:** правата са `yes`, има подходящ **default StorageClass** или явен препоръчан StorageClass. Ако не е дефиниран default, **не** прилагай PVC преди да зададеш правилния `storageClassName` в следващия YAML (вземи го от администраторската конфигурация). **Ако имената са заети от чуждо упражнение, спри.**
@@ -44,7 +49,7 @@ oc get secret m09-db-creds -o jsonpath='{.metadata.name}{"\n"}'
 
 ## 3. Пълен манифест — db.yaml
 
-Създай локален файл `db.yaml` със следното съдържание:
+**Готов файл:** [db.yaml](./examples/mariadb/db.yaml) вече е включен в хранилището. Командите в preflight го копират в работната директория, така че **не е необходимо да преписваш YAML на ръка**. Съдържанието му е:
 
 ```yaml
 apiVersion: v1
@@ -132,13 +137,26 @@ oc logs deployment/m09-db --tail=50
 
 **Очаквано:** PVC е `Bound`, 1/1 DB Pod Ready, endpoint за TCP 3306; логовете показват успешна MariaDB initialization. Ако PVC е `Pending`, виж `oc describe pvc m09-db-data`. Ако image не се изтегли, виж `oc describe pod -l app=m09-db`. Ако SCC или файлова permission откаже достъп, **не** пускай DB като root — установи дали избраният image и StorageClass поддържат arbitrary UIDs.
 
+### 4.1. Алтернативен deployment през Web Console
+
+Официалният Red Hat курс разглежда и инсталация на база данни **през GUI**. Ако искаш да упражниш този път, изпълни го **вместо** реда `oc apply -f db.yaml` по-горе (не създавай отделен втори екземпляр):
+
+1. Увери се, че `m09-db-creds` вече е създаден с командите от раздел 2.
+2. Web Console → личния Project → **+Add / Import YAML** (или съответната опция за YAML ресурси).
+3. Отвори локално [db.yaml](./examples/mariadb/db.yaml), копирай **целия файл** в редактора и избери **Create**. Тук няма Secret стойности.
+4. В Workloads → Deployments намери `m09-db`; в Storage → PersistentVolumeClaims намери `m09-db-data`.
+5. Върни се към CLI проверките `oc rollout status deployment/m09-db`, `oc get pvc m09-db-data` и `oc get endpointslice -l kubernetes.io/service-name=m09-db`.
+
+**Критерий:** и двата метода създават същите ресурси. Изпълни точно **един** от тях. Ако GUI не предлага YAML import, използвай CLI метода, който е пълен и независим от това меню.
+
 ## 5. SQL schema и реална заявка
 
-Изпълни SQL през CLI **вътре в DB Pod**; паролата се чете от неговата environment конфигурация, а не от локален shell. Не добавяй публична Route към база данни.
+Изпълни готовия [seed.sql](./examples/mariadb/seed.sql) през CLI **вътре в DB Pod**; паролата се чете от environment конфигурацията на контейнера, а не от локалния shell. Не добавяй публична Route към база данни.
 
 ```bash
-oc exec deployment/m09-db -- bash -lc 'mariadb -h 127.0.0.1 -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "CREATE TABLE IF NOT EXISTS quotes (id INT PRIMARY KEY, text VARCHAR(255) NOT NULL); INSERT INTO quotes (id,text) VALUES (1, '\''OpenShift builds on Kubernetes'\''), (2, '\''Services select Pods by labels'\''), (3, '\''PVC stores data outside the Pod'\'') ON DUPLICATE KEY UPDATE text=VALUES(text);"'
-oc exec deployment/m09-db -- bash -lc 'mariadb -h 127.0.0.1 -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "SELECT id,text FROM quotes ORDER BY id;"'
+oc exec -i deployment/m09-db -- bash -lc \
+  'exec mariadb -h 127.0.0.1 -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' \
+  < "$M09_MARIADB_DIR/seed.sql"
 ```
 
 **Очаквано:** таблица с 3 реда. **Не** приемай само `Deployment Ready` за доказателство, че данните са правилно записани. За GUI: в Web Console разгледай Deployment `m09-db`, Pod logs, PVC и Service; **не** показвай Secret values. За наблюдение на данните може да използваш Pod terminal със същите SQL команди, ако платформата го позволява.
@@ -182,7 +200,7 @@ oc delete secret/m09-db-creds --ignore-not-found
 oc get deploy,svc,pvc,secret
 ```
 
-Изтрий локалния `db.yaml` **само ако** си го създал за този lab. Не трий целия Project, не премахвай други PVC или Secrets.
+Изтрий локалните `db.yaml` и `m09-course/` **само ако** са създадени чрез стъпките по-горе и не съдържат други твои файлове. Не трий целия Project, не премахвай други PVC или Secrets.
 
 ## 9. Критерии за приемане
 
