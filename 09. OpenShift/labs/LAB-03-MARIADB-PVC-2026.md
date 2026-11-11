@@ -18,8 +18,8 @@ oc auth can-i create persistentvolumeclaims
 oc auth can-i create secrets
 oc auth can-i create deployments.apps
 oc auth can-i create services
-oc get storageclass
-oc get resourcequota
+oc get storageclass || echo 'StorageClass list е ограничен; PVC ще се провери по status/events'
+oc get resourcequota || true
 oc get deploy/m09-db pvc/m09-db-data secret/m09-db-creds 2>/dev/null || true
 git clone --depth=1 https://github.com/pirocorp/Kubernetes.git m09-course
 export M09_MARIADB_DIR="$PWD/m09-course/09. OpenShift/labs/examples/mariadb"
@@ -28,7 +28,7 @@ test -s "$M09_MARIADB_DIR/seed.sql"
 cp "$M09_MARIADB_DIR/db.yaml" ./db.yaml
 ```
 
-**Очаквано:** правата са `yes`, има подходящ **default StorageClass** или явен препоръчан StorageClass. Ако не е дефиниран default, **не** прилагай PVC преди да зададеш правилния `storageClassName` в следващия YAML (вземи го от администраторската конфигурация). **Ако имената са заети от чуждо упражнение, спри.**
+**Очаквано:** правата са `yes`, има подходящ **default StorageClass** или явен препоръчан StorageClass. Ако нямаш право да изброяваш StorageClasses, можеш да приложиш PVC без `storageClassName` и да провериш дали се свързва към default клас. Ако PVC остане `Pending`, виж `oc describe pvc m09-db-data`; без подходящ StorageClass или quota упражнението няма как да продължи. Не измисляй `storageClassName`. **Ако имената са заети от чуждо упражнение, спри.**
 
 ## 2. Създай Secret без hardcoded пароль в Git
 
