@@ -208,7 +208,7 @@ spec:
     service:
       name: serviced
       port:
-        number: 443
+        number: 80
   rules:
   - host: demo.lab
     http:
@@ -219,16 +219,18 @@ spec:
           service:
             name: service1
             port:
-              number: 443
+              number: 80
       - path: /service2
         pathType: Prefix
         backend:
           service:
             name: service2
             port:
-              number: 443
+              number: 80
 ```
 
+
+The Ingress controller terminates external HTTPS traffic (port 443), then forwards requests to the backend Kubernetes Services on **port 80**. The Ingress `backend.service.port.number` must match each Service's declared `spec.ports[].port`.
 
 Apply fanout ingress plus all services and pods
 
