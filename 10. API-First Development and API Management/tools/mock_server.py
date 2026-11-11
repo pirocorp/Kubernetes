@@ -59,7 +59,22 @@ class Handler(BaseHTTPRequestHandler):
         if length > 16384:
             self.respond(413, {"code": "validation_error", "message": "Body too large"})
             return
-        self.rfile.read(length)
+        try:
+            body = json.loads(self.rfile.read(length))
+        except (ValueError, UnicodeDecodeError):
+            return self.respond(400, self.example("/v1/products", "post", 400))
+        required = CONTRACT["components"]["schemas"]["NewProduct"]["required"]
+        valid = (
+            isinstance(body, dict)
+            and all(field in body for field in required)
+            and isinstance(body.get("name"), str)
+            and 1 <= len(body["name"].strip()) <= 100
+            and type(body.get("price")) in (int, float)
+            and body["price"] >= 0
+            and body.get("currency") == "EUR"
+        )
+        if not valid:
+            return self.respond(400, self.example("/v1/products", "post", 400))
         self.respond(201, self.example("/v1/products", "post", 201))
 
 
