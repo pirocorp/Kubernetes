@@ -70,7 +70,7 @@ test -f "$VM_LAB/route.yaml"
 2. **Virtualization → Catalog / VirtualMachines → Create from template**. Избери наличен **Fedora или RHEL compatible Linux boot image**, който изрично е **поддържан** и достъпен в твоя catalog. Не търси непременно Fedora 39, показан в оригиналния урок от 2024.
 3. **Customize VirtualMachine**, задай **VM name `m09-legacy`**. Избери най-малкия позволен **CPU/RAM и storage** профил, който побира Linux + `httpd`. Ако няма съвместим template/достатъчен quota, спри тук.
 4. Настрой **cloud-init** или template **CLOUD_USER_PASSWORD** параметъра. **Никога** не задавай `password`, `admin` или друга известна demo парола. За VNC използвай **нова силна, уникална парола**, запомни я локално и не я поставяй в Git, screenshots или историята на shell.
-5. Ако wizard предлага само параметър **CLOUD_USER_PASSWORD**, въведи лично генерирана парола **директно в masked UI field**; документирай съответното потребителско име (често `fedora` при Fedora template). **Не** записвай паролата във файлове на проекта.
+5. Ако wizard предлага само параметър **CLOUD_USER_PASSWORD**, въведи лично генерирана парола **директно в UI полето на template-а** (провери, че интерфейсът не я показва в logs или под формата на видим parameter YAML); документирай съответното потребителско име (често `fedora` при Fedora template). **Не** записвай паролата във файлове на проекта.
 6. Ако wizard позволява custom **cloud-init user data**, използвай безопасната алтернатива в 3.2 по-долу за собствен потребител `m09student`. **Не прилагай двата подхода едновременно**, когато template ги комбинира конфликтно.
 7. Натисни **Create VirtualMachine**, без да експонираш публично SSH/VNC. Наблюдавай **Events** и **Overview** до `Running`. Запиши си точните имена на личните **boot DataVolume/PVC**, създадени от wizard, защото cleanup трябва да премахне само тях.
 
@@ -85,7 +85,11 @@ umask 077
 M09_VM_PRIVATE_DIR="$(mktemp -d)"
 read -r -s -p "Избери уникална VM парола (мин. 16 знака): " M09_VM_PASSWORD
 printf '\n'
-test "$(printf '%s' "$M09_VM_PASSWORD" | wc -c)" -ge 16
+while test "$(printf '%s' "$M09_VM_PASSWORD" | wc -c)" -lt 16; do
+  echo "Паролата е твърде кратка. Въведи минимум 16 знака." >&2
+  read -r -s -p "Нова VM парола: " M09_VM_PASSWORD
+  printf '\n'
+done
 M09_VM_HASH="$(printf '%s' "$M09_VM_PASSWORD" | openssl passwd -6 -stdin)"
 unset M09_VM_PASSWORD
 cat > "$M09_VM_PRIVATE_DIR/cloud-init-user-data.yaml" <<EOF
