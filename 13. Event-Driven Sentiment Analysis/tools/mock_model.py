@@ -13,9 +13,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             body = json.loads(self.rfile.read(length))
-            text = body["text"].lower()
-            if not isinstance(text, str):
+            raw = body["text"]
+            if not isinstance(raw, str):
                 raise ValueError()
+            text = raw.lower()
         except (ValueError, KeyError, TypeError):
             self.send_error(400)
             return
