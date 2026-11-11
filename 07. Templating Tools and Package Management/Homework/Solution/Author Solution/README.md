@@ -166,12 +166,17 @@ spec:
     targetPort: 5000
 ```
 
+> **NOTE (2026):** The actual base `homework.yaml` intentionally omits the Namespace object. Create `namespace/homework` separately, since Kustomize `namePrefix` would rename a Namespace resource to `production-homework` or `test-homework` and break the shared-namespace assumption.
+
 > **NOTE (2026):** The executable files are in `../Problem 2/` relative to this Author Solution README. Start in `07. Templating Tools and Package Management/Homework/Solution/Problem 2/` before running the following commands. The original `out/overlays` path does **not** exist in the repo, so it has been corrected. The supported syntax is `labels` with `includeSelectors: true` and `patches`, matching the actual files. Two overlays share one lab namespace named `homework`; do not use this against a namespace containing other workloads. Free NodePorts **32001** and **32002** first.
 
 ```bash
 kubectl get nodes
 kubectl config current-context
 kubectl get namespace homework --ignore-not-found
+# Namespace is created separately because namePrefix would also rename
+# a Namespace resource included in the Kustomize base.
+kubectl create namespace homework --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 Now, test both variants
