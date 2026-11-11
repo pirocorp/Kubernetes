@@ -147,10 +147,10 @@ oc get events --sort-by=.lastTimestamp
 
 ### Локална проверка на HTTP callback contract (без Knative Operator)
 
-Ако имаш изпълнен [Lab 13-C](./LAB-03-KAFKA-STORAGE-DASHBOARD.md) и истинския Kafka Compose stack още работи, можеш предварително да провериш как ASP.NET Core обработва **nested KafkaSource CloudEvent** и директен structured CloudEvent:
+Ако имаш изпълнен [Lab 13-C](./LAB-03-KAFKA-STORAGE-DASHBOARD.md) и истинския Kafka Compose stack още работи, можеш предварително да провериш как ASP.NET Core обработва **nested KafkaSource CloudEvent** и директен structured CloudEvent. Проверката стартира **отделен процес на порт 5081**, за да не се сблъсква със стандартния Kafka API на порт 5080:
 
 ```bash
-# Първо спри собствения ръчен API на :5080.
+# Порт 5081 трябва да е свободен; Kafka Compose stack трябва да работи.
 bash scripts/verify-knative-callbacks.sh
 ```
 
