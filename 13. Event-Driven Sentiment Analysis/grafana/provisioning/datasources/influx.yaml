@@ -1,0 +1,14 @@
+apiVersion: 1
+datasources:
+  - name: Globex Sentiment (InfluxDB)
+    uid: globex-sentiment
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    isDefault: true
+    jsonData:
+      version: Flux
+      organization: globex
+      defaultBucket: review_sentiment
+    secureJsonData:
+      token: $INFLUX_TOKEN
