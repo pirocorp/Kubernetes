@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var apiKey = Environment.GetEnvironmentVariable("API_KEY");
 if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Length < 16)
@@ -52,9 +54,20 @@ app.MapGet("/v1/products/{id}", (string id) =>
         : Results.NotFound(new ApiError("not_found", "Product not found")))
     .WithName("getProductById");
 
-app.MapPost("/v1/products", (NewProduct input) =>
+app.MapPost("/v1/products", async (HttpRequest request) =>
 {
-    if (string.IsNullOrWhiteSpace(input.Name) ||
+    NewProduct? input;
+    try
+    {
+        input = await request.ReadFromJsonAsync<NewProduct>();
+    }
+    catch (JsonException)
+    {
+        return Results.BadRequest(new ApiError("validation_error", "Invalid product"));
+    }
+
+    if (input is null ||
+        string.IsNullOrWhiteSpace(input.Name) ||
         input.Name.Length > 100 ||
         input.Price < 0 ||
         input.Currency != "EUR")
@@ -71,6 +84,9 @@ app.MapPost("/v1/products", (NewProduct input) =>
 app.Run();
 
 record Product(string Id, string Name, decimal Price, string Currency);
-record NewProduct(string Name, decimal Price, string Currency);
+record NewProduct(
+    [property: JsonRequired] string Name,
+    [property: JsonRequired] decimal Price,
+    [property: JsonRequired] string Currency);
 record ProductList(Product[] Items);
 record ApiError(string Code, string Message);
