@@ -11,5 +11,7 @@ WORKDIR /app
 COPY --from=builder /out/ ./
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
-# No privileged ports, no writes under /app. OpenShift may inject an arbitrary UID.
+# The app uses an unprivileged numeric UID and never needs to write /app.
+# OpenShift may assign a different arbitrary UID under restricted SCC.
+USER 10001
 ENTRYPOINT ["dotnet", "OrderPlacementApi.dll"]
