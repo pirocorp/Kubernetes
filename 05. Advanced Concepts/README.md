@@ -764,9 +764,9 @@ If you do not specify an IngressClass for an Ingress, and your cluster has exact
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
-name: haproxy
+  name: haproxy
 spec:
-controller: haproxy.org/ingress-controller
+  controller: haproxy.org/ingress-controller
 ```
 
 ## Installing Ingress Controllers — Kubernetes 1.37 lab (2026)
