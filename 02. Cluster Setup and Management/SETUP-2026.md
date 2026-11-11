@@ -342,7 +342,24 @@ For further cluster administration (etcd snapshots, control-plane HA, upgrades, 
 
 **Goal:** control the cluster without logging into cp1 for every command.
 
-On your workstation install kubectl with the same minor version as the cluster. For Linux, use the [official kubectl installation instructions](https://kubernetes.io/docs/tasks/tools/); for Windows/macOS, use the corresponding supported package instructions.
+On the workstation install **kubectl 1.37.x** with the same minor version as the server. For a Linux workstation that also runs Ubuntu 24.04, you may reuse the signed Kubernetes APT repository and kubectl installation from **section 3** (only install the kubectl package). For **Windows 11/PowerShell**, the commands below use Windows Package Manager, with OpenSSH Client already installed:
+
+
+~~~powershell
+winget install --id Kubernetes.kubectl --exact
+kubectl version --client
+New-Item -ItemType Directory -Force "$HOME\.kube" | Out-Null
+~~~
+
+Windows users can securely copy the config with the OpenSSH scp executable after preparing the transfer file on cp1 as instructed below:
+
+~~~powershell
+scp user@192.168.56.11:admin.conf "$HOME\.kube\config"
+kubectl config current-context
+kubectl get nodes -o wide
+~~~
+
+Use the actual username/address, and store the kubeconfig only in your private profile folder (do not share it or commit it). The kubeconfig contains cluster-admin authentication material. On Windows, restrict its ACL to the account that will use it.
 
 On cp1, the file /etc/kubernetes/admin.conf contains cluster-admin credentials and a client private key. Transfer it only over a secure connection to your **own trusted workstation** (the historical course uses this method for local learning). From the workstation, for example:
 
@@ -403,36 +420,38 @@ kubectl port-forward -n headlamp svc/headlamp 8080:80
 
 Open http://localhost:8080 locally. Keep the terminal open during the lab; Ctrl+C stops the port-forward.
 
-### Create a restricted lab identity
+### Create a read-only identity for the UI
 
-Create a dedicated ServiceAccount and restrict its access to a lab namespace. **Do not create a permanent cluster-admin ServiceAccount.**
+The historical Dashboard used a permanent cluster-admin ServiceAccount, giving excessive access to a browser UI. Instead, use a **short-lived token** with the built-in read-only ClusterRole **view**. It can inspect common workload resources across namespaces but **cannot write Deployments or read Secrets**. This provides a usable cluster-wide UI for the course without granting admin operations.
 
 ~~~bash
 kubectl create namespace ui-lab
 kubectl -n ui-lab create serviceaccount headlamp-viewer
 
-kubectl -n ui-lab create rolebinding headlamp-viewer-readonly \
+kubectl create clusterrolebinding headlamp-lab-view \
   --clusterrole=view \
   --serviceaccount=ui-lab:headlamp-viewer
 
 kubectl -n ui-lab create token headlamp-viewer --duration=1h
 ~~~
 
-Paste the short-lived bearer token into Headlamp's login prompt. Depending on the installed Headlamp version/UI authentication behavior, the UI may show limited namespace visibility or require another supported authentication method; consult its [authentication guide](https://headlamp.dev/docs/latest/installation/). The token can read resources allowed by its RBAC role in ui-lab, not administer the cluster.
+Paste the printed short-lived token into Headlamp's login prompt. Do not commit or share the token. Depending on the installed chart and Headlamp version, you may need to refresh the token when it expires.
 
-**Exercise:** inspect namespaces, Pods, Events, Deployments, and confirm that writing to a different namespace is denied. To check authorization from kubectl:
+**Exercise:** inspect Nodes, namespaces (where permitted), Pods, Events and Deployments. Verify rights with kubectl:
 
 ~~~bash
 kubectl auth can-i get pods -n ui-lab --as=system:serviceaccount:ui-lab:headlamp-viewer
 kubectl auth can-i create deployments -n ui-lab --as=system:serviceaccount:ui-lab:headlamp-viewer
 kubectl auth can-i get pods -n kube-system --as=system:serviceaccount:ui-lab:headlamp-viewer
+kubectl auth can-i get secrets -n kube-system --as=system:serviceaccount:ui-lab:headlamp-viewer
 ~~~
 
-Expected: yes / no / no for these checks (unless the cluster already grants this identity extra roles).
+**Expected:** yes / no / yes / no, respectively, unless other permissions were granted. This lab intentionally demonstrates **view**, not the original Dashboard's unsafe permanent cluster-admin role. Perform write/administrative operations with trusted kubectl credentials.
 
-Cleanup after exercise:
+Cleanup after the UI exercise:
 
 ~~~bash
+kubectl delete clusterrolebinding headlamp-lab-view
 kubectl delete namespace ui-lab
 helm uninstall headlamp -n headlamp
 kubectl delete namespace headlamp
@@ -848,6 +867,14 @@ backend k8s_api_back
     server cp1 192.168.56.11:6443 check
     server cp2 192.168.56.12:6443 check
     server cp3 192.168.56.13:6443 check
+
+# Historical course parity: local-only HAProxy statistics page.
+# Use an SSH port forward rather than publishing this dashboard to the LAN.
+listen k8s_api_stats
+    bind 127.0.0.1:8404
+    mode http
+    stats enable
+    stats uri /stats
 ~~~
 
 Apply after validating the configuration:
@@ -861,6 +888,14 @@ sudo ss -lntp | grep ':6443'
 ~~~
 
 **Expected:** HAProxy listens on TCP 6443. Before kubeadm init the backends are down and an API request may get connection refused; after cp1 starts, it should forward API traffic.
+
+**Optional exercise — HAProxy stats (as in the historical course):** from your workstation, use an SSH tunnel to the LB VM and open http://127.0.0.1:8404/stats in the workstation's browser:
+
+~~~bash
+ssh -L 8404:127.0.0.1:8404 user@lb.k8s.lab
+~~~
+
+Replace user with the LB VM SSH account. The HAProxy stats listener is bound only to LB loopback; no public statistics port is needed. You should see the three backend servers change status as control planes become available.
 
 **Important:** one HAProxy VM is a **single point of failure**. High availability of the full API endpoint additionally requires redundant load balancers and a VIP/failover or equivalent managed load balancer.
 
