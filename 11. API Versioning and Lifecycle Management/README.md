@@ -131,6 +131,18 @@ dotnet --version  # нужно само за 11-B/C/D
 
 **Очаквано:** файловете са налични, JSON се парсва, а `dotnet --version` започва с `10.` за упражненията, които използват C#.
 
+### Независима крайна проверка на локалния път
+
+От корена на Module 11 изпълни:
+
+```bash
+bash scripts/verify-local.sh
+```
+
+Нужни са .NET SDK **10**, Python 3.10+ и свободни портове **8080, 8081**. Скриптът компилира реалния C# OrderPlacement API, проверява compatibility/breaking contracts, изпълнява HTTP тестове към директния API и gateway за `active → deprecated → sunset → rollback`, проверява version-specific metrics и спира своите процеси. За да не заличава потребителски state, отказва да започне при съществуващ `.runtime/lifecycle.json`; прегледай и премахни този файл **само ако е твой стар учебен state**. Източник: [scripts/verify-local.sh](./scripts/verify-local.sh).
+
+Тази проверка **не** означава успешно изпълнен 3scale/Argo CD или OpenShift lab; те имат отделни инфраструктурни предпоставки.
+
 ## 8. Структура на проекта
 
 ```text
