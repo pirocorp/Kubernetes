@@ -4,24 +4,38 @@
 
 ## Предпоставки
 
-- Работещият ASP.NET Core API от [Lab 10-C](./LAB-03-ASPNET-IMPLEMENTATION.md) на **127.0.0.1:8080**, с `API_KEY` в същия shell.
-- Python 3.10+, Bash, `curl`, свободен port **8081**. Няма нужда от OpenShift, 3scale license или cluster-admin.
-- Примерният gateway: [tools/gateway.py](../tools/gateway.py).
+- **.NET SDK 10**, Python 3.10+, Bash и `curl`; локални портове **8080** и **8081** трябва да са свободни. Не се изисква предварително изпълнен Lab 10-C, OpenShift, 3scale или платен лиценз.
+- Работна директория = коренът на Module 10. Реалният upstream проект е [ProductsApi.csproj](../src/ProductsApi/ProductsApi.csproj) с [Program.cs](../src/ProductsApi/Program.cs), а gateway е [tools/gateway.py](../tools/gateway.py).
+- **Не** стартирай втори backend върху port 8080. Ако Lab 10-C още работи, изпълни неговия собствен cleanup (чрез запазения му PID), преди да започнеш този lab.
 
-## 1. Стартирай proxy
+## 1. Стартирай upstream API и gateway от чиста среда
 
-В Bash shell, в който е експортиран същият `API_KEY` като при API:
+**Изпълни блока в един Bash терминал**, за да споделят двете приложения една и съща учебна тайна. Тези команди не зависят от терминал или process, оставен от предишен lab:
 
 ```bash
+dotnet --version
+dotnet build src/ProductsApi/ProductsApi.csproj -c Release
+export API_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(24))')"
 export ADMIN_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(24))')"
-test "${#API_KEY}" -ge 16
-test "${#ADMIN_KEY}" -ge 16
+test "${#API_KEY}" -ge 16 && test "${#ADMIN_KEY}" -ge 16
 export API_UPSTREAM=http://127.0.0.1:8080
-python3 tools/gateway.py > /tmp/m10-gateway.log 2>&1 &
+ASPNETCORE_URLS=http://127.0.0.1:8080 dotnet run \
+  --project src/ProductsApi/ProductsApi.csproj \
+  -c Release --no-build --no-launch-profile > /tmp/m10d-api.log 2>&1 &
+M10D_API_PID=$!
+python3 tools/gateway.py > /tmp/m10d-gateway.log 2>&1 &
 GATEWAY_PID=$!
 ```
 
-**Продължи в същия Bash shell**, в който са `API_KEY` и `ADMIN_KEY`. При отказ виж `cat /tmp/m10-gateway.log`. Не стартирай второ копие на 8081.
+**Преди тестовете** провери готовността; ако една от заявките не успее, виж `/tmp/m10d-api.log` и `/tmp/m10d-gateway.log` и повтори, след като процесът стартира:
+
+```bash
+curl -fsS http://127.0.0.1:8080/healthz
+curl -sS -o /dev/null -w 'gateway unauthorized: %{http_code}\n' \
+  http://127.0.0.1:8081/v1/products
+```
+
+**Очаквано:** `ok` от upstream и `401` от gateway без ключ. Не продължавай, ако имаш `Connection refused` или чужд процес на някой от двата порта. Backend и gateway валидират един и същ `API_KEY` (учебна defense-in-depth демонстрация), но нямат enterprise IdP/portal/billing.
 
 Gateway и API и двата валидират header `X-Api-Key`. Това е **учебна defense-in-depth схема**; няма потребители, IdP, истински API products или billing.
 
@@ -68,6 +82,14 @@ curl -sS -o /dev/null -w 'metrics without admin key -> %{http_code}\n' \
 
 ## Cleanup
 
-Ctrl+C за foreground gateway или `if test -n "${GATEWAY_PID:-}"; then kill "$GATEWAY_PID"; unset GATEWAY_PID; fi`. След упражнението: `unset ADMIN_KEY API_UPSTREAM`; `API_KEY` премахни когато приключиш и Lab 10-E. Няма клъстерни ресурси.
+Използвай **само записаните PID-ове от този lab** (не прекъсвай други API процеси). Ако вече си стартирал gateway/endpoint и си загубил PID-а, прегледай съответните портове преди ръчно спиране:
+
+```bash
+if test -n "${GATEWAY_PID:-}"; then kill "$GATEWAY_PID" 2>/dev/null || true; unset GATEWAY_PID; fi
+if test -n "${M10D_API_PID:-}"; then kill "$M10D_API_PID" 2>/dev/null || true; unset M10D_API_PID; fi
+unset API_KEY ADMIN_KEY API_UPSTREAM
+```
+
+Няма Kubernetes/OpenShift ресурси. За допълнителна end-to-end проверка на **mock → .NET API → gateway** от чиста среда изпълни [локалната acceptance suite](../scripts/verify-local.sh) чрез `bash scripts/verify-local.sh`; тя проверява портовете, генерира собствени временни ключове и спира собствените test процеси.
 
 **Критерий:** наблюдавани **401 / 200 / 429** и admin-only метрика; разбираш защо gateway не замества backend security.

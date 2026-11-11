@@ -53,7 +53,7 @@ curl -sS -H "X-Api-Key: $API_KEY" -H 'Content-Type: application/json' \
 
 **Очаквано:** `401` без ключ, `400` при невалиден product payload. Няма logging на API key.
 
-**Граница на валидатора:** `tools/contract_check.py` проверява **подмножество** от schema правила (required/type/enum), не е пълен OpenAPI semantic validator или end-to-end penetration test. Той проверява *реалния HTTP endpoint*, вместо да сравнява само C# типове по име.
+**Граница на валидатора:** `tools/contract_check.py` проверява **подмножество** от schema правила (required/type/enum/additionalProperties за response тела), не е пълен OpenAPI semantic validator или end-to-end penetration test. Той проверява *реалния HTTP endpoint*, вместо да сравнява само C# типове по име.
 
 ## 4. Container image (локален, опционален)
 
@@ -80,4 +80,4 @@ docker run --rm -p 127.0.0.1:18080:8080 --env API_KEY m10-products:dev
 
 Ако имаш `API_PID` от собствения background run: `if test -n "${API_PID:-}"; then kill "$API_PID"; unset API_PID; fi`. Ако си създал container, спри го с Ctrl+C (използвано е `--rm`). По избор: `dotnet clean src/ProductsApi/ProductsApi.csproj`. След края на всички labs: `unset API_KEY`. Няма клъстерни ресурси.
 
-**Критерий:** успешен `dotnet build`, работещ API и `contract_check.py` с осемте очаквани HTTP проверки.
+**Критерий:** успешен `dotnet build`, работещ API и `contract_check.py` с деветте очаквани HTTP проверки, включително отказ на непознато JSON поле.

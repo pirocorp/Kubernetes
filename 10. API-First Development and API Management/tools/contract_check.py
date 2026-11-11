@@ -32,6 +32,10 @@ def shape(schema, obj, trail="$"):
     if "enum" in schema and obj not in schema["enum"]:
         raise AssertionError(f"{trail}: invalid enum value {obj}")
     if isinstance(obj, dict):
+        if schema.get("additionalProperties") is False:
+            extra = set(obj) - set(schema.get("properties", {}))
+            if extra:
+                raise AssertionError(f"{trail}: additional properties are not permitted: {sorted(extra)}")
         for name in schema.get("required", []):
             if name not in obj:
                 raise AssertionError(f"{trail}: missing {name}")
@@ -95,7 +99,11 @@ def main():
         base, "POST", "/v1/products", 400, "ApiError", key,
         {"name": "", "price": -1, "currency": "EUR"}
     )
-    print("Contract smoke tests PASSED (subset of schema rules).")
+    expect(
+        base, "POST", "/v1/products", 400, "ApiError", key,
+        {"name": "Extra field test", "price": 15, "currency": "EUR", "unexpected": True}
+    )
+    print("Contract smoke tests PASSED (required fields, subset of types and closed schemas).")
 
 
 if __name__ == "__main__":
