@@ -1,0 +1,47 @@
+# Kubernetes 1.37 — Module 02 Homework Task 3 virtual infrastructure
+# NOTE: Vagrant automates the creation and basic OS preparation of three Ubuntu VMs.
+# Complete Kubernetes/containerd/Calico installation using ../../SETUP-2026.md.
+# Provider: VirtualBox. Base image: tested in HashiCorp's Vagrant guide.
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-24.04"
+  config.vm.box_version = "202510.26.0"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  nodes = {
+    "cp1" => "192.168.56.11",
+    "wk1" => "192.168.56.21",
+    "wk2" => "192.168.56.22"
+  }
+
+  nodes.each do |name, address|
+    config.vm.define name do |machine|
+      machine.vm.hostname = "#{name}.k8s.lab"
+      machine.vm.network "private_network", ip: address
+
+      machine.vm.provider "virtualbox" do |vb|
+        vb.name = "k8s-m02-#{name}"
+        vb.cpus = 2
+        vb.memory = 3072
+      end
+
+      machine.vm.provision "shell", inline: <<-SHELL
+        set -eu
+        # Make names consistent on all VMs (idempotent entries).
+        sed -i '/# k8s-m02-lab/d' /etc/hosts
+        printf '%s\n' '192.168.56.11 cp1.k8s.lab cp1 # k8s-m02-lab' >> /etc/hosts
+        printf '%s\n' '192.168.56.21 wk1.k8s.lab wk1 # k8s-m02-lab' >> /etc/hosts
+        printf '%s\n' '192.168.56.22 wk2.k8s.lab wk2 # k8s-m02-lab' >> /etc/hosts
+        # Note: SETUP-2026.md also explains OS/cgroup prerequisites.
+        swapoff -a
+        if grep -qE '^[^#]+[[:space:]]swap[[:space:]]' /etc/fstab; then
+          sed -i '/[[:space:]]swap[[:space:]]/s/^/#/' /etc/fstab
+        fi
+        modprobe overlay
+        modprobe br_netfilter
+        printf '%s\n' overlay br_netfilter >/etc/modules-load.d/k8s-m02.conf
+        printf '%s\n' 'net.bridge.bridge-nf-call-iptables=1' 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-k8s-m02.conf
+        sysctl --system
+      SHELL
+    end
+  end
+end
