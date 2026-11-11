@@ -60,7 +60,7 @@ for topic in globex.reviews reviews.moderated reviews.denied reviews.sentiment; 
   grep -Fqx "$topic" <<< "$TOPICS" || { echo "Missing Kafka topic $topic" >&2; exit 1; }
 done
 for group in m13-moderation m13-sentiment; do
-  grep -Fqx "$group" <<< "$GROUPS" || { echo "Missing Kafka consumer group $group" >&2; exit 1; }
+  grep -Fqx "$group" <<< "$KAFKA_GROUP_LIST" || { echo "Missing Kafka consumer group $group" >&2; exit 1; }
 done
 echo "PASS real Kafka fan-out, PostgreSQL, InfluxDB and provisioned Grafana"
 echo "Grafana: http://127.0.0.1:3300 (admin credentials in local .env)."
