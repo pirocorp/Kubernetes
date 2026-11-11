@@ -74,6 +74,17 @@ python3 -m json.tool contract/products-v1.openapi.json >/dev/null
 
 **Очаквано:** директорията съществува и JSON договорът се парсва без грешка. За Lab C: `dotnet --version` трябва да започва с `10.`. За Lab E: `oc whoami` и `oc project` трябва да сочат **собствената учебна OpenShift среда**, не kubeadm/Calico клъстера.
 
+### Независима крайна проверка на локалния път
+
+Можеш да провериш **от чиста среда** mock server, истинския C# API, договорите и учебния API gateway **без** OpenShift, 3scale или Apicurio. Нужни са .NET SDK **10**, Python 3.10+ и свободни TCP портове **8080, 8081, 8082**:
+
+```bash
+# Изпълни от корена на Module 10
+bash scripts/verify-local.sh
+```
+
+Скриптът компилира C#, стартира собствените процеси с временни тайни, проверява JSON contract responses (включително 400/401/404), gateway quota 429 и admin metrics, а накрая спира само своите процеси. Ако порт вече е зает, **отказва да стартира**, вместо да се свърже с чужд endpoint. Изходен код: [scripts/verify-local.sh](./scripts/verify-local.sh). Тази проверка **не** включва live OpenShift, Apicurio или 3scale.
+
 ## 6. Файлова структура
 
 ```text
