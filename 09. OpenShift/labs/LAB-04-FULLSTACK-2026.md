@@ -273,13 +273,15 @@ oc delete route/m09-web --ignore-not-found
 oc delete deploy/m09-web deploy/m09-api deploy/m09-qdb --ignore-not-found
 oc delete svc/m09-web svc/m09-api svc/m09-qdb --ignore-not-found
 oc delete bc/m09-web bc/m09-api --ignore-not-found
+oc delete builds -l buildconfig=m09-web --ignore-not-found
+oc delete builds -l buildconfig=m09-api --ignore-not-found
 oc delete is/m09-web is/m09-api is/m09-node22 is/m09-py312 --ignore-not-found
 oc delete pvc/m09-qdb-data --ignore-not-found
 oc delete secret/m09-qdb-creds --ignore-not-found
 oc get deploy,svc,route,pvc,bc,is,secret
 ```
 
-Ако `oc get builds -l buildconfig=m09-web` или `...=m09-api` открие остатъчни build records, изтрий **само тези records по име**. Не използвай `oc delete all --all`, `oc delete project` или `rm ~/.kube/config`. Ако StorageClass използва Retain, Released PV може да изисква отделно действие от администратор.
+Ако останат Build records без очаквания label, прегледай `oc get builds` и изтрий **само** тези за `m09-web` или `m09-api`. Не използвай `oc delete all --all`, `oc delete project` или `rm ~/.kube/config`. Ако StorageClass използва Retain, Released PV може да изисква отделно действие от администратор.
 
 ## 10. Acceptance criteria
 
