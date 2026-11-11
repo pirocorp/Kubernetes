@@ -1,3 +1,5 @@
+> **Kubernetes 1.37 execution track (2026):** [Start with the complete course roadmap — COURSE-2026.md](./COURSE-2026.md). Modules **00–08** have modern executable guides, required prerequisites, expected results, checks and cleanup. **09 OpenShift is excluded** from this review. Older examples below are retained as historical notes.
+
 # Kubernetes
 
 ## Containerization

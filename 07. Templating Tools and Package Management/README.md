@@ -1,3 +1,5 @@
+> **Kubernetes 1.37 lab (2026):** [LAB-2026.md](./LAB-2026.md) provides the complete, self-contained runbook for the three Module 07 homework tasks (sed, Kustomize and Helm), current manifests, expected results, verification and cleanup. Older examples below are retained as original course explanations.
+
 # Manual Approach (using [sed](https://www.gnu.org/software/sed/manual/sed.html))
 
 ![image](https://user-images.githubusercontent.com/34960418/148054368-3da900a8-c995-4555-857a-581fc09e112a.png)
