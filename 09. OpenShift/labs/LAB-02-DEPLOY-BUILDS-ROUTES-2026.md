@@ -164,9 +164,24 @@ oc logs deployment/m09-source --tail=30
 
 **Очаквано:** `ok`, JSON с `"version":"v1"` и JSON с `"message":"hello"`. Ако build fail-не, използвай `oc get builds` и `oc logs build/ИМЕ_ОТ_СПИСЪКА`; ако приложението не стартира, провери `APP_MODULE` и Flask/gunicorn installation logs.
 
-### 3.3. Виж Git workflow в Web Console (без външен source dependency)
+### 3.3. Същият код от Git през Web Console (пълно упражнение)
 
-В Web Console намери **Import from Git / +Add** и **Builds**, разгледай наличните builder options и сравни с нашия BuildConfig. Не натискай Create върху случайно repo; това е **инспекционна**, не изпълнима Git build стъпка. Red Hat оригиналът показва import от public Git. Тук пълният изпълним source build е S2I binary, за да бъде самодостатъчен; при следващия Git-specific lab source може да се push-не към собствен repo и да се зададе commit pin.
+За да покрием и оригиналния урок **Import from Git**, същият source е включен като реални файлове **в настоящото GitHub repository**:
+- [app.py](./examples/python-hello/app.py)
+- [requirements.txt](./examples/python-hello/requirements.txt)
+- [.s2i/environment](./examples/python-hello/.s2i/environment)
+
+**След като PR с този lab бъде слят в main** (преди това линкът към main няма файловете), отвори Red Hat Sandbox Web Console и:
+1. Избери личния Project → **+Add / Import from Git** или съответния source-to-image wizard.
+2. Git URL: `https://github.com/pirocorp/Kubernetes.git`; Git reference **main** (за възпроизводимост на конкретен момент използвай SHA на merge commit вместо подвижен main, ако интерфейсът предлага Git reference).
+3. Context directory: `09. OpenShift/labs/examples/python-hello` (интервалът в името на parent folder е част от пътя).
+4. Builder: избери **Python 3.12 / UBI9** ако е наличен; не избирай исторически Python 3.9 / UBI8 или Ruby 2.2. Ако такъв builder **липсва** в каталога, първо провери наличните builder images; Binary S2I B2 остава изпълнимият основен път.
+5. Name/label: `m09-git`; Resource type: **Deployment** (не DeploymentConfig); Route: **Enabled**; Create.
+6. Намери Build и прегледай log до **Complete**; виж `oc get bc,is,deploy,svc,route` и `oc rollout status deploy/m09-git --timeout=240s`.
+7. Намери Route hostname: `oc get route m09-git -o jsonpath='{.spec.host}'`. В браузър посети `https://HOST/healthz`; очаква се `ok`. Ако Route не е генериран, създай го с реалния Service port.
+8. Cleanup: `oc delete route/m09-git deploy/m09-git svc/m09-git bc/m09-git is/m09-git --ignore-not-found`, проверявай и други обекти, създадени от wizard, преди да изтриваш.
+
+**Обяснение:** Git S2I и Binary S2I произвеждат еднакъв клас image, но първият клонира source от Git, а вторият качва локална директория. При UI различия ползвай реалните полета `Git Repo URL / Context Dir / Builder / Name / Deployment / Route` — не се доверявай на снимка от 2023 г.
 
 ## 4. B3 — Scaling, rolling update и metrics
 
@@ -174,7 +189,7 @@ oc logs deployment/m09-source --tail=30
 oc scale deploy/m09-source --replicas=2
 oc rollout status deploy/m09-source --timeout=240s
 oc get deploy m09-source -o jsonpath='{.status.readyReplicas}{" / "}{.spec.replicas}{"\n"}'
-oc get pods -l deployment=m09-source -o wide
+oc get pods -l app=m09-source -o wide
 oc get endpointslice -l kubernetes.io/service-name=m09-source
 ```
 
