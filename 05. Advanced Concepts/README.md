@@ -747,10 +747,10 @@ Types
 ## Ingress Controllers
 
 - **Ingress controller**s are **not started automatically** with a cluster.
-- Kubernetes as a project supports and maintains **AWS**, **GCE**, and **nginx** ingress controllers.
+- The Kubernetes project defines the Ingress API; controllers such as **F5 NGINX**, **HAProxy**, and cloud-provider implementations are maintained by their respective projects/providers.
 - Some of the others include **HAProxy**, **Istio**, **Contour**, etc.
 - We may deploy **any number of ingress controllers** within a cluster.
-- Ingress Controllers must be annotated with the appropriate **Ingress Class**.
+- An Ingress normally selects its controller using `spec.ingressClassName`; the controller must provide the corresponding **IngressClass** resource.
 
 ![image](https://user-images.githubusercontent.com/34960418/145843008-8d64c7c6-d6e5-4805-a701-440fe24795b4.png)
 
@@ -768,6 +768,91 @@ name: haproxy
 spec:
 controller: haproxy.org/ingress-controller
 ```
+
+## Installing Ingress Controllers — Kubernetes 1.37 lab (2026)
+
+> **NOTE (2026):** The original 2021 manifest-based NGINX v2.0.3 and HAProxy `master` installation steps are retained in the **historical section** below, not recommended for the current lab. For the exercises here, use **F5 NGINX Ingress Controller** (NGINX Open Source edition) with Helm, which understands the existing `nginx.org/rewrites` annotation. This is **not** the retired community `ingress-nginx` controller. Start with a working Kubernetes 1.37 + Calico cluster from [SETUP-2026.md](../02.%20Cluster%20Setup%20and%20Management/SETUP-2026.md) and an installed Helm 3.19+ client.
+
+### NGINX — primary lab controller (Helm chart 2.8.1 / controller 5.7.1)
+
+Use a fresh lab cluster without a conflicting `IngressClass` named `nginx`. This pinned F5 chart/controller release is listed as compatible with Kubernetes 1.37.
+
+```bash
+kubectl get nodes
+helm version
+kubectl get ingressclass
+
+helm upgrade --install nginx-ingress oci://ghcr.io/nginx/charts/nginx-ingress \
+  --version 2.8.1 \
+  --namespace nginx-ingress --create-namespace \
+  --set controller.service.type=NodePort \
+  --set controller.ingressClass.name=nginx
+
+# The Helm chart creates the IngressClass and controller resources.
+kubectl get ingressclass nginx -o yaml
+kubectl get pods -n nginx-ingress
+kubectl get svc -n nginx-ingress
+helm status nginx-ingress -n nginx-ingress
+```
+
+**Expected:** NGINX controller Pod(s) become `Running/Ready`, `IngressClass/nginx` exists, and a NodePort Service exposes HTTP (Service port 80) and HTTPS (Service port 443). Note the **HTTPS NodePort** from `kubectl get svc -n nginx-ingress` (usually 30000–32767). You must be able to reach a cluster node on this port from your browser/workstation; check the node firewall.
+
+#### HTTPS fanout verification (Homework / Solution / Problem 2)
+
+Execute this from the **repository root**. The original committed test certificate is historical, so generate a *fresh* temporary certificate; do not overwrite or commit a private key into the repo.
+
+```bash
+LAB_TLS_DIR="$(mktemp -d)"
+openssl req -x509 -nodes -days 30 -newkey rsa:2048 \
+  -keyout "$LAB_TLS_DIR/tls.key" -out "$LAB_TLS_DIR/tls.crt" \
+  -subj "/CN=demo.lab" -addext "subjectAltName=DNS:demo.lab"
+kubectl create secret tls demo-lab-secret \
+  --cert="$LAB_TLS_DIR/tls.crt" --key="$LAB_TLS_DIR/tls.key" \
+  --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -f "05. Advanced Concepts/Homework/Solution/Problem 2/solution.yaml"
+kubectl describe ingress ingress-ctrl
+kubectl get pods,svc,ingress
+```
+
+Set `NODE_IP` to an address reachable from your workstation and `HTTPS_NODEPORT` to the NodePort assigned to **443/TCP** by the NGINX controller Service, **not** the backend Service port 80. Then run:
+
+```bash
+NODE_IP=192.0.2.10           # REPLACE with a reachable cluster-node IP
+HTTPS_NODEPORT=30443        # REPLACE with the actual mapped HTTPS NodePort
+curl -k --resolve "demo.lab:${HTTPS_NODEPORT}:${NODE_IP}" \
+  "https://demo.lab:${HTTPS_NODEPORT}/service1"
+curl -k --resolve "demo.lab:${HTTPS_NODEPORT}:${NODE_IP}" \
+  "https://demo.lab:${HTTPS_NODEPORT}/service2"
+curl -k --resolve "demo.lab:${HTTPS_NODEPORT}:${NODE_IP}" \
+  "https://demo.lab:${HTTPS_NODEPORT}/"
+```
+
+**Expected:** `/service1` routes to `POD1 -> SERVICE1`, `/service2` routes to `POD2 -> SERVICE2`, and `/` routes to default backend `PODd -> SERVICEd`. `curl -k` bypasses trust checking for the self-signed lab certificate; do not use `-k` for production validation. The client uses **HTTPS 443** (through the mapped NodePort), while `Ingress.spec.rules[].http.paths[].backend.service.port.number` and `defaultBackend.service.port.number` must reference the declared **Service port 80**. This is the alignment fixed in Homework Problem 2.
+
+If routing fails, inspect `kubectl describe ingress ingress-ctrl`, `kubectl get endpoints`, and `kubectl logs -n nginx-ingress` for the controller Pods. Confirm the ingress class, service port, TLS Secret, node firewall, and HTTP rewrite behavior. Use unique names or delete `ingress-ctrl` before applying the **separate** single-service, default-backend, fanout, or virtual-hosting examples below.
+
+### HAProxy — optional alternative (separate lab, Helm chart 1.54.4)
+
+HAProxy is **optional** for this course. For a separate clean lab, use its maintained official chart instead of an unpinned `master` YAML URL:
+
+```bash
+helm upgrade --install haproxy-ingress \
+  oci://ghcr.io/haproxytech/helm-charts/kubernetes-ingress \
+  --version 1.54.4 \
+  --namespace haproxy-controller --create-namespace \
+  --set controller.service.type=NodePort \
+  --set controller.ingressClass=haproxy
+
+kubectl get ingressclass haproxy
+kubectl get pods,svc -n haproxy-controller
+```
+
+For HAProxy Ingress resources use `spec.ingressClassName: haproxy`. **Do not expect NGINX-specific annotations (`nginx.org/rewrites`) to work with HAProxy**: the original rewrite-based exercises must be adapted to HAProxy's features. Do not install the alternative controller just to execute the primary NGINX exercises.
+
+Reference documentation: [F5 NGINX Helm](https://docs.nginx.com/nginx-ingress-controller/install/helm/open-source/), [NGINX Helm parameters](https://docs.nginx.com/nginx-ingress-controller/install/helm/parameters/), [HAProxy community installation](https://www.haproxy.com/documentation/kubernetes-ingress/community/installation/on-prem/).
+
+<details>
+<summary>Historical (2021) manual NGINX and HAProxy install instructions — do not run on the 2026 lab</summary>
 
 ## Installing Ingress Controller NGINX
 
@@ -886,6 +971,8 @@ kubectl get ingressclass
 
 Successfully installed and HAProxy ingress controller.
 
+</details>
+
 ## Single service
 
 ![image](https://user-images.githubusercontent.com/34960418/145848801-a6b3828a-adb0-44df-b870-df6daea0e797.png)
@@ -961,13 +1048,13 @@ kubectl describe ingress ingress-ctrl
 Get the NodePort of the ingress service
 
 ```bash
-kubectl get svc nginx-ingress -n nginx-ingress
+kubectl get svc -n nginx-ingress
 ```
 
 For the HAProxy, you must execute
 
 ```bash
-kubectl get svc haproxy-ingress -n haproxy-controller
+kubectl get svc -n haproxy-controller
 ```
 
 *Please note that you should have a record in your **hosts file** that matches **demo.lab** to the **IP address of the control plane node**.*
@@ -1228,6 +1315,25 @@ kubectl delete svc serviced service1 service2
 kubectl delete ingress ingress-ctrl
 ```
 
+### NGINX (2026 Helm installation)
+
+```bash
+helm uninstall nginx-ingress -n nginx-ingress
+kubectl delete namespace nginx-ingress
+```
+
+**Note:** Helm-installed CRDs may remain after uninstall. Do not delete shared CRDs merely to clean up a lab.
+
+### HAProxy (optional Helm installation)
+
+```bash
+helm uninstall haproxy-ingress -n haproxy-controller
+kubectl delete namespace haproxy-controller
+```
+
+<details>
+<summary>Historical cleanup commands for the old manual installations</summary>
+
 ### NGINX
 
 Delete the whole namespace
@@ -1256,3 +1362,5 @@ Delete everything at once
 ```bash
 kubectl delete -f https://raw.githubusercontent.com/haproxytech/kubernetes-ingress/master/deploy/haproxy-ingress.yaml
 ```
+
+</details>
