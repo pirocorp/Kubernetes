@@ -1,11 +1,16 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: production-
-commonLabels:
-  variant: production
-  org: pirocorp
+# NOTE (2026): Use 'labels' instead of deprecated 'commonLabels';
+# includeSelectors: true preserves the old selectors and Pod template labels.
+labels:
+- pairs:
+    variant: production
+    org: pirocorp
+  includeSelectors: true
 resources:
 - ../../base
-patchesStrategicMerge:
-- deployment.yaml
-- service.yaml
+# 'patches' replaces deprecated 'patchesStrategicMerge'.
+patches:
+- path: deployment.yaml
+- path: service.yaml
