@@ -24,14 +24,15 @@ dotnet restore src/ProductsApi/ProductsApi.csproj
 dotnet build src/ProductsApi/ProductsApi.csproj --no-restore
 export API_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(24))')"
 test "${#API_KEY}" -ge 16
-ASPNETCORE_URLS=http://127.0.0.1:8080 dotnet run --project src/ProductsApi/ProductsApi.csproj --no-build
+ASPNETCORE_URLS=http://127.0.0.1:8080 dotnet run --project src/ProductsApi/ProductsApi.csproj --no-build > /tmp/m10-api.log 2>&1 &
+API_PID=$!
 ```
 
-Остави процеса да работи. Алтернативно стартирай `ASPNETCORE_URLS=http://127.0.0.1:8080 dotnet run --project src/ProductsApi/ProductsApi.csproj --no-build > /tmp/m10-api.log 2>&1 & API_PID=$!` **в същия Bash shell**, ако искаш да изпълниш проверките с вече наличен `API_KEY`.
+**Продължи в същия Bash терминал** с вече експортирания `API_KEY`. Приложението работи във фон. Ако API не е готово при първия `curl`, провери `cat /tmp/m10-api.log`, направи повторна заявка и потърси порт/SDK/configuration проблема. Не стартирай ново копие върху зает порт.
 
 ## 3. Тествай по OpenAPI
 
-В терминал със същия `API_KEY` (използвай `read -s` при втори терминал):
+В същия терминал:
 
 ```bash
 curl -fsS http://127.0.0.1:8080/healthz
@@ -77,6 +78,6 @@ docker run --rm -p 127.0.0.1:18080:8080 -e API_KEY="$API_KEY" m10-products:dev
 
 ## Cleanup
 
-Ctrl+C в foreground shell; ако имаш `API_PID` от собствен background run: `if test -n "${API_PID:-}"; then kill "$API_PID"; unset API_PID; fi`. Ако си създал container, спри го с Ctrl+C (използвано е `--rm`). По избор: `dotnet clean src/ProductsApi/ProductsApi.csproj`. След края на всички labs: `unset API_KEY`. Няма клъстерни ресурси.
+Ако имаш `API_PID` от собствения background run: `if test -n "${API_PID:-}"; then kill "$API_PID"; unset API_PID; fi`. Ако си създал container, спри го с Ctrl+C (използвано е `--rm`). По избор: `dotnet clean src/ProductsApi/ProductsApi.csproj`. След края на всички labs: `unset API_KEY`. Няма клъстерни ресурси.
 
 **Критерий:** успешен `dotnet build`, работещ API и `contract_check.py` с шестте очаквани HTTP проверки.
