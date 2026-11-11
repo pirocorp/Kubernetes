@@ -1,0 +1,16 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: m09-cutover
+  labels:
+    lab: module09virt
+spec:
+  to:
+    kind: Service
+    name: m09-legacy
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
