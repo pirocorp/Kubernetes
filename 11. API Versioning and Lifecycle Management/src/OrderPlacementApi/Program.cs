@@ -10,6 +10,9 @@ if (string.IsNullOrWhiteSpace(key) || key.Length < 16)
 var lifecycle = Environment.GetEnvironmentVariable("V1_LIFECYCLE") ?? "active";
 if (lifecycle is not ("active" or "deprecated" or "sunset"))
     throw new InvalidOperationException("V1_LIFECYCLE must be active, deprecated or sunset.");
+var major = Environment.GetEnvironmentVariable("ALLOWED_MAJOR") ?? "both";
+if (major is not ("v1" or "v2" or "both"))
+    throw new InvalidOperationException("ALLOWED_MAJOR must be v1, v2 or both.");
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -41,6 +44,9 @@ app.MapGet("/healthz", () => Results.Text("ok", "text/plain"));
 
 app.MapPost("/v1/placeorder", async (HttpContext context) =>
 {
+    if (major == "v2")
+        return Results.NotFound(new ApiError("not_found", "Unsupported major version"));
+
     // The major version in the URL stays /v1 for compatible 1.0.0 -> 1.1.0 revisions.
     if (lifecycle is "deprecated" or "sunset")
     {
@@ -79,6 +85,9 @@ app.MapPost("/v1/placeorder", async (HttpContext context) =>
 
 app.MapPost("/v2/placeorder", async (HttpContext context) =>
 {
+    if (major == "v1")
+        return Results.NotFound(new ApiError("not_found", "Unsupported major version"));
+
     using var document = await ParseOrder(context.Request);
     if (document is null)
         return Results.BadRequest(new ApiError("validation_error", "Invalid order payload"));
