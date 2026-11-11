@@ -123,7 +123,7 @@ oc get istag m09-py312:latest -o jsonpath='{.image.dockerImageReference}{"\n"}'
 oc new-build --name=m09-api --binary --strategy=source --image-stream=m09-py312:latest
 oc start-build m09-api --from-dir="$M09_STACK/backend" --follow --wait
 oc get builds
-oc new-app --image-stream=m09-api:latest --name=m09-api
+oc new-app --image-stream=m09-api:latest --name=m09-api -l app=m09-api
 oc set env deployment/m09-api --from=secret/m09-qdb-creds
 oc set env deployment/m09-api DB_HOST=m09-qdb APP_MODULE=app:app APP_VERSION=v1
 oc set probe deployment/m09-api --liveness --get-url=http://:8080/healthz
