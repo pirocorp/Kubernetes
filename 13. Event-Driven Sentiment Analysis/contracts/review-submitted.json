@@ -1,0 +1,210 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Globex Product Review Event API — C# learning adaptation",
+    "version": "1.0.0",
+    "description": "Synthetic customer reviews. Event processing is asynchronous; model is a deterministic teaching baseline, NOT real trained ML."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:5080",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/healthz": {
+      "get": {
+        "summary": "Liveness",
+        "responses": {
+          "200": {
+            "description": "ok"
+          }
+        }
+      }
+    },
+    "/reviews": {
+      "post": {
+        "summary": "Accept a customer review and publish a CloudEvent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewInput"
+              },
+              "example": {
+                "productId": "p-100",
+                "category": "clothing",
+                "text": "I love this great shirt"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Event enqueued for independent moderation and sentiment analysis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "reviewId",
+                    "status"
+                  ],
+                  "properties": {
+                    "reviewId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "queued"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid review",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Required only when INGEST_KEY is configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Event broker unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reviews/{id}": {
+      "get": {
+        "summary": "Check asynchronous processing status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current moderation and sentiment outcome"
+          },
+          "404": {
+            "description": "Review not found"
+          }
+        }
+      }
+    },
+    "/reviews/approved": {
+      "get": {
+        "summary": "List reviews approved by moderation",
+        "responses": {
+          "200": {
+            "description": "Approved review records"
+          }
+        }
+      }
+    },
+    "/metrics/sentiment": {
+      "get": {
+        "summary": "Current process-only sentiment breakdown by category",
+        "responses": {
+          "200": {
+            "description": "Aggregated local scores, not the InfluxDB time-series database"
+          }
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "summary": "Inspect recent structured CloudEvents (local/internal only)",
+        "responses": {
+          "200": {
+            "description": "Recent teaching event envelopes"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ReviewInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "productId",
+          "category",
+          "text"
+        ],
+        "properties": {
+          "productId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "clothing",
+              "bags",
+              "utensils",
+              "office-supplies",
+              "fashion-accessory",
+              "electronics",
+              "sports-equipment"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

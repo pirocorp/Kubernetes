@@ -1,0 +1,72 @@
+# Requires a preconfigured namespace Kafka cluster and Knative Eventing.
+# Replace IMAGE_PLACEHOLDER and KAFKA_BOOTSTRAP_PLACEHOLDER before applying.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: m13-globex-reviews
+  labels: {app: m13-globex-reviews, training: module13}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: m13-globex-reviews}
+  template:
+    metadata:
+      labels: {app: m13-globex-reviews, training: module13}
+    spec:
+      containers:
+        - name: reviews
+          image: IMAGE_PLACEHOLDER
+          imagePullPolicy: Always
+          ports:
+            - {name: http, containerPort: 8080}
+          env:
+            - {name: ASPNETCORE_URLS, value: "http://+:8080"}
+            - {name: REVIEWS_MODE, value: "knative"}
+            - {name: KAFKA_MANAGE_TOPICS, value: "false"}
+            - {name: KAFKA_BOOTSTRAP, value: "KAFKA_BOOTSTRAP_PLACEHOLDER"}
+            - name: INGEST_KEY
+              valueFrom:
+                secretKeyRef: {name: m13-review-secret, key: INGEST_KEY}
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: 1000m, memory: 1Gi}
+          readinessProbe:
+            httpGet: {path: /readyz, port: http}
+            periodSeconds: 5
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 10
+            initialDelaySeconds: 20
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            seccompProfile: {type: RuntimeDefault}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: m13-globex-reviews
+  labels: {app: m13-globex-reviews, training: module13}
+spec:
+  type: ClusterIP
+  selector: {app: m13-globex-reviews}
+  ports:
+    - {name: http, port: 8080, targetPort: http}
+---
+# Only the /reviews public path is exposed; /events callbacks remain internal.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: m13-globex-reviews
+  labels: {training: module13}
+spec:
+  path: /reviews
+  to:
+    kind: Service
+    name: m13-globex-reviews
+  port: {targetPort: http}
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

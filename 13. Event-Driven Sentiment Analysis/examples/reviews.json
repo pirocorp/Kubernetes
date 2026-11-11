@@ -1,0 +1,22 @@
+[
+  {
+    "productId": "shirt-1",
+    "category": "clothing",
+    "text": "I love this excellent product"
+  },
+  {
+    "productId": "bag-4",
+    "category": "bags",
+    "text": "Bad design, broken zipper"
+  },
+  {
+    "productId": "shoe-2",
+    "category": "sports-equipment",
+    "text": "Arrived on Monday"
+  },
+  {
+    "productId": "shirt-2",
+    "category": "clothing",
+    "text": "This is spam"
+  }
+]
