@@ -57,8 +57,12 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 metadata:
   name: homework
-commonLabels:
-  app: hw
+# NOTE (2026): 'commonLabels' is deprecated. 'labels' with
+# 'includeSelectors: true' preserves the original selector/template behavior.
+labels:
+- pairs:
+    app: hw
+  includeSelectors: true
 resources:
 - homework.yaml
 ```
@@ -69,14 +73,19 @@ overlays/production/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: production-
-commonLabels:
-  variant: production
-  org: pirocorp
+# NOTE (2026): Use 'labels' instead of deprecated 'commonLabels';
+# includeSelectors: true preserves the old selectors and Pod template labels.
+labels:
+- pairs:
+    variant: production
+    org: pirocorp
+  includeSelectors: true
 resources:
 - ../../base
-patchesStrategicMerge:
-- deployment.yaml
-- service.yaml
+# 'patches' replaces deprecated 'patchesStrategicMerge'.
+patches:
+- path: deployment.yaml
+- path: service.yaml
 ```
 
 overlays/test/kustomization.yaml
@@ -85,14 +94,19 @@ overlays/test/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namePrefix: test-
-commonLabels:
-  variant: test
-  org: pirocorp
+# NOTE (2026): Use 'labels' instead of deprecated 'commonLabels';
+# includeSelectors: true preserves the old selectors and Pod template labels.
+labels:
+- pairs:
+    variant: test
+    org: pirocorp
+  includeSelectors: true
 resources:
 - ../../base
-patchesStrategicMerge:
-- deployment.yaml
-- service.yaml
+# 'patches' replaces deprecated 'patchesStrategicMerge'.
+patches:
+- path: deployment.yaml
+- path: service.yaml
 ```
 
 overlays/production/deployment.yaml
@@ -130,8 +144,9 @@ metadata:
 spec:
   ports:
   - port: 5000
-    nodePort: 30001
+    nodePort: 32001
     protocol: TCP
+    targetPort: 5000
 ```
 
 
@@ -151,18 +166,31 @@ spec:
     targetPort: 5000
 ```
 
+> **NOTE (2026):** The actual base `homework.yaml` intentionally omits the Namespace object. Create `namespace/homework` separately, since Kustomize `namePrefix` would rename a Namespace resource to `production-homework` or `test-homework` and break the shared-namespace assumption.
+
+> **NOTE (2026):** The executable files are in `../Problem 2/` relative to this Author Solution README. Start in `07. Templating Tools and Package Management/Homework/Solution/Problem 2/` before running the following commands. The original `out/overlays` path does **not** exist in the repo, so it has been corrected. The supported syntax is `labels` with `includeSelectors: true` and `patches`, matching the actual files. Two overlays share one lab namespace named `homework`; do not use this against a namespace containing other workloads. Free NodePorts **32001** and **32002** first.
+
+```bash
+kubectl get nodes
+kubectl config current-context
+kubectl get namespace homework --ignore-not-found
+# Namespace is created separately because namePrefix would also rename
+# a Namespace resource included in the Kustomize base.
+kubectl create namespace homework --dry-run=client -o yaml | kubectl apply -f -
+```
+
 Now, test both variants
 
 ```bash
-kustomize build out/overlays/production/
-kustomize build out/overlays/test/
+kubectl kustomize ./overlays/production/
+kubectl kustomize ./overlays/test/
 ```
 
 Everything seems to be fine. We can start both variants with.
 
 ```bash
-kubectl apply -k out/overlays/production/
-kubectl apply -k out/overlays/test/
+kubectl apply -k ./overlays/production/
+kubectl apply -k ./overlays/test/
 ```
 
 We can check the resources that were created with
@@ -179,14 +207,17 @@ kubectl get ns homework --show-labels
 
 Open two browser tabs and navigate to
 
--	```http://<cluster-ip>:30001``` for production.
--	```http://<cluster-ip>:32002``` for test.
+-	```http://<node-ip>:32001``` for production.
+-	```http://<node-ip>:32002``` for test.
 
-Clean Up
+Clean Up (dedicated **homework** lab namespace only; this deletes **all** resources in that namespace):
 
 ```bash
-kubectl delete ns homework
+kubectl delete ns homework --ignore-not-found
+kubectl get ns homework --ignore-not-found
 ```
+
+Expected: production Deployment with 3 replicas on NodePort `32001`; test Deployment with 1 replica on NodePort `32002`. Both target the Service port `5000` and are accessed through **reachable node IPs**, not cluster-internal Service ClusterIPs. Inspect `kubectl get deployments,services,pods -n homework` after applying both overlays. Do not run this demo alongside other exercises that reserve the same NodePorts.
 
 
 # Create a Helm chart 
