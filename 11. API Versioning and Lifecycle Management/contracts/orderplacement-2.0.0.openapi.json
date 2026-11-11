@@ -1,0 +1,192 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Globex OrderPlacement API — ASP.NET Core adaptation",
+    "version": "2.0.0",
+    "description": "Versioned contract for the Red Hat Globex retail API-versioning scenario. Synthetic data, no external webhook."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8080",
+      "description": "Local API (Gateway port 8081 is separate)"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/v2/placeorder": {
+      "post": {
+        "operationId": "placeOrderV2",
+        "summary": "Place an order with fullName",
+        "description": "Version 2 changes the customer name representation; old v1 clients must be migrated.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderRequest"
+              },
+              "example": {
+                "fullName": "Alex Ivanov",
+                "deliveryInstructions": "Leave at the door",
+                "sku": "BOOK-1",
+                "quantity": 2
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order accepted; response is not persistent",
+            "headers": {
+              "X-API-Revision": {
+                "description": "Current implementation contract revision",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderReceipt"
+                },
+                "example": {
+                  "orderId": "ord-1",
+                  "status": "accepted",
+                  "apiVersion": "2.0.0"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid order payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "code": "validation_error",
+                  "message": "Invalid order payload"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "code": "unauthorized",
+                  "message": "Invalid API key"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Version v1 has been retired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "code": "gone",
+                  "message": "Version v1 has been retired"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Api-Key"
+      }
+    },
+    "schemas": {
+      "OrderRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fullName",
+          "sku",
+          "quantity"
+        ],
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160,
+            "example": "Alex Ivanov"
+          },
+          "deliveryInstructions": {
+            "type": "string",
+            "maxLength": 200,
+            "example": "Leave at the door"
+          },
+          "sku": {
+            "type": "string",
+            "minLength": 1,
+            "example": "BOOK-1"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "example": 2
+          }
+        }
+      },
+      "OrderReceipt": {
+        "type": "object",
+        "required": [
+          "orderId",
+          "status",
+          "apiVersion"
+        ],
+        "properties": {
+          "orderId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "accepted"
+            ]
+          },
+          "apiVersion": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
