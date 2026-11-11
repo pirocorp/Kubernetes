@@ -1,0 +1,21 @@
+# NOTE (2026): Client can reach consumer on TCP 5000.
+# Client Pod must have label role=client; other Pods are excluded.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: client-consumer-policy
+  namespace: projectx
+spec:
+  podSelector:
+    matchLabels:
+      role: consumer
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: client
+    ports:
+    - protocol: TCP
+      port: 5000
