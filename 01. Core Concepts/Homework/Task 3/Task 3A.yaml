@@ -48,9 +48,9 @@ metadata:
   namespace: homework
 spec:
   ports:
-  - port: 80
+  - port: 5000
     nodePort: 32000 
-    targetPort: 5500
+    targetPort: 5000
     protocol: TCP    
   selector:
     app: hw
