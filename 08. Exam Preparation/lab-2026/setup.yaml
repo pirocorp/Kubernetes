@@ -1,0 +1,195 @@
+# Kubernetes 1.37 modern exam — three logical exam areas on one Calico cluster.
+# NOTE: venus-web is deliberately not Ready until venus-index ConfigMap is created.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exam-mars
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exam-jupiter
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exam-venus
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cat
+  namespace: exam-mars
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cat
+  template:
+    metadata:
+      labels:
+        app: cat
+    spec:
+      containers:
+      - name: http-echo
+        image: hashicorp/http-echo:1.0.0
+        args: ["-listen=:5678", "-text=cat-service-ok"]
+        ports:
+        - containerPort: 5678
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dog
+  namespace: exam-mars
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dog
+  template:
+    metadata:
+      labels:
+        app: dog
+    spec:
+      containers:
+      - name: http-echo
+        image: hashicorp/http-echo:1.0.0
+        args: ["-listen=:5678", "-text=dog-service-ok"]
+        ports:
+        - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cat-svc
+  namespace: exam-mars
+spec:
+  selector:
+    app: cat
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dog-svc
+  namespace: exam-mars
+spec:
+  selector:
+    app: dog
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5678
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: misprobe
+  namespace: exam-mars
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: misprobe
+  template:
+    metadata:
+      labels:
+        app: misprobe
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.30.6-alpine-slim
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /nonexistent
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jupiter-api
+  namespace: exam-jupiter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jupiter-api
+  template:
+    metadata:
+      labels:
+        app: jupiter-api
+    spec:
+      containers:
+      - name: http-echo
+        image: hashicorp/http-echo:1.0.0
+        args: ["-listen=:5678", "-text=jupiter-api-ok"]
+        ports:
+        - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-svc
+  namespace: exam-jupiter
+spec:
+  selector:
+    app: jupiter-api
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5678
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: exam-reader
+  namespace: exam-jupiter
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venus-web
+  namespace: exam-venus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: venus-web
+  template:
+    metadata:
+      labels:
+        app: venus-web
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.30.6-alpine-slim
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: content
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: content
+        configMap:
+          name: venus-index
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: venus-web
+  namespace: exam-venus
+spec:
+  selector:
+    app: venus-web
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80

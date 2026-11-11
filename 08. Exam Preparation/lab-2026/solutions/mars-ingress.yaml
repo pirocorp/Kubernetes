@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pets-ingress
+  namespace: exam-mars
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: pets.lab
+    http:
+      paths:
+      - path: /cat
+        pathType: Prefix
+        backend:
+          service:
+            name: cat-svc
+            port:
+              number: 80
+      - path: /dog
+        pathType: Prefix
+        backend:
+          service:
+            name: dog-svc
+            port:
+              number: 80

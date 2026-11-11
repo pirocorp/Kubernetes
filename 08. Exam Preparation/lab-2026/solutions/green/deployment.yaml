@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal
+  namespace: exam-mars
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: main
+        image: nginx:1.30.6

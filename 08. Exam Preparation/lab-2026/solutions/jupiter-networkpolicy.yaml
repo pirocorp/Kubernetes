@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: only-trusted-to-api
+  namespace: exam-jupiter
+spec:
+  podSelector:
+    matchLabels:
+      app: jupiter-api
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          access: trusted
+    ports:
+    - protocol: TCP
+      port: 5678
