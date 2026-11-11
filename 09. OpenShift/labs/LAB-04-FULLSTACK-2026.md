@@ -34,8 +34,8 @@ flowchart LR
 oc whoami
 oc project
 oc version
-oc get storageclass
-oc get resourcequota
+oc get storageclass || echo 'Няма право за StorageClass list; проверката ще бъде чрез PVC'
+oc get resourcequota || true
 oc auth can-i create persistentvolumeclaims
 oc auth can-i create buildconfigs.build.openshift.io
 oc auth can-i create imagestreams.image.openshift.io
@@ -47,7 +47,7 @@ oc auth can-i create routes.route.openshift.io
 oc get deploy,svc,pvc,secret,bc,is
 ```
 
-**Очаквано:** `yes` за изискваните операции, default StorageClass и достатъчна quota за 3 Pods плюс build Pods (ориентир 2Gi memory). Ако мястото или permissions не стигат, **спри** и отчети лимита; не увеличавай quotas.
+**Очаквано:** `yes` за изискваните операции, динамично provision-ван PVC (проверяваме `Bound` след създаването му) и достатъчна quota за 3 Pods плюс build Pods (ориентир 2Gi memory). Ако мястото или permissions не стигат, **спри** и отчети лимита; не увеличавай quotas.
 
 ## 3. Изтегли всички нужни source файлове
 
