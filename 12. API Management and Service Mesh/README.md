@@ -111,6 +111,17 @@ bash scripts/start.sh
 bash scripts/stop.sh
 ```
 
+### Автоматична крайна проверка на локалния път
+
+Преди да преминеш към OpenShift/Istio можеш да изпълниш **всички локални acceptance проверки наведнъж**, без липсващи файлове или външни API услуги:
+
+```bash
+# От корена на Module 12; .NET SDK 10, Python 3.10+, свободни портове 5100–5300
+bash scripts/verify-local.sh
+```
+
+Скриптът изгражда реалния C# проект, стартира пет локални процеса, проверява health, Portal → Agency, 80/20, един безопасен GET fallback, Red/Blue quota 401/200/429 и admin metrics, след което спира **собствените** процеси. Изходен код: [scripts/verify-local.sh](./scripts/verify-local.sh). Запазените учебни credentials в `.runtime/keys.env` са локални (mode 0600) и не се commit-ват. **Локалният тест не доказва изпълнение на истински Istio/3scale** — тези цели остават в 12-D/12-E при налична среда.
+
 ## 7. Файлова структура
 
 ```text
