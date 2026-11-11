@@ -61,7 +61,7 @@ curl -sS -H "X-Api-Key: $API_KEY" -H 'Content-Type: application/json' \
 
 ```bash
 docker build -f Dockerfile -t m10-products:dev .
-docker run --rm -p 127.0.0.1:18080:8080 -e API_KEY="$API_KEY" m10-products:dev
+docker run --rm -p 127.0.0.1:18080:8080 --env API_KEY m10-products:dev
 ```
 
 Провери в друг терминал `curl -fsS -H "X-Api-Key: $API_KEY" http://127.0.0.1:18080/v1/products`. Не изпълнявай локален Docker build, ако същият порт вече е зает. Image използва .NET 10 SDK за build и ASP.NET Core 10 runtime, слуша на **8080** и не изисква root за работа на приложението.
