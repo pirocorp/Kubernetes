@@ -1,3 +1,5 @@
+> **NOTE (2026):** This is the **historical Kubernetes 1.21/Debian 10** author solution. Its apt repositories, Docker/dockershim and Calico URLs are not valid installation instructions for the Kubernetes 1.37 lab. Follow [HOMEWORK-2026.md](../../HOMEWORK-2026.md) for three complete tasks and [SETUP-2026.md](../../SETUP-2026.md) for current kubeadm/containerd/Calico installation. A [new Vagrant-2026/Vagrantfile](../Vagrant-2026/Vagrantfile) provisions the three Ubuntu 24.04 VMs.
+
 # Task 1
 
 Create a two node **Minikube**-based **Kubernetes** cluster and deploy a simple app on it. For example, shekeriev/k8s-oracle from the previous HW.
