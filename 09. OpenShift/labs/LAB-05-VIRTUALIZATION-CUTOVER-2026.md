@@ -304,9 +304,22 @@ unset M09_VM_PRIVATE_DIR
 
 Готовият [legacy-fallback.yaml](./examples/vm-cutover/legacy-fallback.yaml) публикува **legacy container** на port 8080 през Service `m09-legacy` на port 80. [modern.yaml](./examples/vm-cutover/modern.yaml) публикува modern container през Service `m09-modern` на port 8080. И двата Service ports се наричат `http`, затова [route.yaml](./examples/vm-cutover/route.yaml) може да сменя backend без hostname или target port name промяна.
 
-**Preflight:** избери личния Project; провери `oc auth can-i create deployments.apps`, `oc auth can-i create services`, `oc auth can-i create routes.route.openshift.io`, `oc auth can-i create configmaps`. **Не започвай, ако съществува някой от собствените ресурсни имена**: `m09-legacy`, `m09-fallback`, `m09-modern`, `m09-cutover` или `m09-fallback-html`.
+**Preflight:** избери личния Project, потвърди RBAC за Deployment/Service/Route/ConfigMap. **Не започвай, ако съществува някой от ресурсите с имена** `m09-legacy`, `m09-fallback`, `m09-modern`, `m09-cutover` или `m09-fallback-html`. Ако прескачаш направо от раздел 2 заради липсваща Virtualization функционалност, **не е нужно първо да си изпълнил VM стъпките или раздел 2.1** — подготовката на файловете е включена тук:
 
 ```bash
+oc whoami
+oc project
+oc auth can-i create deployments.apps
+oc auth can-i create services
+oc auth can-i create routes.route.openshift.io
+oc auth can-i create configmaps
+if test -z "${VM_LAB:-}"; then
+  git clone --depth=1 https://github.com/pirocorp/Kubernetes.git m09-virtualization-reference
+  export VM_LAB="$PWD/m09-virtualization-reference/09. OpenShift/labs/examples/vm-cutover"
+fi
+test -s "$VM_LAB/legacy-fallback.yaml"
+test -s "$VM_LAB/modern.yaml"
+test -s "$VM_LAB/route.yaml"
 oc get deploy,svc,route,cm
 oc apply --dry-run=client -f "$VM_LAB/legacy-fallback.yaml"
 oc apply --dry-run=client -f "$VM_LAB/modern.yaml"
