@@ -34,7 +34,7 @@
 
 ## Further modules — separate learning tracks
 
-The Kubernetes **1.37 static audit above covers Modules 00–08 only**. Continue separately with [Module 09 — OpenShift](./09.%20OpenShift/README.md) (Projects, Builds, Routes, Security, Storage and Virtualization) and [Module 10 — API-First Development & API Management](./10.%20API-First%20Development%20and%20API%20Management/README.md) (OpenAPI contract design, registry, mocking, ASP.NET Core implementation, API management and optional OpenShift deployment). Each has its own prerequisites; neither changes the default kubeadm/Calico lab baseline.
+The Kubernetes **1.37 static audit above covers Modules 00–08 only**. Continue separately with [Module 09 — OpenShift](./09.%20OpenShift/README.md) (Projects, Builds, Routes, Security, Storage and Virtualization) and [Module 10 — API-First Development & API Management](./10.%20API-First%20Development%20and%20API%20Management/README.md) (OpenAPI contract design, registry, mocking, ASP.NET Core implementation, API management and optional OpenShift deployment). Continue with [Module 11 — API Versioning & Lifecycle Management](./11.%20API%20Versioning%20and%20Lifecycle%20Management/README.md) for SemVer, backward compatibility, ASP.NET Core OrderPlacement v1/v2, consumer migration, deprecation, sunset and optional OpenShift dual-route deployment. Each track has its own prerequisites; **none changes** the default kubeadm/Calico lab baseline.
 
 ## External dependencies that cannot be packaged as static documents
 
