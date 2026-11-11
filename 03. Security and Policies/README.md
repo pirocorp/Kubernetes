@@ -1,3 +1,5 @@
+> **Kubernetes 1.37 (2026) homework:** Start with [SECURITY-2026.md](./SECURITY-2026.md) to complete all seven tasks with real user certificates, quota/LimitRange, devguru RBAC, Calico NetworkPolicy testing, expected results and cleanup. The historical practice and author certificates are not reusable.
+
 # Security and Policies
 
 # Default Cluster User
