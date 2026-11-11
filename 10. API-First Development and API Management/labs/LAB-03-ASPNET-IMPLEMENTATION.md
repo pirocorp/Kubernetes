@@ -80,4 +80,4 @@ docker run --rm -p 127.0.0.1:18080:8080 --env API_KEY m10-products:dev
 
 Ако имаш `API_PID` от собствения background run: `if test -n "${API_PID:-}"; then kill "$API_PID"; unset API_PID; fi`. Ако си създал container, спри го с Ctrl+C (използвано е `--rm`). По избор: `dotnet clean src/ProductsApi/ProductsApi.csproj`. След края на всички labs: `unset API_KEY`. Няма клъстерни ресурси.
 
-**Критерий:** успешен `dotnet build`, работещ API и `contract_check.py` с осемте очаквани HTTP проверки.
+**Критерий:** успешен `dotnet build`, работещ API и `contract_check.py` с деветте очаквани HTTP проверки, включително отказ на непознато JSON поле.
