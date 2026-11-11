@@ -145,6 +145,17 @@ oc get events --sort-by=.lastTimestamp
 
 **Очаквано:** структурирани JSON резултати. Спри port-forward с Ctrl+C. Ако Route дава `503`, диагностицирай Service endpoints/Pod readiness и API logs. Ако POST дава `503 event_unavailable`, Kafka producer не успява да достигне/публикува в topic-а.
 
+### Локална проверка на HTTP callback contract (без Knative Operator)
+
+Ако имаш изпълнен [Lab 13-C](./LAB-03-KAFKA-STORAGE-DASHBOARD.md) и истинския Kafka Compose stack още работи, можеш предварително да провериш как ASP.NET Core обработва **nested KafkaSource CloudEvent** и директен structured CloudEvent:
+
+```bash
+# Първо спри собствения ръчен API на :5080.
+bash scripts/verify-knative-callbacks.sh
+```
+
+**Очаквано:** `PASS wrapped KafkaSource CloudEvent` и `PASS Knative-style CloudEvent HTTP callback contract`. Този тест използва истински Kafka/PostgreSQL/InfluxDB, но **имитира HTTP доставката**, не инсталира/валидира реален Knative Broker/Trigger. Изходни файлове: [verify_knative_callbacks.py](../tools/verify_knative_callbacks.py) и [verify-knative-callbacks.sh](../scripts/verify-knative-callbacks.sh). **Live Serverless** остава проверката от раздели 2–6.
+
 ## 7. Failure scenarios
 
 | Симптом | Проверка | Корекция |
