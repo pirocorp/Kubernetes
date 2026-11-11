@@ -60,7 +60,7 @@ Create manifests for every object (the namespace, the two pods, and the service)
 
 Solution:
 
-hw-ns.yaml
+homework-namespace.yaml
 
 ```yaml
 apiVersion: v1
@@ -68,7 +68,7 @@ kind: Namespace
 metadata:
   name: homework
 ```
-hw-pod-1.yaml
+homework-1-pod.yaml
 
 ```yaml
 apiVersion: v1
@@ -86,7 +86,7 @@ spec:
     name: homework-1
 ```
 
-hw-pod-2.yaml
+homework-2-pod.yaml
 
 ```yaml
 apiVersion: v1
