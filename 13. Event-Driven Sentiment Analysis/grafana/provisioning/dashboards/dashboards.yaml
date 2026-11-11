@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: Globex Demo
+    orgId: 1
+    folder: Globex
+    type: file
+    disableDeletion: false
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
