@@ -46,7 +46,7 @@ curl -fsS -H "X-Api-Key: $API_KEY" http://127.0.0.1:8082/v1/products/p-100
 python3 tools/contract_check.py --base-url http://127.0.0.1:8082
 ```
 
-**Очаквано:** `ok`, списък от Keyboard и Mouse, детайли за `p-100`, след това шест успешни contract smoke проверки (health, unauthorized, list, found, 404, POST 201). Mock `POST` връща примерен обект, **не** запазва нови продукти.
+**Очаквано:** `ok`, списък от Keyboard и Mouse, детайли за `p-100`, след това осем успешни contract smoke проверки (health, unauthorized, list, found, 404, POST 201 и два отказани POST 400). Mock `POST` връща примерен обект, **не** запазва нови продукти.
 
 ## Troubleshooting
 
