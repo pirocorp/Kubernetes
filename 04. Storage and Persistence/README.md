@@ -1,3 +1,5 @@
+> **Kubernetes 1.37 lab (2026):** Follow [STORAGE-2026.md](./STORAGE-2026.md) for complete NFS prerequisites, static PV/PVC binding, ConfigMap/Secret homework, commands, expected results and cleanup. Historic Docker/Kubernetes explanations below are retained for context.
+
 # The [Docker Way](https://docs.docker.com/storage/volumes/)
 
 - Bind Mounts are dependent on the OS and file system structure
@@ -152,9 +154,11 @@ spec:
     emptyDir: {}
 ```
 
-## GitRepo (deprecated)
+## Git repository files in a Pod — `emptyDir` + init container (Kubernetes 1.37)
 
-A gitRepo volume is an example of a volume plugin. This plugin mounts an empty directory and clones a git repository into this directory for your Pod to use.
+> **NOTE (2026):** The old `gitRepo` volume driver was permanently disabled in Kubernetes **1.36**. It cannot be used on the course's **1.37** cluster. The supported equivalent uses an init container with Git to populate an `emptyDir`, then mounts the same directory in the application container. It clones only at Pod creation, **not** continuously. Original archive `M4-Practice-Storage-and-Persistence (files).zip/part1/git-pod.yaml` is a historical 2021 artifact.
+
+Save as `git-pod-2026.yaml`:
 
 ```yaml
 apiVersion: v1
@@ -164,29 +168,42 @@ metadata:
   labels:
     app: notes
 spec:
-  containers:
-  - image: php:apache
-    name: container-git
+  initContainers:
+  - name: clone-repository
+    image: alpine:3.22
+    command: ["/bin/sh", "-ec"]
+    args:
+    - |
+      apk add --no-cache git
+      git clone --depth 1 --branch main https://github.com/shekeriev/k8s-notes.git /work
     volumeMounts:
-    - mountPath: /var/www/html
-      name: git-volume
-    - mountPath: /data
-      name: data-volume
+    - name: git-volume
+      mountPath: /work
+  containers:
+  - name: container-git
+    image: php:8.4-apache
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: git-volume
+      mountPath: /var/www/html
   volumes:
-    # First volume name
   - name: git-volume
-    # First volume type
-    gitRepo:
-      # The repository that will be cloned.
-      repository: "https://github.com/shekeriev/k8s-notes.git"
-      # Repository branch
-      revision: "main"
-      # Directory in which will be cloned.
-      directory: .
-    # Second volume name
-  - name: data-volume
     emptyDir: {}
 ```
+
+```bash
+kubectl apply -f git-pod-2026.yaml
+kubectl wait --for=condition=Ready pod/pod-git --timeout=180s
+kubectl logs pod-git -c clone-repository
+kubectl exec pod-git -- ls -la /var/www/html
+kubectl port-forward pod/pod-git 8080:80
+# From another terminal: curl http://localhost:8080/
+# Ctrl+C to stop port-forward; clean up:
+kubectl delete -f git-pod-2026.yaml
+```
+
+**Expected:** init container completes, web container is Ready and Git files are visible at `/var/www/html`. Requires outbound HTTPS and access to the public GitHub repository.
 
 ## HostPath
 
@@ -335,10 +352,10 @@ PVs are resources in the cluster. PVCs are requests for those resources and also
 - **Provisioning** - There are two ways PVs may be provisioned: statically or dynamically. Static: a cluster administrator creates a number of PVs. They carry the details of the real storage, which is available for use by cluster users. They exist in the Kubernetes API and are available for consumption. Dynamic: This provisioning is based on StorageClasses.
 - **Binding** - A user creates (or in the case of dynamic provisioning, has already created), a **PersistentVolumeClaim** with a specific amount of storage requested and with certain access modes. A control loop in the master watches for new PVCs, finds a matching PV (if possible), and binds them together. The user will always get at least what they asked for, but the volume may be in excess of what was requested. Once bound, **PersistentVolumeClaim** binds are exclusive, regardless of how they were bound. A PVC to PV binding is a one-to-one mapping, using a **ClaimRef** which is a bi-directional binding between the **PersistentVolume** and the **PersistentVolumeClaim**.
 - **Using** - Pods use claims as volumes. The cluster inspects the claim to find the bound volume and mounts that volume for a Pod. For volumes that support multiple access modes, the user specifies which mode is desired when using their claim as a volume in a Pod.
-- **Reclaiming** - When a user is done with their volume, they can delete the PVC objects from the API that allows reclamation of the resource. The reclaim policy for a PersistentVolume tells the cluster what to do with the volume after it has been released of its claim. Currently, volumes can either be Retained, Recycled, or Deleted.
+- **Reclaiming** - When a user is done with their volume, they can delete the PVC objects from the API that allows reclamation of the resource. The reclaim policy for a PersistentVolume tells the cluster what to do with the volume after it has been released of its claim. The actively supported reclaim-policy choices for this lab are **Retain** and **Delete** (the historical **Recycle** behavior is deprecated).
   - **Retain** allows for manual reclamation of the resource
   - **Delete** removes both the PV object from Kubernetes, as well as the associated storage asset in the external infrastructure
-  - **Recycle** performs a basic scrub on the volume and makes it available again (deprecated)
+  - **Recycle (historical only)** attempted automatic scrubbing; deprecated and **not used** in the 2026 lab. Use **Retain** for the static NFS examples, where data is preserved and reclaim is manual.
 
 ## Access Modes
 
