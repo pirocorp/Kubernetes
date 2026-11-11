@@ -122,22 +122,21 @@ oc describe kafkasource m13-globex-kafka-source
 ```bash
 M13_HOST="$(oc get route m13-globex-reviews -o jsonpath='{.spec.host}')"
 test -n "$M13_HOST"
-python3 tools/verify.py --base-url "https://$M13_HOST" --timeout 90
+python3 tools/generate_reviews.py --base-url "https://$M13_HOST" --count 3
 ```
 
-**Очаквано:** synthetic reviews → HTTP 202, асинхронна moderation/sentiment обработка, approved/denied outcomes, `globex.review.*` CloudEvents и score aggregation. `verify.py` използва `INGEST_KEY` от environment за всички review API заявки; не го печата.
+**Очаквано:** три synthetic POST заявки към **публичния Route** се приемат с HTTP 202 и собствен `INGEST_KEY` (прочетен от environment, без отпечатване). Route е умишлено ограничен до `/reviews`; `/healthz`, `/metrics` и `/events` не са публично достъпни от него. Поради това пълният acceptance test се изпълнява **през временен port-forward**, а не през Route.
 
-Вътрешна диагностична проверка за metrics/events (нямат public Route path):
-
-**Терминал 1:**
+**Терминал 1** (остави да работи):
 
 ```bash
 oc port-forward service/m13-globex-reviews 5508:8080
 ```
 
-**Терминал 2:**
+**Терминал 2** (същия локален checkout и `INGEST_KEY` от раздел 4):
 
 ```bash
+python3 tools/verify.py --base-url http://127.0.0.1:5508 --timeout 90
 curl -fsS http://127.0.0.1:5508/metrics/sentiment
 curl -fsS http://127.0.0.1:5508/events
 oc logs deployment/m13-globex-reviews --tail=60
