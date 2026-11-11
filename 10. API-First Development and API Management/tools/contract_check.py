@@ -87,6 +87,14 @@ def main():
         base, "POST", "/v1/products", 201, "Product", key,
         {"name": "Monitor", "price": 129, "currency": "EUR"}
     )
+    expect(
+        base, "POST", "/v1/products", 400, "ApiError", key,
+        {"name": "Bad item", "currency": "EUR"}  # missing required price
+    )
+    expect(
+        base, "POST", "/v1/products", 400, "ApiError", key,
+        {"name": "", "price": -1, "currency": "EUR"}
+    )
     print("Contract smoke tests PASSED (subset of schema rules).")
 
 
