@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: venus-index
+  namespace: exam-venus
+data:
+  index.html: |-
+    <!doctype html>
+    <html><body><h1>Venus recovered!</h1></body></html>
