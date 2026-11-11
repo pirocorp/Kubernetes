@@ -50,7 +50,7 @@ public sealed class KafkaTransport : IDisposable
                         }));
             }
             catch (CreateTopicsException exception) when (
-                exception.Results.All(r => r.Error.Code == ErrorCode.TopicAlreadyExists))
+                exception.Results.All(r => r.Error.Code is ErrorCode.TopicAlreadyExists or ErrorCode.NoError))
             {
                 // Re-running the exercise must not fail for existing demo topics.
             }
