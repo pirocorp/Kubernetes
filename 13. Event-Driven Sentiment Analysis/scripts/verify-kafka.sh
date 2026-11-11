@@ -36,7 +36,7 @@ export INFLUX_URL="http://127.0.0.1:8086"
 export INFLUX_ORG="globex"
 export INFLUX_BUCKET="review_sentiment"
 export KAFKA_BOOTSTRAP="127.0.0.1:9092"
-ASPNETCORE_URLS=http://127.0.0.1:5080 REVIEWS_MODE=kafka   dotnet run --no-build -c Release --no-launch-profile   --project src/GlobexReviews/GlobexReviews.csproj > "$work/api.log" 2>&1 &
+ASPNETCORE_URLS=http://127.0.0.1:5080 REVIEWS_MODE=kafka   dotnet src/GlobexReviews/bin/Release/net10.0/GlobexReviews.dll > "$work/api.log" 2>&1 &
 pid="$!"
 for i in $(seq 1 45); do
   if python3 - <<'PY'
