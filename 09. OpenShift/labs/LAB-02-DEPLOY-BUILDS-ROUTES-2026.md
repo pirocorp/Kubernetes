@@ -277,13 +277,15 @@ oc delete service/m09-image service/m09-source service/m09-git-cli --ignore-not-
 oc delete configmap/m09-html --ignore-not-found
 oc delete buildconfig/m09-source buildconfig/m09-git-cli --ignore-not-found
 oc delete imagestream/m09-source imagestream/m09-python-312 imagestream/m09-git-cli --ignore-not-found
+oc delete builds -l buildconfig=m09-source --ignore-not-found
+oc delete builds -l buildconfig=m09-git-cli --ignore-not-found
 oc get builds -l buildconfig=m09-source
-oc get builds -l buildconfig=m09-git
+oc get builds -l buildconfig=m09-git-cli
 oc get deploy,svc,route,bc,is,cm
 cd ..
 ```
 
-Ако има останали build records, премахни **само** имената от `oc get builds -l buildconfig=m09-source` (не изтривай всички Builds). Локалната директория `lab09b/` съдържа само тези source files и може да се изтрие след проверка на `pwd`. **Не** изтривай Project, чужди приложения или стандартния kubeconfig. Локалната директория `lab09b/course-reference` е само checkout от Git; може да се запази за следващите упражнения или да се премахне **след проверка**, че не си добавял собствени файлове.
+Ако има Build records без очаквания label, провери `oc get builds` и изтрий **само имената**, свързани с `m09-source` или `m09-git-cli`. GUI вариантът `m09-git` има отделен cleanup в раздел 3.3. Не изтривай всички Builds. Локалната директория `lab09b/` съдържа само тези source files и може да се изтрие след проверка на `pwd`. **Не** изтривай Project, чужди приложения или стандартния kubeconfig. Локалната директория `lab09b/course-reference` е само checkout от Git; може да се запази за следващите упражнения или да се премахне **след проверка**, че не си добавял собствени файлове.
 
 ## 7. Acceptance criteria / version scope
 
