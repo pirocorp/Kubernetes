@@ -145,7 +145,7 @@ oc new-build --name=m09-source --binary --strategy=source --image-stream=m09-pyt
 oc start-build m09-source --from-dir=source --follow --wait
 oc get builds
 oc get imagestream m09-source
-oc new-app --image-stream=m09-source:latest --name=m09-source
+oc new-app --image-stream=m09-source:latest --name=m09-source -l app=m09-source
 oc set env deployment/m09-source APP_MODULE=app:app APP_VERSION=v1
 oc rollout status deployment/m09-source --timeout=240s
 oc get svc m09-source -o yaml
