@@ -27,7 +27,7 @@ trap cleanup EXIT
 python3 -m compileall -q tools
 python3 -m json.tool contracts/review-submitted.json >/dev/null
 dotnet build src/GlobexReviews/GlobexReviews.csproj -c Release
-ASPNETCORE_URLS=http://127.0.0.1:5080 REVIEWS_MODE=local   dotnet run -c Release --no-build --no-launch-profile   --project src/GlobexReviews/GlobexReviews.csproj > "$work/api.log" 2>&1 &
+ASPNETCORE_URLS=http://127.0.0.1:5080 REVIEWS_MODE=local   dotnet src/GlobexReviews/bin/Release/net10.0/GlobexReviews.dll > "$work/api.log" 2>&1 &
 pid="$!"
 for attempt in $(seq 1 30); do
   if python3 - <<'PY'
