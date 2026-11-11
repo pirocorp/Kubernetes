@@ -1,6 +1,7 @@
 """Test Knative-style CloudEvent HTTP callbacks (not a live Knative control plane)."""
 import datetime
 import json
+import os
 import time
 import urllib.error
 import urllib.request
