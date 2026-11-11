@@ -160,7 +160,7 @@ oc import-image m09-node22 --from=registry.access.redhat.com/ubi9/nodejs-22:late
 oc get istag m09-node22:latest -o jsonpath='{.image.dockerImageReference}{"\n"}'
 oc new-build --name=m09-web --binary --strategy=source --image-stream=m09-node22:latest
 oc start-build m09-web --from-dir="$M09_STACK/frontend" --follow --wait
-oc new-app --image-stream=m09-web:latest --name=m09-web
+oc new-app --image-stream=m09-web:latest --name=m09-web -l app=m09-web
 oc set env deployment/m09-web API_URL=http://m09-api:8080/quotes
 oc set probe deployment/m09-web --readiness --get-url=http://:8080/healthz
 oc rollout status deployment/m09-web --timeout=240s
