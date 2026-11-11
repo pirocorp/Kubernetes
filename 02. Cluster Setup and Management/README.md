@@ -1,3 +1,5 @@
+> **Kubernetes 1.37 homework (2026):** Use [HOMEWORK-2026.md](./HOMEWORK-2026.md) to complete **all three** homework tasks (two-node Minikube, three-node kind, and three-node vanilla/Vagrant). It links the canonical [SETUP-2026.md](./SETUP-2026.md) for kubeadm/Calico. Older commands below are a **Kubernetes 1.21–1.22 historical record**.
+
 # Basic Cluster Operations
 
 > **Historical course material (Kubernetes 1.21–1.22, Debian 10).** The original lab commands below are retained unchanged for reference, but are not an up-to-date installation procedure. For a new Kubernetes v1.37 lab cluster, use [SETUP-2026.md](./SETUP-2026.md) instead.
