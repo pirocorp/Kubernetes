@@ -53,7 +53,7 @@ curl -sS -H "X-Api-Key: $API_KEY" -H 'Content-Type: application/json' \
 
 **Очаквано:** `401` без ключ, `400` при невалиден product payload. Няма logging на API key.
 
-**Граница на валидатора:** `tools/contract_check.py` проверява **подмножество** от schema правила (required/type/enum), не е пълен OpenAPI semantic validator или end-to-end penetration test. Той проверява *реалния HTTP endpoint*, вместо да сравнява само C# типове по име.
+**Граница на валидатора:** `tools/contract_check.py` проверява **подмножество** от schema правила (required/type/enum/additionalProperties за response тела), не е пълен OpenAPI semantic validator или end-to-end penetration test. Той проверява *реалния HTTP endpoint*, вместо да сравнява само C# типове по име.
 
 ## 4. Container image (локален, опционален)
 
