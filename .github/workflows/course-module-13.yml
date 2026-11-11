@@ -1,0 +1,49 @@
+name: Module 13 event-driven sentiment acceptance
+
+on:
+  pull_request:
+    paths:
+      - "13. Event-Driven Sentiment Analysis/**"
+      - ".github/workflows/course-module-13.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dotnet-local:
+    name: .NET 10 local EDA and CloudEvent HTTP behavior
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Execute local acceptance
+        shell: bash
+        run: bash "13. Event-Driven Sentiment Analysis/scripts/verify-local.sh"
+
+  kafka-integration:
+    name: Real Kafka, PostgreSQL and InfluxDB integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run Kafka + database integration against Docker Compose
+        shell: bash
+        run: bash "13. Event-Driven Sentiment Analysis/scripts/verify-kafka.sh"
+      - name: Clean integration containers and volumes
+        if: always()
+        shell: bash
+        working-directory: "13. Event-Driven Sentiment Analysis"
+        run: docker compose down -v --remove-orphans || true
