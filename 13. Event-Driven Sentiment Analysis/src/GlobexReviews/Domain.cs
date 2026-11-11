@@ -102,6 +102,6 @@ public static class ReviewRules
         var neg = words.Count(Negative.Contains);
         var score = pos + neg == 0 ? 0.0 : (double)(pos - neg) / (pos + neg);
         var label = score > 0 ? "positive" : score < 0 ? "negative" : "neutral";
-        return new(r.Id, r.Category, label, score, "demo-lexicon-v1", DateTimeOffset.UtcNow);
+        return new(r.Id, r.Category, label, score, "demo-lexicon-v1", r.SubmittedAt);
     }
 }
