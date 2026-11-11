@@ -1,2 +1,11 @@
-![OpenShift](./OpenShift.png)
-![OpenShift](./OpenShift%20-%20Components.png)
+# Module 09 — OpenShift
+
+> **Начална учебна бележка:** [INTRO-2026.md — OpenShift за начинаещи: понятия и компоненти от видео](./INTRO-2026.md).
+>
+> Това е само концептуално въведение. Модернизацията и изборът на OpenShift/OKD версия, lab среда и упражнения **още не са завършени**. Двата исторически слайда по-долу са запазени без промени.
+
+## Слайдове от уводното видео
+
+![OpenShift — технологии](./OpenShift.png)
+
+![OpenShift — основни компоненти](./OpenShift%20-%20Components.png)
