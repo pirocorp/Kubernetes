@@ -254,6 +254,8 @@ curl -fsS "https://$M09_VM_HOST/" | grep 'Legacy VM'
 
 ```bash
 oc get vm m09-legacy -o yaml
+oc get vm m09-legacy -o jsonpath='{range .spec.template.spec.volumes[*]}{.name}{" -> "}{.dataVolume.name}{" -> "}{.persistentVolumeClaim.claimName}{"\n"}{end}'
+oc get vm m09-legacy -o jsonpath='{range .spec.dataVolumeTemplates[*]}{.metadata.name}{"\n"}{end}'
 oc get pvc
 oc get dv 2>/dev/null || true
 oc delete route/m09-cutover --ignore-not-found
@@ -262,7 +264,7 @@ oc delete deployment/m09-modern --ignore-not-found
 oc delete configmap/m09-modern-html --ignore-not-found
 ```
 
-След това във **Virtualization → VirtualMachines → m09-legacy → Delete** избери премахване на **VM и собствените ѝ създадени boot DataVolumes/PVCs**, **само ако** са ясно идентифицирани като нейни и нямат други consumers. Ако wizard не предлага опция за associated storage, след изтриване на VM използвай `oc get pvc` и изтрий **само** идентифицираните в началото ресурси по техните **реални имена**:
+След това във **Virtualization → VirtualMachines → m09-legacy → Delete** избери премахване на **VM и собствените ѝ създадени boot DataVolumes/PVCs**, **само ако** са ясно идентифицирани като нейни и нямат други consumers. Ако wizard не предлага опция за associated storage, след изтриване на VM използвай записаните от горните две `jsonpath` команди имена на boot DataVolumes/PVC. Преди `oc delete pvc ИМЕ` се увери, че PVC принадлежи само на тази учебна VM и няма други consumers. **Не** използвай wildcard или `oc delete pvc --all`:
 
 ```bash
 oc get vm,vmi,pvc,deploy,svc,route,cm
