@@ -1,0 +1,104 @@
+# NOTE (2026): Alternative Ingress Controller exercise (NOT NGINX or HAProxy).
+# Deploy Traefik chart 42.3.0 first, following ADVANCED-2026.md.
+# This is intentionally HTTP-only; no NGINX-specific rewrite annotations.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: m05-alt
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service1
+  namespace: m05-alt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: m05-service1
+  template:
+    metadata:
+      labels:
+        app: m05-service1
+    spec:
+      containers:
+      - name: echo
+        image: hashicorp/http-echo:1.0.0
+        args: ["-listen=:5678", "-text=service1 via Traefik"]
+        ports:
+        - containerPort: 5678
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service2
+  namespace: m05-alt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: m05-service2
+  template:
+    metadata:
+      labels:
+        app: m05-service2
+    spec:
+      containers:
+      - name: echo
+        image: hashicorp/http-echo:1.0.0
+        args: ["-listen=:5678", "-text=service2 via Traefik"]
+        ports:
+        - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service1
+  namespace: m05-alt
+spec:
+  selector:
+    app: m05-service1
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5678
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service2
+  namespace: m05-alt
+spec:
+  selector:
+    app: m05-service2
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5678
+    protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-fanout
+  namespace: m05-alt
+spec:
+  ingressClassName: traefik
+  rules:
+  - http:
+      paths:
+      - path: /service1
+        pathType: Prefix
+        backend:
+          service:
+            name: service1
+            port:
+              number: 80
+      - path: /service2
+        pathType: Prefix
+        backend:
+          service:
+            name: service2
+            port:
+              number: 80

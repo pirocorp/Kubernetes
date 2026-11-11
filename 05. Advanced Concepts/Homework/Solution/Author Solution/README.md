@@ -1,3 +1,5 @@
+> **Kubernetes 1.37 — NOTE (2026):** For all three homework tasks and the HPA exercise, follow [ADVANCED-2026.md](../../../ADVANCED-2026.md). The historical TLS Secret and Contour quickstart examples below belong to 2021; the **supported third-controller homework** now uses [Traefik](../Problem%203%20-%20Traefik/traefik-fanout.yaml) with a pinned Helm chart. The original NGINX TLS fanout is documented with a **fresh** lab certificate and backend Service ports **80**.
+
 
 # Init Containers
 

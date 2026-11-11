@@ -1,12 +1,20 @@
-# Generate Certificate
-openssl genrsa -out main.key 4096
-openssl req -new -x509 -key main.key -out main.crt -days 365 -subj /CN=demo.lab
+# Kubernetes 1.37 — HTTPS Ingress homework (run from this Problem 2 directory).
+# NOTE (2026): Generate a fresh short-lived TLS Secret for this lab.
+# Do NOT apply the historical secret.yaml containing a 2021 demo certificate.
+# Requires the F5 NGINX Ingress Controller installed from Module 05 README.
+openssl req -x509 -nodes -days 30 -newkey rsa:2048 -keyout tls.key -out tls.crt \
+  -subj "/CN=demo.lab" -addext "subjectAltName=DNS:demo.lab"
 
-# Create secret containing private key and certificate
-kubectl create secret generic demo-lab-secret --from-file=tls.key=./main.key  --from-file=tls.crt=./main.crt
-
-# Edit secret type to be: kubernetes.io/tls and aplly secret from file
-kubectl apply -f secret.yaml
-
-# Apply fanout ingress plus all services and pods
+kubectl create secret tls demo-lab-secret --key=tls.key --cert=tls.crt \
+  --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -f solution.yaml
+kubectl get pods,svc,ingress
+kubectl describe ingress ingress-ctrl
+
+# Identify HTTPS NodePort in the nginx-ingress namespace and the reachable node IP.
+kubectl get svc -n nginx-ingress
+# Then follow ADVANCED-2026.md to test HTTPS /service1, /service2 and /.
+# Clean up when done:
+kubectl delete -f solution.yaml --ignore-not-found
+kubectl delete secret demo-lab-secret --ignore-not-found
+rm -f tls.crt tls.key
