@@ -41,10 +41,11 @@ oc auth can-i create virtualmachines.kubevirt.io
 oc auth can-i create services
 oc auth can-i create routes.route.openshift.io
 oc auth can-i create deployments.apps
+oc auth can-i create configmaps
 oc get vm,vmi,pvc,deploy,svc,route,cm
 ```
 
-**Очаквано:** VirtualMachine API и права за VM; наличен каталог в Console → **Virtualization → Catalog / VirtualMachines / Create** (точните имена зависят от версията). Ако `oc get vm` е Forbidden, провери правилния Project и правата; ако няма Fedora/RHEL template или quota, **спри**, документирай блокиращата предпоставка и не прескачай към въображаема VM.
+**Очаквано:** VirtualMachine API и права за VM; наличен каталог в Console → **Virtualization → Catalog / VirtualMachines / Create** (точните имена зависят от версията). Ако `oc get vm` е Forbidden, провери правилния Project и правата; ако няма Fedora/RHEL template или quota, **не опитвай VM стъпките**. Можеш да завършиш само маршрутизацията чрез **отделния контейнерен fallback в раздел 12**, който не изпълнява VM учебната цел.
 
 ### 2.1. Къде са файловете
 
@@ -58,6 +59,7 @@ export VM_LAB="$PWD/09. OpenShift/labs/examples/vm-cutover"
 test -f "$VM_LAB/legacy-service.yaml"
 test -f "$VM_LAB/modern.yaml"
 test -f "$VM_LAB/route.yaml"
+test -f "$VM_LAB/legacy-fallback.yaml"
 ```
 
 Използвай файловете от настоящото хранилище, а не случайни manifests от други repositories.
@@ -252,6 +254,8 @@ curl -fsS "https://$M09_VM_HOST/" | grep 'Legacy VM'
 
 ```bash
 oc get vm m09-legacy -o yaml
+oc get vm m09-legacy -o jsonpath='{range .spec.template.spec.volumes[*]}{.name}{" -> "}{.dataVolume.name}{" -> "}{.persistentVolumeClaim.claimName}{"\n"}{end}'
+oc get vm m09-legacy -o jsonpath='{range .spec.dataVolumeTemplates[*]}{.metadata.name}{"\n"}{end}'
 oc get pvc
 oc get dv 2>/dev/null || true
 oc delete route/m09-cutover --ignore-not-found
@@ -260,7 +264,7 @@ oc delete deployment/m09-modern --ignore-not-found
 oc delete configmap/m09-modern-html --ignore-not-found
 ```
 
-След това във **Virtualization → VirtualMachines → m09-legacy → Delete** избери премахване на **VM и собствените ѝ създадени boot DataVolumes/PVCs**, **само ако** са ясно идентифицирани като нейни и нямат други consumers. Ако wizard не предлага опция за associated storage, след изтриване на VM използвай `oc get pvc` и изтрий **само** идентифицираните в началото ресурси по техните **реални имена**:
+След това във **Virtualization → VirtualMachines → m09-legacy → Delete** избери премахване на **VM и собствените ѝ създадени boot DataVolumes/PVCs**, **само ако** са ясно идентифицирани като нейни и нямат други consumers. Ако wizard не предлага опция за associated storage, след изтриване на VM използвай записаните от горните две `jsonpath` команди имена на boot DataVolumes/PVC. Преди `oc delete pvc ИМЕ` се увери, че PVC принадлежи само на тази учебна VM и няма други consumers. **Не** използвай wildcard или `oc delete pvc --all`:
 
 ```bash
 oc get vm,vmi,pvc,deploy,svc,route,cm
@@ -293,3 +297,68 @@ unset M09_VM_PRIVATE_DIR
 **API:** VM = `kubevirt.io/v1`; Deployment = `apps/v1`; Service/ConfigMap = `v1`; Route = `route.openshift.io/v1`. **Референции:** [Red Hat VM Service labels and networking](https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/virtualization/managing-vms), [Sandbox FAQ](https://developers.redhat.com/developer-sandbox/FAQ).
 
 > **Практическо ограничение:** наличността на VM wizard и boot templates зависи от конкретния Sandbox акаунт. Ако нужната услуга липсва, спри на preflight. Останалият Service/Route/container workflow е описан със собствени manifests.
+
+## 12. Алтернативен Route cutover без VM (ако Virtualization липсва)
+
+**Това е пълно самостоятелно упражнение по Service/Route switching, но НЕ доказва VM lifecycle или миграция на VM.** Изпълни го **вместо** раздели 3–10, ако `VirtualMachine` API, VM wizard, permissions или boot image не са достъпни. Използва само Deployment, ConfigMap, Service и Route.
+
+Готовият [legacy-fallback.yaml](./examples/vm-cutover/legacy-fallback.yaml) публикува **legacy container** на port 8080 през Service `m09-legacy` на port 80. [modern.yaml](./examples/vm-cutover/modern.yaml) публикува modern container през Service `m09-modern` на port 8080. И двата Service ports се наричат `http`, затова [route.yaml](./examples/vm-cutover/route.yaml) може да сменя backend без hostname или target port name промяна.
+
+**Preflight:** избери личния Project, потвърди RBAC за Deployment/Service/Route/ConfigMap. **Не започвай, ако съществува някой от ресурсите с имена** `m09-legacy`, `m09-fallback`, `m09-modern`, `m09-cutover` или `m09-fallback-html`. Ако прескачаш направо от раздел 2 заради липсваща Virtualization функционалност, **не е нужно първо да си изпълнил VM стъпките или раздел 2.1** — подготовката на файловете е включена тук:
+
+```bash
+oc whoami
+oc project
+oc auth can-i create deployments.apps
+oc auth can-i create services
+oc auth can-i create routes.route.openshift.io
+oc auth can-i create configmaps
+if test -z "${VM_LAB:-}"; then
+  git clone --depth=1 https://github.com/pirocorp/Kubernetes.git m09-virtualization-reference
+  export VM_LAB="$PWD/m09-virtualization-reference/09. OpenShift/labs/examples/vm-cutover"
+fi
+test -s "$VM_LAB/legacy-fallback.yaml"
+test -s "$VM_LAB/modern.yaml"
+test -s "$VM_LAB/route.yaml"
+oc get deploy,svc,route,cm
+oc apply --dry-run=client -f "$VM_LAB/legacy-fallback.yaml"
+oc apply --dry-run=client -f "$VM_LAB/modern.yaml"
+oc apply --dry-run=client -f "$VM_LAB/route.yaml"
+oc apply -f "$VM_LAB/legacy-fallback.yaml"
+oc apply -f "$VM_LAB/modern.yaml"
+oc rollout status deployment/m09-fallback --timeout=240s
+oc rollout status deployment/m09-modern --timeout=240s
+oc get endpointslice -l kubernetes.io/service-name=m09-legacy
+oc get endpointslice -l kubernetes.io/service-name=m09-modern
+oc apply -f "$VM_LAB/route.yaml"
+M09_FALLBACK_HOST="$(oc get route m09-cutover -o jsonpath='{.spec.host}')"
+test -n "$M09_FALLBACK_HOST"
+curl -fsS "https://$M09_FALLBACK_HOST/" | grep 'Legacy fallback container'
+```
+
+**Очаквано:** и двете Deployments са `1/1 Ready`, legacy и modern Services имат endpoints, Route първоначално показва fallback legacy HTML.
+
+```bash
+oc patch route m09-cutover --type=merge \
+  -p '{"spec":{"to":{"kind":"Service","name":"m09-modern","weight":100}}}'
+oc get route m09-cutover -o jsonpath='{.spec.host}{" -> "}{.spec.to.name}{"\n"}'
+curl -fsS "https://$M09_FALLBACK_HOST/" | grep 'Modern container'
+oc patch route m09-cutover --type=merge \
+  -p '{"spec":{"to":{"kind":"Service","name":"m09-legacy","weight":100}}}'
+curl -fsS "https://$M09_FALLBACK_HOST/" | grep 'Legacy fallback container'
+```
+
+**Очаквано:** един hostname, но различни HTML отговори при cutover/rollback. Кратко забавяне на Route propagation е възможно; при `HTTP 503` провери `oc get endpointslice`, `oc describe route m09-cutover` и Pod readiness.
+
+**Cleanup само за fallback режима** (не изтрива никакви VMs/PVC):
+
+```bash
+oc delete route/m09-cutover --ignore-not-found
+oc delete deployment/m09-fallback deployment/m09-modern --ignore-not-found
+oc delete service/m09-legacy service/m09-modern --ignore-not-found
+oc delete configmap/m09-fallback-html configmap/m09-modern-html --ignore-not-found
+oc get deploy,svc,route,cm
+```
+
+При успех отметни **Route/Service cutover** като завършен, но остави **OpenShift Virtualization** като *неизпълнен*, докато нямаш реална VM среда.
+

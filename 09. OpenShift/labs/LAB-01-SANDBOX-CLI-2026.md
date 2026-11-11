@@ -32,7 +32,7 @@
    oc login --help | grep -- --web
    ```
 
-   **Очаквано:** версия на `oc` и наличен `--web` флаг. Ако флагът липсва, изтегли по-нов `oc` от конзолата; не преминавай към стар token-in-history login.
+   **Очаквано:** версия на `oc` и наличен `--web` флаг. Ако флагът липсва, изтегли по-нов `oc` от конзолата. Ако конкретният клъстер не позволява този flow, следвай резервния вход с token, без да го пишеш директно в shell command history.
 
 3. Изолирай напълно този lab от собствените Kubernetes contexts:
 
@@ -49,7 +49,23 @@
    oc login https://api.YOUR-SANDBOX.example:6443 --web
    ```
 
-   Това отваря браузърния authentication flow; има **локален HTTP callback listener**. Използвай **лична**, не споделена машина и затвори login процеса след завършване. Ако Sandbox identity provider не позволява browser login, спри и използвай **път B** от конзолата; не поставяй access token в repo, screenshots, history или command output.
+   Това отваря браузърния authentication flow; има **локален HTTP callback listener**. Използвай **лична**, не споделена машина и затвори login процеса след завършване. Ако browser login не е наличен, използвай резервния CLI вход по-долу. Не поставяй token в Git, screenshots, history или публичен command output.
+
+**Резервен CLI вход, ако `--web` е недостъпен или browser redirect не успява:** в OpenShift Web Console използвай **User menu → Copy login command → Display Token**. Копирай **само API server URL и token**. Командите по-долу не записват token в shell history и не го отпечатват:
+
+```bash
+read -r -p "Sandbox API URL (от Copy login command): " M09_API_SERVER
+read -r -s -p "Sandbox token (невидим при въвеждане): " M09_LOGIN_TOKEN
+printf '\n'
+if test -n "$M09_API_SERVER" && test -n "$M09_LOGIN_TOKEN"; then
+  oc login "$M09_API_SERVER" --token="$M09_LOGIN_TOKEN"
+else
+  echo "Липсва API URL или token; login не е изпълнен" >&2
+fi
+unset M09_LOGIN_TOKEN M09_API_SERVER
+```
+
+**Сигурност:** използвай лична машина, не споделяй screen/terminal в този момент и изчисти clipboard след копирането. Токенът не е във файла или history, но при `oc login --token` може **за кратко** да се вижда като аргумент на локален процес; предпочитай `--web`, когато работи. Не използвай `--insecure-skip-tls-verify` и **не** изтривай `~/.kube/config`.
 
 5. Провери самоличността и контекста:
 
