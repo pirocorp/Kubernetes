@@ -291,6 +291,7 @@ cd ..
 
 - [ ] Изпълнен HTTPD Deployment с ConfigMap, Service и работещ HTTPS Route.
 - [ ] Създаден Python source code, S2I BuildConfig и успешен Build/ImageStream.
+- [ ] Проверен Git source deployment през `oc new-app` с изричен context directory и HTTPS Route (ако Build permissions позволяват).
 - [ ] JSON от `/healthz`, `/` и `/echo`.
 - [ ] GUI/CLI scaling до 2 (3 опционално), environment rolling update v1→v2→rollback.
 - [ ] Проверени Pods, Service endpoints, Build logs и наличните metrics.
