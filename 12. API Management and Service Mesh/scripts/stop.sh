@@ -10,6 +10,11 @@ for name in gateway router portal agency-v2 agency-v1; do
     echo "Invalid PID in $file. Inspect manually." >&2
     continue
   fi
+  if ! kill -0 "$pid" 2>/dev/null; then
+    rm -f -- "$file"
+    echo "Removed stale PID for $name (process no longer running)"
+    continue
+  fi
   args="$(ps -p "$pid" -o args= 2>/dev/null || true)"
   case "$name:$args" in
     gateway:*tools/partner_gateway.py*|router:*tools/mesh_sim.py*|portal:*Travelz.dll*|agency-v1:*Travelz.dll*|agency-v2:*Travelz.dll*)
