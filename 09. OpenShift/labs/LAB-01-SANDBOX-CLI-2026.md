@@ -56,7 +56,7 @@
 ```bash
 read -r -p "Sandbox API URL (от Copy login command): " M09_API_SERVER
 read -r -s -p "Sandbox token (невидим при въвеждане): " M09_LOGIN_TOKEN
-printf '\\n'
+printf '\n'
 if test -n "$M09_API_SERVER" && test -n "$M09_LOGIN_TOKEN"; then
   oc login "$M09_API_SERVER" --token="$M09_LOGIN_TOKEN"
 else
