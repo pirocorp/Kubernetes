@@ -27,7 +27,7 @@ Do not assume `fullName = firstName + " " + lastName` is a universally correct i
 
 - **Announcement:** publish new contract and changelog to consumers.
 - **Deprecation:** document intention to retire v1. Use `Deprecation` (RFC 9745) header, **without** changing successful v1 behavior.
-- **Sunset:** communicate a future retirement time with `Sunset` (RFC 8594). The local lab uses **2027-01-01** and **2027-06-30** as fictional dates.
+- **Sunset:** communicate a future retirement time with `Sunset` (RFC 8594). The local lab uses **2026-01-01** and **2027-06-30** as fictional dates.
 - **Retirement:** gateway denies v1; local simulation returns `410 Gone` while v2 remains available.
 - **Removal:** after monitoring and any retention obligations, remove the v1 Service/Route/Deployment.
 
