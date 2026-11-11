@@ -33,18 +33,11 @@ PY
 ```bash
 export API_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(24))')"
 test "${#API_KEY}" -ge 16
-python3 tools/mock_server.py
-```
-
-Остави терминала да работи. В **друг** терминал въведи същия `API_KEY` безопасно: `read -r -s -p 'API_KEY: ' API_KEY; echo; export API_KEY` (можеш да го прехвърлиш през личен password manager; **не** го поставяй в Git). За удобство можеш вместо това да стартираш mock във фон в първия терминал и да изпълниш тестовете в същия shell:
-
-```bash
-# Само алтернативен начин, ако не си го стартирал на преден план:
-python3 tools/mock_server.py &
+python3 tools/mock_server.py > /tmp/m10-mock.log 2>&1 &
 MOCK_PID=$!
 ```
 
-Не стартирай второ копие, ако порт 8082 вече е зает.
+**Продължи в същия Bash терминал**, за да използваш същия `API_KEY`. Mock процесът остава във фон. Проверка при отказ: `cat /tmp/m10-mock.log`. Ако порт 8082 вече е зает, спри собствения предишен mock, вместо да стартираш второ копие.
 
 ```bash
 curl -fsS http://127.0.0.1:8082/healthz
