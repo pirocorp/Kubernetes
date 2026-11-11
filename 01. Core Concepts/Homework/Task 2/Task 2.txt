@@ -1,5 +1,9 @@
-Task 2
-kubectl create -f .\homework-namespace.yaml
-kubectl create -f .\homework-1-pod.yaml
-kubectl create -f .\homework-2-pod.yaml
-kubectl create -f .\homework-svc.yaml
+Task 2 (2026) — from the repository root, on Linux/macOS or Windows PowerShell:
+# Create the Namespace first; Pods and the Service refer to it.
+kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-namespace.yaml"
+kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-1-pod.yaml"
+kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-2-pod.yaml"
+kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-svc.yaml"
+
+kubectl get pods,svc -n homework
+# Port mapping is Service 5000 -> Pod 5000, exposed via NodePort 32000.
