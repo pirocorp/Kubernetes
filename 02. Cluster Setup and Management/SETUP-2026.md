@@ -437,7 +437,7 @@ kubectl -n ui-lab create token headlamp-viewer --duration=1h
 
 Paste the printed short-lived token into Headlamp's login prompt. Do not commit or share the token. Depending on the installed chart and Headlamp version, you may need to refresh the token when it expires.
 
-**Exercise:** inspect Nodes, namespaces (where permitted), Pods, Events and Deployments. Verify rights with kubectl:
+**Exercise:** inspect the namespaces you can access, Pods, Events and Deployments. Some cluster-scoped resources (such as Nodes) may remain unavailable to the built-in view role. Verify rights with kubectl:
 
 ~~~bash
 kubectl auth can-i get pods -n ui-lab --as=system:serviceaccount:ui-lab:headlamp-viewer
