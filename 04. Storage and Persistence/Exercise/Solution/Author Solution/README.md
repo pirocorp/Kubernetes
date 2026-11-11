@@ -1,3 +1,5 @@
+> **NOTE (2026):** For the self-contained Kubernetes 1.37 NFS setup, use [STORAGE-2026.md](../../../STORAGE-2026.md) and the executable [updated solution.yaml](../Problem%202/solution.yaml). `Recycle` was replaced by `Retain`, and the static PV/PVC example uses explicit empty storage classes. Historical images in this README may show old reclaim behavior.
+
 # Configuration maps and secrets
 
 ### Create a *ConfigMap* resource *hwcm* that:
@@ -141,7 +143,8 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
   mountOptions:
     - nfsvers=4.1
   nfs:
@@ -160,7 +163,8 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
   mountOptions:
     - nfsvers=4.1
   nfs:
@@ -179,7 +183,8 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
   mountOptions:
     - nfsvers=4.1
   nfs:
@@ -218,6 +223,7 @@ spec:
       name: facts-data
     spec:
       accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ""
       resources:
         requests:
           storage: 2Gi          
