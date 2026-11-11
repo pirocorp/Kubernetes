@@ -437,6 +437,27 @@ spec:
 
 Make sure that our cluster is using a **Network plugin** that supports **Network Policies**. Partial list of them can be found [here](https://kubernetes.io/docs/tasks/administer-cluster/declare-network-policy/) (**Flannel** plugin does not support network policies).
 
+## CNI setup for the 2026 Kubernetes lab
+
+> **NOTE (2026):** The Antrea, Calico and Weave Net install commands preserved below are **historical course examples**. Do **not** run them against the current Kubernetes 1.37 lab or mix them with another installed CNI. Install **one** CNI in a **fresh** cluster, with Pod CIDR matching the chosen network configuration.
+>
+> Our supported course path is **Calico v3.33.0 with VXLAN / BGP disabled** on Pod CIDR `10.244.0.0/16`. Follow [SETUP-2026.md — section 5, Install Calico](../02.%20Cluster%20Setup%20and%20Management/SETUP-2026.md#5-install-calico-v3330--vxlan--bgp-disabled-control-plane-node-only) and then [section 15, Validate NetworkPolicy](../02.%20Cluster%20Setup%20and%20Management/SETUP-2026.md#15-validate-networkpolicy-calico). **Do not reinstall Calico** when continuing Module 03 on an already-configured cluster.
+>
+> A Kubernetes `NetworkPolicy` resource has **no enforcement effect** unless the installed networking solution implements NetworkPolicy. Basic Flannel alone does not enforce these policies.
+
+Verify your **existing** Calico installation before running the exercises:
+
+```bash
+kubectl get nodes
+kubectl get tigerastatus
+kubectl get pods -n calico-system
+```
+
+**Other CNIs:** Antrea is an alternative only on a **separate fresh cluster**; choose a published version-specific [Antrea release manifest](https://antrea.io/docs/v2.5.0/docs/getting-started/), not the moving `main` branch. **Weave Net is not recommended for a new lab:** its [upstream repository was archived in June 2024](https://github.com/weaveworks/weave), and the old `cloud.weave.works` installer should not be used.
+
+<details>
+<summary>Historical CNI installation examples (2021): Antrea, Calico, Weave Net — do not run on the current lab</summary>
+
 ## Instalation of [Antrea](https://github.com/antrea-io/antrea/blob/main/docs/getting-started.md) plugin
 
 Assuming that cluster is created with 
@@ -498,6 +519,7 @@ Should we want to change the configuration, for example the pod network addresse
 ```bash
 kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d 'n')&env.IPALLOC_RANGE=10.200.0.0/16"
 ```
+</details>
 
 ## Network policy example
 
