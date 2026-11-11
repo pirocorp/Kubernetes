@@ -1,6 +1,6 @@
 # Lab 09-D — Full stack: Python REST API + React UI + MariaDB (2026)
 
-> **Самодостатъчен интеграционен lab.** 90–120 минути, Sandbox Project; **пълните изходни файлове и database.yaml са включени в това репо**, без нужда от старите примерни Git repos. Подходящ след основните OpenShift упражнения, но не изисква да си изпълнил друг lab. **Статично проверен; live execution не е проведено.**
+> **Самодостатъчен интеграционен lab.** 90–120 минути, Sandbox Project; **пълните изходни файлове и database.yaml са включени в това репо**, без нужда от старите примерни Git repos. Подходящ след основните OpenShift упражнения, но не изисква да си изпълнил друг lab.
 >
 > **Оригинал:** [Learn Kubernetes using the Developer Sandbox](https://developers.redhat.com/learn/openshift/learn-kubernetes-using-developer-sandbox) — [environment](https://developers.redhat.com/learning/learn:openshift:learn-kubernetes-using-developer-sandbox/resource/resources:set-your-activity-environment), [backend REST](https://developers.redhat.com/learning/learn:openshift:learn-kubernetes-using-developer-sandbox/resource/resources:create-back-end-restful-service), [React frontend](https://developers.redhat.com/learning/learn:openshift:learn-kubernetes-using-developer-sandbox/resource/resources:build-front-end-react-page), [MariaDB / PVC / self-healing](https://developers.redhat.com/learning/learn:openshift:learn-kubernetes-using-developer-sandbox/resource/resources:create-and-populate-database-mariadb).
 >
@@ -27,7 +27,7 @@ flowchart LR
 - [Developer Sandbox](https://developers.redhat.com/developer-sandbox), текущият личен Project, CLI `oc` от конзолата, Bash, `curl`, `git` и `openssl`. За safe login използвай [Lab 09-A](./LAB-01-SANDBOX-CLI-2026.md), но инструкции за source/environment са дадени **тук**.
 - Нужен е стандартен PVC с default динамичен StorageClass, права за Deployment/Service/BuildConfig/ImageStream/Route/Secret и образи от публичен registry; **никакъв** cluster-admin.
 - Използваме **Python 3.12 S2I, Node.js 22 S2I, MariaDB 10.11**. Target OpenShift = предоставената от Red Hat Sandbox версия, проверена чрез `oc version` (не я изравнявай с Kubernetes 1.37 от Modules 00–08).
-- Външни зависимости при изпълнение: Red Hat UBI registries, Quay image за MariaDB, Python package index за Flask/PyMySQL/gunicorn, npm registry за React/Express. Дори при пълни локални файлове upstream network availability не може да се гарантира само със статичен review.
+- Външни зависимости при изпълнение: Red Hat UBI registries, Quay image за MariaDB, Python package index за Flask/PyMySQL/gunicorn, npm registry за React/Express. Увери се, че тези registries и package indexes са достъпни от Sandbox по време на build.
 - Images `ubi9/python-312:latest`, `ubi9/nodejs-22:latest`, `mariadb-1011-c9s:latest` **не са digest-pinned**; при production адаптация pin-вай проверен multi-arch digest. Текущото упражнение записва resolved image references, а package versions са фиксирани в source.
 
 ```bash
@@ -46,7 +46,7 @@ oc get deploy,svc,pvc,secret,bc,is
 
 ## 3. Изтегли всички нужни source файлове
 
-**След merge на PR за този lab**:
+Изтегли изходните файлове от основния branch на хранилището:
 
 ```bash
 git clone https://github.com/pirocorp/Kubernetes.git
@@ -66,11 +66,9 @@ test -f "$M09_STACK/database.yaml"
 - [React SSR app](./examples/quotes-stack/frontend/server.js), [Node.js dependencies](./examples/quotes-stack/frontend/package.json).
 - [MariaDB PVC/Deployment/Service](./examples/quotes-stack/database.yaml).
 
-**Използване преди merge:** вместо `git switch main` използвай `git fetch origin docs/openshift-labs-database-fullstack-2026` и `git switch -c preview --track origin/docs/openshift-labs-database-fullstack-2026`, само ако този branch все още съществува. Не е необходим личен fork.
-
 ## 4. Secret и database
 
-Генерирай собствена временна парола с `openssl` — не добавяй нейното съдържание към Git, Markdown или GitHub PR. Base64 не криптира Secret.
+Генерирай собствена временна парола с `openssl` — не добавяй нейното съдържание към Git, Markdown или публичен документ. Base64 не криптира Secret.
 
 ```bash
 umask 077
@@ -256,4 +254,4 @@ oc get deploy,svc,route,pvc,bc,is,secret
 - [ ] DB Pod deletion → нов Pod и същите 3 SQL records.
 - [ ] Cleanup всички създадени resources и никакво SCC escalation.
 
-**Използвани API:** `apps/v1` Deployments, `v1` PVC/Secret/Service, OpenShift `build.openshift.io/v1` BuildConfig, `route.openshift.io/v1` Route, Kubernetes readiness/liveness probes. **Съвместимост:** за OpenShift Sandbox с указаните API и разрешени Builds; статичният преглед не замества runtime проверка. Оригиналният browser-side React се заменя с SSR, за да остане пътят лесен за диагностика; това е изрично отклонение от Red Hat примера.
+**Използвани API:** `apps/v1` Deployments, `v1` PVC/Secret/Service, OpenShift `build.openshift.io/v1` BuildConfig, `route.openshift.io/v1` Route, Kubernetes readiness/liveness probes. **Съвместимост:** за OpenShift Sandbox с указаните API и разрешени Builds; провери действителните права, квоти и наличност на образите в твоя Sandbox. Оригиналният browser-side React се заменя с SSR, за да остане пътят лесен за диагностика; това е изрично отклонение от Red Hat примера.

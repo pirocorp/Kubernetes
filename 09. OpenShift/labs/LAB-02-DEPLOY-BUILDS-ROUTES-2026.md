@@ -1,6 +1,6 @@
 # Lab 09-B — Deployment, S2I Build, Route, Scaling & Monitoring (2026)
 
-> **Пълно, самодостатъчно упражнение за Red Hat Developer Sandbox.** Не изисква cluster-admin, нов Project или собствен kubeadm cluster. Изпълни в личния Sandbox Project с `oc` + Bash. Ориентировъчно 60–90 минути. Проверка: **само статична**; runtime не е изпълняван.
+> **Пълно, самодостатъчно упражнение за Red Hat Developer Sandbox.** Не изисква cluster-admin, нов Project или собствен kubeadm cluster. Изпълни в личния Sandbox Project с `oc` + Bash. Ориентировъчно 60–90 минути. Провери версията и разрешенията на Sandbox, преди да изпълняваш командите.
 >
 > **Оригиналите на Red Hat:** [Foundations](https://developers.redhat.com/learn/openshift/foundations-openshift), [Git през Console](https://developers.redhat.com/learning/learn:openshift:foundations-openshift/resource/resources:install-application-source-code-github-repository-using-openshift-web-console), [Image чрез oc](https://developers.redhat.com/learning/learn:openshift:foundations-openshift/resource/resources:install-application-linux-container-image-using-oc-cli-tool), [Source чрез oc](https://developers.redhat.com/learning/learn:openshift:foundations-openshift/resource/resources:install-application-source-code-using-oc-cli-tool), [GUI scaling](https://developers.redhat.com/learning/learn:openshift:foundations-openshift/resource/resources:scale-applications-using-openshift-web-console), [CLI scaling](https://developers.redhat.com/learning/learn:openshift:foundations-openshift/resource/resources:scale-applications-using-oc-cli-tool) и [Metrics](https://developers.redhat.com/learning/learn:openshift:foundations-openshift/resource/resources:view-performance-information-using-openshift-web-console).
 
@@ -171,7 +171,7 @@ oc logs deployment/m09-source --tail=30
 - [requirements.txt](./examples/python-hello/requirements.txt)
 - [.s2i/environment](./examples/python-hello/.s2i/environment)
 
-**След като PR с този lab бъде слят в main** (преди това линкът към main няма файловете), отвори Red Hat Sandbox Web Console и:
+За да изпълниш същия сценарий през Web Console, отвори Red Hat Sandbox и:
 1. Избери личния Project → **+Add / Import from Git** или съответния source-to-image wizard.
 2. Git URL: `https://github.com/pirocorp/Kubernetes.git`; Git reference **main** (за възпроизводимост на конкретен момент използвай SHA на merge commit вместо подвижен main, ако интерфейсът предлага Git reference).
 3. Context directory: `09. OpenShift/labs/examples/python-hello` (интервалът в името на parent folder е част от пътя).
@@ -248,4 +248,4 @@ cd ..
 - [ ] Проверени Pods, Service endpoints, Build logs и наличните metrics.
 - [ ] Пълно премахване само на създадените lab resources.
 
-**API:** `apps/v1` Deployment, `v1` Service/ConfigMap, OpenShift `route.openshift.io/v1` и `build.openshift.io/v1`. Приложението работи в проект на Sandbox, **не** на kubeadm+Calico cluster. **Потенциална външна нестабилност:** pull от registry, Python packages и Sandbox build quota. Статичният audit не доказва live compatibility; няма гаранция, че current Sandbox предлага BuildConfig permissions.
+**API:** `apps/v1` Deployment, `v1` Service/ConfigMap, OpenShift `route.openshift.io/v1` и `build.openshift.io/v1`. Приложението работи в проект на Sandbox, **не** на kubeadm+Calico cluster. **Потенциална външна нестабилност:** pull от registry, Python packages и Sandbox build quota. Текущата Sandbox среда може да няма BuildConfig permissions; провери ги при preflight и не заобикаляй ограниченията.

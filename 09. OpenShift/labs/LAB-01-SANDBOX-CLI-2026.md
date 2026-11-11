@@ -4,7 +4,7 @@
 >
 > **Оригинални Red Hat уроци:** [Foundations of OpenShift](https://developers.redhat.com/learn/openshift/foundations-openshift) — [OpenShift and Developer Sandbox](https://developers.redhat.com/learning/learn:openshift:foundations-openshift/resource/resources:openshift-and-developer-sandbox), [Overview of Web Console](https://developers.redhat.com/learning/learn:openshift:foundations-openshift/resource/resources:overview-web-console) и [Web Console Terminal](https://developers.redhat.com/learning/learn:openshift:foundations-openshift/resource/resources:use-terminal-window-within-red-hat-openshift-web-console). Допълнително: [Red Hat Developer Sandbox FAQ](https://developers.redhat.com/developer-sandbox/FAQ).
 >
-> **Проверка:** статичен review (11.11.2026); **не** е извършен реален sandbox run. Менютата и наличните права могат да се различават според версията. Това упражнение НЕ предполага Kubernetes 1.37 от основния kubeadm курс.
+> **Среда:** менютата и наличните права зависят от версията и настройките на Sandbox. Това упражнение не използва Kubernetes 1.37 от основния kubeadm курс.
 
 ## 1. Цел и резултат
 

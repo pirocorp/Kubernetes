@@ -1,6 +1,6 @@
 # Lab 09-C — MariaDB, Secrets, PVC, failure/recovery (2026)
 
-> **Самодостатъчен lab:** 45–60 минути, **само в личния Red Hat Developer Sandbox Project**, Bash + `oc`. **Не е тествано на жив cluster**; проведен е статичен review. Създава собствена база с **непродукционни данни**. Изисква динамично provisioning StorageClass и право за PVC/Deployment/Service/Secret.
+> **Самодостатъчен lab:** 45–60 минути, **само в личния Red Hat Developer Sandbox Project**, Bash + `oc`. Създава собствена база с **непродукционни данни**. Изисква динамично provisioning StorageClass и право за PVC/Deployment/Service/Secret.
 >
 > **Оригинални уроци:** [Foundations: Databases using oc](https://developers.redhat.com/learning/learn:openshift:foundations-openshift/resource/resources:work-databases-openshift-using-oc-cli-tool), [Foundations: Databases using Web Console](https://developers.redhat.com/learning/learn:openshift:foundations-openshift/resource/resources:work-databases-openshift-web-console); [Kubernetes Sandbox: MariaDB](https://developers.redhat.com/learning/learn:openshift:learn-kubernetes-using-developer-sandbox/resource/resources:create-and-populate-database-mariadb).
 >
@@ -27,7 +27,7 @@ oc get deploy/m09-db pvc/m09-db-data secret/m09-db-creds 2>/dev/null || true
 
 ## 2. Създай Secret без hardcoded пароль в Git
 
-Тази последователност **не** записва plaintext password в command history, repo или YAML. Secret остава в OpenShift и се защитава с RBAC, но **base64 не е шифроване**. Не публикувай `oc get secret -o yaml` в PR.
+Тази последователност **не** записва plaintext password в command history, repo или YAML. Secret остава в OpenShift и се защитава с RBAC, но **base64 не е шифроване**. Не публикувай `oc get secret -o yaml` в споделени документи, логове или screenshots.
 
 ```bash
 umask 077
