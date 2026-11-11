@@ -1,0 +1,180 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Travelz Partner API — contract for training",
+    "version": "1.0.0",
+    "description": "Synthetic travel quote data. API is fronted by a local training gateway, not Red Hat 3scale."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:5300",
+      "description": "Local gateway (HTTPS route used on OpenShift)"
+    }
+  ],
+  "security": [
+    {
+      "PartnerKey": []
+    }
+  ],
+  "paths": {
+    "/partner/travels/{city}": {
+      "get": {
+        "summary": "Get synthetic travel quote from Agency v2",
+        "operationId": "getPartnerTravelQuote",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "example": "Paris"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Synthetic Travelz v2 quote",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TravelQuote"
+                },
+                "example": {
+                  "city": "Paris",
+                  "version": "v2",
+                  "hotel": 118,
+                  "flight": 240,
+                  "car": 45,
+                  "insuranceIncluded": true,
+                  "currency": "EUR",
+                  "correlationId": ""
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid partner key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "code": "unauthorized",
+                  "message": "Invalid partner key"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Partner plan limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "code": "rate_limited",
+                  "message": "Partner quota exceeded"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Travel Agency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                },
+                "example": {
+                  "code": "bad_gateway",
+                  "message": "Travel agency unavailable"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "PartnerKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Partner-Key"
+      }
+    },
+    "schemas": {
+      "TravelQuote": {
+        "type": "object",
+        "required": [
+          "city",
+          "version",
+          "hotel",
+          "flight",
+          "car",
+          "insuranceIncluded",
+          "currency",
+          "correlationId"
+        ],
+        "properties": {
+          "city": {
+            "type": "string",
+            "example": "Paris"
+          },
+          "version": {
+            "type": "string",
+            "enum": [
+              "v2"
+            ]
+          },
+          "hotel": {
+            "type": "number",
+            "minimum": 0
+          },
+          "flight": {
+            "type": "number",
+            "minimum": 0
+          },
+          "car": {
+            "type": "number",
+            "minimum": 0
+          },
+          "insuranceIncluded": {
+            "type": "boolean",
+            "example": true
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR"
+            ]
+          },
+          "correlationId": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
