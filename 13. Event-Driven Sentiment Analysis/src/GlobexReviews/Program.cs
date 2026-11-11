@@ -22,8 +22,7 @@ var app = builder.Build();
 // it protects the public submission endpoint; webhooks remain internal-only.
 app.Use(async (context, next) =>
 {
-    if (context.Request.Method == "POST" &&
-        context.Request.Path == "/reviews" &&
+    if (context.Request.Path.StartsWithSegments("/reviews") &&
         !string.IsNullOrWhiteSpace(app.Configuration["INGEST_KEY"]))
     {
         var expected = Encoding.UTF8.GetBytes(app.Configuration["INGEST_KEY"]!);
