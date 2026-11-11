@@ -64,6 +64,6 @@ public sealed class ReviewState
             positive = g.Count(s => s.Label == "positive"),
             negative = g.Count(s => s.Label == "negative"),
             neutral = g.Count(s => s.Label == "neutral"),
-            model = "demo-lexicon-v1 (NOT a machine learning model)"
+            models = g.Select(s => s.Model).Distinct().OrderBy(s => s).ToArray()
         }).ToArray();
 }
