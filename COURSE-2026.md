@@ -31,6 +31,11 @@
 
 **Recommended practical order:** 02 setup → 01 → 02 homework/extensions → 03 → 04 → 05 → 06 → 07 → 08 exam. Do not run every lab simultaneously. Modules often re-use namespace `homework`, NodePort **30001**, **31000**, **32000**, **32001** or **32002**. Destroy/clean up the earlier lab before reserving the same ports for the next.
 
+
+## Further modules — separate learning tracks
+
+The Kubernetes **1.37 static audit above covers Modules 00–08 only**. Continue separately with [Module 09 — OpenShift](./09.%20OpenShift/README.md) (Projects, Builds, Routes, Security, Storage and Virtualization) and [Module 10 — API-First Development & API Management](./10.%20API-First%20Development%20and%20API%20Management/README.md) (OpenAPI contract design, registry, mocking, ASP.NET Core implementation, API management and optional OpenShift deployment). Each has its own prerequisites; neither changes the default kubeadm/Calico lab baseline.
+
 ## External dependencies that cannot be packaged as static documents
 
 | Dependency | What you must supply or verify |
