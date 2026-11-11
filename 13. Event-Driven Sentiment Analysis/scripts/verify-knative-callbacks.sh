@@ -32,7 +32,7 @@ for i in $(seq 1 30); do
   if python3 - <<'PY'
 import urllib.request,sys
 try:
-  with urllib.request.urlopen("http://127.0.0.1:5080/healthz",timeout=1) as r: assert r.status==200
+  with urllib.request.urlopen("http://127.0.0.1:5081/healthz",timeout=1) as r: assert r.status==200
 except Exception: sys.exit(1)
 PY
   then break; fi
