@@ -147,9 +147,10 @@ set -a
 . .env
 set +a
 python3 tools/check_external.py --minimum-approved 3
+python3 tools/check_grafana.py
 ```
 
-**Очаквано:** `PASS PostgreSQL approved reviews` и `PASS InfluxDB real sentiment score record`.
+**Очаквано:** `PASS PostgreSQL approved reviews`, `PASS InfluxDB real sentiment score record` и `PASS Grafana real InfluxDB datasource and 2-panel provisioned dashboard`. Последната проверка чете реалните Grafana API resources и може да изчака началното provision-ване.
 
 Отвори **http://127.0.0.1:3300**, влез като `admin` с паролата в **локалния** `.env`, после **Dashboards → Globex → Globex — Product Review Sentiment (demo)**. Има provisioned InfluxDB data source и две панели: средна оценка по категория и последни scores.
 
