@@ -140,7 +140,8 @@
           "sku": {
             "type": "string",
             "minLength": 1,
-            "example": "BOOK-1"
+            "example": "BOOK-1",
+            "maxLength": 100
           },
           "quantity": {
             "type": "integer",
