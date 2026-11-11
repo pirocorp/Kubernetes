@@ -379,9 +379,12 @@ If the API endpoint in the transferred config is **127.0.0.1**, a private name u
 
 The original notes used Kubernetes Dashboard v2.4.0. **Kubernetes Dashboard is archived/unmaintained**; this lab uses [Headlamp](https://headlamp.dev/docs/latest/installation/in-cluster/) instead. Headlamp is a UI replacement, not the same implementation.
 
-On your workstation with functioning kubectl, install [Helm 3](https://helm.sh/docs/intro/install/) and confirm:
+On your workstation with functioning kubectl, install **Helm 3** (if not already installed). Download and **inspect** the official installer script before executing it:
 
 ~~~bash
+curl -fsSLo "$HOME/get-helm-3" https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+less "$HOME/get-helm-3"
+bash "$HOME/get-helm-3"
 helm version
 kubectl get nodes
 helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
@@ -1013,27 +1016,98 @@ sudo journalctl -u kubelet -n 100 --no-pager
 sudo crictl --runtime-endpoint unix:///run/containerd/containerd.sock ps -a
 ~~~
 
-## 17. Optional alternative: fresh Flannel-only cluster
+## 17. Optional alternative: Flannel v0.28.10 on a fresh cluster
 
-**Do not install Flannel on a cluster that already has Calico.** This optional appendix reproduces the historical networking choice on a **new** kubeadm cluster. Use a *separate clean set of VMs*, and make CNI selection **before** the first network plugin is installed.
+This appendix preserves the course's original CNI option. **Do not run it on Calico nodes.** Install Flannel **instead of** section 5 on an entirely new disposable lab.
 
-The original lab used Flannel and the same 10.244.0.0/16 Pod CIDR. Complete sections 0–4 on fresh nodes but **skip section 5 entirely**. In kubeadm init use --pod-network-cidr=10.244.0.0/16. Then follow the [current official Flannel installation](https://github.com/flannel-io/flannel) for the selected, Kubernetes-compatible Flannel release and deployment method.
+### 17.1 Create fresh VMs and base cluster
 
-For a **networking-only** reproduction, use the vendor's official YAML manifest or Helm chart for the version you selected. Pin the version rather than fetching an uncontrolled latest/main branch. Verify the resulting CNI network ranges and node status.
+Repeat the standard Lab A topology (cp1 + wk1 + wk2), run common setup **sections 0–3**, and on cp1 run **section 4** exactly as written (including --pod-network-cidr=10.244.0.0/16). **Skip section 5 entirely.** Before deploying Flannel, the control-plane node will normally be NotReady due to missing CNI.
 
-For NetworkPolicy exercises **Flannel alone is insufficient**. Recent Flannel Helm charts have an optional additional kube-network-policies controller:
+Flannel uses VXLAN over UDP 8472 by default (**different from Calico's UDP 4789**). Open node-to-node UDP 8472 in your lab firewall.
+
+### 17.2 Install CNI plugins on all three nodes
+
+The Flannel Helm chart uses standard CNI binaries including portmap. Install a known plugin archive on **cp1, wk1, wk2** (amd64 and arm64 examples):
 
 ~~~bash
-# Example Helm chart option on a new Flannel lab; see upstream chart
-# repository and release docs for the exact install invocation:
-helm install flannel flannel/flannel \
-  --namespace kube-flannel \
-  --set netpol.enabled=true
+case "$(uname -m)" in
+  x86_64)  CNI_ARCH=amd64 ;;
+  aarch64) CNI_ARCH=arm64 ;;
+  *) echo "Set CNI_ARCH for your CPU before continuing"; exit 1 ;;
+esac
+sudo mkdir -p /opt/cni/bin
+curl -fL --retry 3 -o "$HOME/cni-plugins.tgz" \
+  "https://github.com/containernetworking/plugins/releases/download/v1.7.1/cni-plugins-linux-$CNI_ARCH-v1.7.1.tgz"
+sudo tar -C /opt/cni/bin -xzf "$HOME/cni-plugins.tgz"
+test -x /opt/cni/bin/portmap && echo "portmap plugin ready"
 ~~~
 
-**Do not run this snippet without first adding the official Flannel Helm repository and creating/configuring its namespace according to the pinned release's instructions.** For a fully reproducible Flannel lab, follow and version-lock the current [Flannel Helm chart](https://github.com/flannel-io/flannel#deploying-flannel-with-helm). The supplemental controller adds moving parts; Calico remains our **primary course CNI**.
+### 17.3 Install Helm (control-plane admin account)
 
-**Choice summary:** Default: **Calico 3.33 / VXLAN / BGP disabled / NetworkPolicy enabled**. Alternative: **Flannel** only on a fresh, separately prepared lab cluster. Never mix their full networking installations.
+If Helm has not yet been installed, use the official Helm 3 installer after inspecting the downloaded script. **This lab does not install Helm by silently running unchecked remote shell code.**
+
+~~~bash
+curl -fsSLo "$HOME/get-helm-3" https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+less "$HOME/get-helm-3"  # Inspect the script; press q to exit.
+bash "$HOME/get-helm-3"
+helm version
+~~~
+
+Use Helm on cp1 with working admin kubectl, or on a trusted workstation configured as in section 8.
+
+### 17.4 Deploy Flannel (control-plane admin account)
+
+~~~bash
+kubectl create namespace kube-flannel
+kubectl label --overwrite namespace kube-flannel pod-security.kubernetes.io/enforce=privileged
+
+helm repo add flannel https://flannel-io.github.io/flannel/
+helm repo update
+helm search repo flannel/flannel --versions
+
+FLANNEL_CHART_VERSION="$(helm search repo flannel/flannel --versions | awk 'NR==2 {print $2}')"
+test -n "$FLANNEL_CHART_VERSION" || { echo "No Flannel chart version found"; exit 1; }
+printf 'Selected Helm chart version: %s\n' "$FLANNEL_CHART_VERSION"
+
+helm install flannel flannel/flannel \
+  --namespace kube-flannel \
+  --version "$FLANNEL_CHART_VERSION" \
+  --set podCidr=10.244.0.0/16 \
+  --set flannel.image.tag=v0.28.10 \
+  --set flannel_cni.image.tag=v1.9.1-flannel3 \
+  --wait
+~~~
+
+**Expected:** Flannel chart is installed with image version **v0.28.10**, Pod CIDR **10.244.0.0/16**, and namespace Pod Security Admission set appropriately for the plugin. **Record the printed chart version** to reproduce this specific chart in the future. If the chart changes its values API, inspect the chart with helm show values and adjust before installing. No Calico operator or Installation resource is used in this lab.
+
+~~~bash
+kubectl get pods -n kube-flannel -o wide
+kubectl get nodes -o wide
+kubectl get pods -n kube-system -l k8s-app=kube-dns
+helm status flannel -n kube-flannel
+~~~
+
+After Flannel is Ready and CoreDNS works, run the worker join procedure **section 6** on wk1 and wk2, then run section 7.
+
+### 17.5 Optional NetworkPolicy controller for Flannel
+
+Flannel **alone** provides pod networking but does not enforce standard Kubernetes NetworkPolicy. Its recent Helm chart can deploy the **kube-network-policies** controller through the **netpol.enabled** option. Use the same installed chart/version (do not install a second CNI):
+
+~~~bash
+helm upgrade flannel flannel/flannel \
+  --namespace kube-flannel \
+  --version "$FLANNEL_CHART_VERSION" \
+  --reuse-values \
+  --set netpol.enabled=true \
+  --wait
+kubectl get pods -n kube-flannel -o wide
+helm get values flannel -n kube-flannel
+~~~
+
+**Expected:** a NetworkPolicy-related additional container/controller is present. You may now try the **section 15** NetworkPolicy lab on this independent Flannel cluster. To test Flannel *without* policy support, omit this optional subsection.
+
+**Comparison:** Calico remains the main course recommendation because it has integrated policy enforcement and richer networking controls. Flannel is the simpler historical alternative with an optional extra controller. Neither is to be installed into a cluster already managed by the other CNI.
 
 ## 18. Course parity checklist
 
