@@ -1,0 +1,588 @@
+# YAML 1.2 JSON syntax — valid Kubernetes/OpenShift manifest; no external YAML parser required.
+{
+  "apiVersion": "v1",
+  "kind": "ServiceAccount",
+  "metadata": {
+    "name": "m12-agency-sa",
+    "labels": {
+      "training": "module12"
+    }
+  }
+}
+---
+{
+  "apiVersion": "v1",
+  "kind": "ServiceAccount",
+  "metadata": {
+    "name": "m12-portal-sa",
+    "labels": {
+      "training": "module12"
+    }
+  }
+}
+---
+{
+  "apiVersion": "v1",
+  "kind": "ServiceAccount",
+  "metadata": {
+    "name": "m12-partner-sa",
+    "labels": {
+      "training": "module12"
+    }
+  }
+}
+---
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "m12-agency-v1",
+    "labels": {
+      "training": "module12",
+      "app": "m12-agency",
+      "version": "v1"
+    }
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "matchLabels": {
+        "app": "m12-agency",
+        "version": "v1"
+      }
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "m12-agency",
+          "version": "v1",
+          "training": "module12"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "m12-agency-sa",
+        "containers": [
+          {
+            "name": "app",
+            "image": "TRAVEL_IMAGE_PLACEHOLDER",
+            "imagePullPolicy": "Always",
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080
+              }
+            ],
+            "env": [
+              {
+                "name": "APP_MODE",
+                "value": "agency-v1"
+              },
+              {
+                "name": "ASPNETCORE_URLS",
+                "value": "http://+:8080"
+              }
+            ],
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/healthz",
+                "port": "http"
+              },
+              "initialDelaySeconds": 3,
+              "periodSeconds": 5
+            },
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/healthz",
+                "port": "http"
+              },
+              "initialDelaySeconds": 15,
+              "periodSeconds": 10
+            },
+            "resources": {
+              "requests": {
+                "cpu": "50m",
+                "memory": "128Mi"
+              },
+              "limits": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "runAsNonRoot": true,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+---
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "m12-agency-v2",
+    "labels": {
+      "training": "module12",
+      "app": "m12-agency",
+      "version": "v2"
+    }
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "matchLabels": {
+        "app": "m12-agency",
+        "version": "v2"
+      }
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "m12-agency",
+          "version": "v2",
+          "training": "module12"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "m12-agency-sa",
+        "containers": [
+          {
+            "name": "app",
+            "image": "TRAVEL_IMAGE_PLACEHOLDER",
+            "imagePullPolicy": "Always",
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080
+              }
+            ],
+            "env": [
+              {
+                "name": "APP_MODE",
+                "value": "agency-v2"
+              },
+              {
+                "name": "ASPNETCORE_URLS",
+                "value": "http://+:8080"
+              }
+            ],
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/healthz",
+                "port": "http"
+              },
+              "initialDelaySeconds": 3,
+              "periodSeconds": 5
+            },
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/healthz",
+                "port": "http"
+              },
+              "initialDelaySeconds": 15,
+              "periodSeconds": 10
+            },
+            "resources": {
+              "requests": {
+                "cpu": "50m",
+                "memory": "128Mi"
+              },
+              "limits": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "runAsNonRoot": true,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+---
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "m12-portal",
+    "labels": {
+      "training": "module12",
+      "app": "m12-portal"
+    }
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "matchLabels": {
+        "app": "m12-portal"
+      }
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "m12-portal",
+          "training": "module12"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "m12-portal-sa",
+        "containers": [
+          {
+            "name": "app",
+            "image": "TRAVEL_IMAGE_PLACEHOLDER",
+            "imagePullPolicy": "Always",
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080
+              }
+            ],
+            "env": [
+              {
+                "name": "APP_MODE",
+                "value": "portal"
+              },
+              {
+                "name": "ASPNETCORE_URLS",
+                "value": "http://+:8080"
+              },
+              {
+                "name": "AGENCY_URL",
+                "value": "http://m12-agency-v1:8080"
+              }
+            ],
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/healthz",
+                "port": "http"
+              },
+              "initialDelaySeconds": 3,
+              "periodSeconds": 5
+            },
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/healthz",
+                "port": "http"
+              },
+              "initialDelaySeconds": 15,
+              "periodSeconds": 10
+            },
+            "resources": {
+              "requests": {
+                "cpu": "50m",
+                "memory": "128Mi"
+              },
+              "limits": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "runAsNonRoot": true,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+---
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "m12-partner",
+    "labels": {
+      "training": "module12",
+      "app": "m12-partner"
+    }
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "matchLabels": {
+        "app": "m12-partner"
+      }
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "m12-partner",
+          "training": "module12"
+        }
+      },
+      "spec": {
+        "serviceAccountName": "m12-partner-sa",
+        "containers": [
+          {
+            "name": "app",
+            "image": "PARTNER_IMAGE_PLACEHOLDER",
+            "imagePullPolicy": "Always",
+            "ports": [
+              {
+                "name": "http",
+                "containerPort": 8080
+              }
+            ],
+            "env": [
+              {
+                "name": "GATEWAY_BIND",
+                "value": "0.0.0.0"
+              },
+              {
+                "name": "GATEWAY_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "AGENCY_V2_URL",
+                "value": "http://m12-agency-v2:8080"
+              },
+              {
+                "name": "PARTNER_RED_KEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "m12-partner-keys",
+                    "key": "PARTNER_RED_KEY"
+                  }
+                }
+              },
+              {
+                "name": "PARTNER_BLUE_KEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "m12-partner-keys",
+                    "key": "PARTNER_BLUE_KEY"
+                  }
+                }
+              },
+              {
+                "name": "ADMIN_KEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "m12-partner-keys",
+                    "key": "ADMIN_KEY"
+                  }
+                }
+              }
+            ],
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/healthz",
+                "port": "http"
+              },
+              "initialDelaySeconds": 3,
+              "periodSeconds": 5
+            },
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/healthz",
+                "port": "http"
+              },
+              "initialDelaySeconds": 15,
+              "periodSeconds": 10
+            },
+            "resources": {
+              "requests": {
+                "cpu": "50m",
+                "memory": "128Mi"
+              },
+              "limits": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "runAsNonRoot": true,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+---
+{
+  "apiVersion": "v1",
+  "kind": "Service",
+  "metadata": {
+    "name": "m12-agency",
+    "labels": {
+      "training": "module12"
+    }
+  },
+  "spec": {
+    "type": "ClusterIP",
+    "selector": {
+      "app": "m12-agency"
+    },
+    "ports": [
+      {
+        "name": "http",
+        "port": 8080,
+        "targetPort": "http"
+      }
+    ]
+  }
+}
+---
+{
+  "apiVersion": "v1",
+  "kind": "Service",
+  "metadata": {
+    "name": "m12-agency-v1",
+    "labels": {
+      "training": "module12"
+    }
+  },
+  "spec": {
+    "type": "ClusterIP",
+    "selector": {
+      "app": "m12-agency",
+      "version": "v1"
+    },
+    "ports": [
+      {
+        "name": "http",
+        "port": 8080,
+        "targetPort": "http"
+      }
+    ]
+  }
+}
+---
+{
+  "apiVersion": "v1",
+  "kind": "Service",
+  "metadata": {
+    "name": "m12-agency-v2",
+    "labels": {
+      "training": "module12"
+    }
+  },
+  "spec": {
+    "type": "ClusterIP",
+    "selector": {
+      "app": "m12-agency",
+      "version": "v2"
+    },
+    "ports": [
+      {
+        "name": "http",
+        "port": 8080,
+        "targetPort": "http"
+      }
+    ]
+  }
+}
+---
+{
+  "apiVersion": "v1",
+  "kind": "Service",
+  "metadata": {
+    "name": "m12-portal",
+    "labels": {
+      "training": "module12"
+    }
+  },
+  "spec": {
+    "type": "ClusterIP",
+    "selector": {
+      "app": "m12-portal"
+    },
+    "ports": [
+      {
+        "name": "http",
+        "port": 8080,
+        "targetPort": "http"
+      }
+    ]
+  }
+}
+---
+{
+  "apiVersion": "v1",
+  "kind": "Service",
+  "metadata": {
+    "name": "m12-partner",
+    "labels": {
+      "training": "module12"
+    }
+  },
+  "spec": {
+    "type": "ClusterIP",
+    "selector": {
+      "app": "m12-partner"
+    },
+    "ports": [
+      {
+        "name": "http",
+        "port": 8080,
+        "targetPort": "http"
+      }
+    ]
+  }
+}
+---
+{
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "name": "m12-partner",
+    "labels": {
+      "training": "module12"
+    }
+  },
+  "spec": {
+    "to": {
+      "kind": "Service",
+      "name": "m12-partner"
+    },
+    "port": {
+      "targetPort": "http"
+    },
+    "tls": {
+      "termination": "edge",
+      "insecureEdgeTerminationPolicy": "Redirect"
+    }
+  }
+}
