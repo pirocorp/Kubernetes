@@ -20,7 +20,11 @@ spec:
     - name: curl
       image: curlimages/curl:8.11.1
       command: ["sleep", "1800"]
+      resources:
+        requests: {cpu: 25m, memory: 64Mi}
+        limits: {cpu: 100m, memory: 128Mi}
       securityContext:
         allowPrivilegeEscalation: false
         runAsNonRoot: true
         capabilities: {drop: [ALL]}
+        seccompProfile: {type: RuntimeDefault}
