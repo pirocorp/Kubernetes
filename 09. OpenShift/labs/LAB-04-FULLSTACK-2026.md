@@ -287,6 +287,7 @@ oc get deploy,svc,route,pvc,bc,is,secret
 
 - [ ] Изтеглени са всички локални **actual source files** и DB manifest от репото.
 - [ ] Secret без plaintext в Git, Bound 1Gi PVC, 3 SQL rows.
+- [ ] Генериран `frontend/package-lock.json` със съответната Node/npm версия и изпълнен `npm run build`.
 - [ ] Python REST API 200/JSON, отделна `/readyz` с DB connectivity.
 - [ ] React SSR frontend 200 през HTTPS Route с данните от API.
 - [ ] API 1→2 replicas (quota permitting), `v1→v2` rollout и undo.
