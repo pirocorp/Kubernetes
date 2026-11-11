@@ -99,7 +99,11 @@ def main():
         base, "POST", "/v1/products", 400, "ApiError", key,
         {"name": "", "price": -1, "currency": "EUR"}
     )
-    print("Contract smoke tests PASSED (subset of schema rules).")
+    expect(
+        base, "POST", "/v1/products", 400, "ApiError", key,
+        {"name": "Extra field test", "price": 15, "currency": "EUR", "unexpected": True}
+    )
+    print("Contract smoke tests PASSED (required fields, subset of types and closed schemas).")
 
 
 if __name__ == "__main__":
