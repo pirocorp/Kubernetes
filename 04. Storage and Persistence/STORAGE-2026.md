@@ -130,6 +130,12 @@ kubectl get pv
 
 **Important:** PVC deletion causes PVs with `Retain` to move to **Released**; the NFS data **remains**. A Released PV is not automatically available for another PVC. For another run, confirm/backup or delete the test files on NFS, delete those Released PV **objects**, and re-apply the solution. **Do not delete arbitrary NFS data**. This change avoids the deprecated automatic `Recycle` scrub.
 
+```bash
+# Only after verifying retained lab data and deciding to reclaim the storage:
+kubectl delete pv pvssa pvssb pvssc --ignore-not-found
+# Recreate the original PVs with the same YAML when starting another clean run.
+```
+
 ## 6. `gitRepo` alternative
 
 Use [README.md — Git repository files in a Pod](./README.md#git-repository-files-in-a-pod--emptydir--init-container-kubernetes-137), which includes the complete supported init-container YAML, apply, readiness, logging, port-forward and cleanup steps. Do not execute the original `part1/git-pod.yaml` from the historical ZIP.
