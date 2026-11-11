@@ -31,6 +31,11 @@ public sealed class KafkaTransport : IDisposable
         try
         {
             if (_ready) return;
+            if (Environment.GetEnvironmentVariable("KAFKA_MANAGE_TOPICS") == "false")
+            {
+                _ready = true; // Admin must pre-create all four topics in this mode.
+                return;
+            }
             using var admin = new AdminClientBuilder(
                 new AdminClientConfig { BootstrapServers = _bootstrap }).Build();
             try
