@@ -1,2 +1,2 @@
 ![OpenShift](./OpenShift.png)
-![OpenShift](./"OpenShift - Components.png")
+![OpenShift](./OpenShift%20-%20Components.png)
