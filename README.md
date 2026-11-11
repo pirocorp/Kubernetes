@@ -85,7 +85,7 @@ A **container** is a **standard unit of software that packages up code and all i
 
 ![image](https://user-images.githubusercontent.com/34960418/147656355-445cbf18-e506-458a-a952-49cb83d11295.png)
 
-- **Container runtime** - Docker, containerd, CRI-O, etc
+- **Container runtime** - CRI-compatible runtimes such as containerd or CRI-O; Docker Engine requires `cri-dockerd`
 - **kubelet** - Communicates with the control plane
 - **kube-proxy** - Network proxy
 
@@ -96,10 +96,8 @@ A **container** is a **standard unit of software that packages up code and all i
 - Listens to the API Server
 - Creates pods
 - Reports back to the control plane
-- Exposes endpoint on :10255
-  - /spec
-  - /healthz
-  - /pods
+- Exposes the Kubelet HTTPS API on TCP `:10250` (with authentication/authorization)
+- **NOTE (2026):** The historical unauthenticated read-only endpoint `:10255` (used for paths such as `/spec`, `/healthz`, `/pods`) is disabled by default in modern `KubeletConfiguration` (`readOnlyPort: 0`). Do not expose it in a current cluster.
 
 #### (Worker) Nodes: Container Runtime
 
@@ -107,7 +105,7 @@ A **container** is a **standard unit of software that packages up code and all i
   - **Pulling** images
   - **Starting** and **stopping**
 - It is **pluggable**
-- By default, is **Docker**
+- **NOTE (2026):** Kubernetes has **no built-in default Docker runtime**. It uses the Container Runtime Interface (CRI); `kubeadm` detects an installed runtime or asks you to specify one. The built-in Docker integration (`dockershim`) was removed in Kubernetes **v1.24**. Use `containerd` (as in our [2026 setup lab](./02.%20Cluster%20Setup%20and%20Management/SETUP-2026.md)), `CRI-O`, or Docker Engine with the separate `cri-dockerd` adapter.
 
 #### (Worker) Nodes: kube-proxy
 
