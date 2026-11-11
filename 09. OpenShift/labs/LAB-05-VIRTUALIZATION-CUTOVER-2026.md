@@ -1,10 +1,10 @@
 # Lab 09-E — OpenShift Virtualization: legacy VM → Service → Route → container cutover (2026)
 
-> **Самодостатъчен lab с външна инфраструктурна предпоставка:** Red Hat Developer Sandbox с **активна OpenShift Virtualization**, разрешен VM template и свободна квота за CPU, RAM и PVC. Самата платформа/VM образът се предоставят от Red Hat, а **всички Service/Route/modern manifests и всички команди са тук**. **Статично проверен**, не изпълняван на live cluster.
+> **Самодостатъчен lab с външна инфраструктурна предпоставка:** Red Hat Developer Sandbox с **активна OpenShift Virtualization**, разрешен VM template и свободна квота за CPU, RAM и PVC. Самата платформа/VM образът се предоставят от Red Hat, а **всички Service/Route/modern manifests и всички команди са тук**.
 >
 > **Трите оригинални Red Hat урока:** [Create a VM](https://developers.redhat.com/learning/learn:openshift:openshift-virtualization-and-application-modernization-using-developer-sandbox/resource/resources:create-virtual-machine), [Set up a legacy app](https://developers.redhat.com/learning/learn:openshift:openshift-virtualization-and-application-modernization-using-developer-sandbox/resource/resources:set-legacy-application), [Modernize the app](https://developers.redhat.com/learning/learn:openshift:openshift-virtualization-and-application-modernization-using-developer-sandbox/resource/resources:modernize-application). [Пълна оригинална пътека](https://developers.redhat.com/learn/openshift/openshift-virtualization-and-application-modernization-using-developer-sandbox).
 >
-> **Адаптации:** не използваме фиксирана слаба парола, остарелия Fedora 39 template, `Kind: Service` (невалидно изписване), чужд/непиннат Git sample или ръчно заместване на целия Route YAML с риск от изгубен hostname. VM ресурсът и cloud-init се създават чрез **наличния официален Template Wizard**; без конкретен provider catalog не е коректно да се измисля универсален работещ VM image/PVC source. Ако Sandbox не предоставя подходящ template/rights, този сценарий е **блокиран по prerequisite** — не е грешка в YAML за Service и Route.
+> **VM изисквания:** използвай поддържан Linux template и уникални credentials. VM ресурсът и cloud-init се създават чрез наличния Template Wizard. Не всички Sandbox среди предлагат съвместим boot image или нужните права; ако липсват, спри на preflight и използвай другите упражнения.
 
 ## 1. Архитектура и цел
 
@@ -48,7 +48,7 @@ oc get vm,vmi,pvc,deploy,svc,route,cm
 
 ### 2.1. Къде са файловете
 
-След merge на този PR в `main`:
+Изтегли файловете от основния branch на хранилището:
 
 ```bash
 git clone https://github.com/pirocorp/Kubernetes.git
@@ -60,7 +60,7 @@ test -f "$VM_LAB/modern.yaml"
 test -f "$VM_LAB/route.yaml"
 ```
 
-Преди merge може да checkout-неш branch `docs/openshift-labs-virtualization-2026`, ако още е наличен. Използваме **готови проверими files**, не manifests от текущ чужд `main`.
+Използвай файловете от настоящото хранилище, а не случайни manifests от други repositories.
 
 ## 3. Create VM чрез наличния поддържан template (без слаби credentials)
 
@@ -292,4 +292,4 @@ unset M09_VM_PRIVATE_DIR
 
 **API:** VM = `kubevirt.io/v1`; Deployment = `apps/v1`; Service/ConfigMap = `v1`; Route = `route.openshift.io/v1`. **Референции:** [Red Hat VM Service labels and networking](https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/virtualization/managing-vms), [Sandbox FAQ](https://developers.redhat.com/developer-sandbox/FAQ).
 
-> **Честно ограничение:** не е валидиран live Sandbox wizard/boot catalog; точно това не може да бъде гарантирано със статичен преглед. Ако изисканата услуга липсва, lab правилно спира още на preflight. Останалият Service/Route/container workflow е напълно специфициран в Markdown и трите файлови manifests.
+> **Практическо ограничение:** наличността на VM wizard и boot templates зависи от конкретния Sandbox акаунт. Ако нужната услуга липсва, спри на preflight. Останалият Service/Route/container workflow е описан със собствени manifests.
