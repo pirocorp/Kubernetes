@@ -72,6 +72,16 @@ curl -fsS http://127.0.0.1:5080/events
 
 **Очаквано:** HTTP тестовете преминават, `globex.review.sentiment` events съдържат `model=python-fixture-NOT-ML`, scores и категории. Данните не са просто response от mock server — **ASP.NET Core worker реално е направил HTTP повикване**, валидирал е резултата и е създал ново domain event.
 
+### Еднокоманден acceptance test
+
+Ако искаш автоматичен **чист старт на модела и приложението, компилация, HTTP тестове и cleanup**, без да управляваш три терминала, първо спри собствените процеси на портове 5080/8090 и изпълни:
+
+```bash
+bash scripts/verify-model.sh
+```
+
+**Очаквано:** `PASS real HTTP inference boundary`; проверява се реално извикване към учебния HTTP fixture, а не статичен JSON файл. Изходният скрипт е [scripts/verify-model.sh](../scripts/verify-model.sh).
+
 ## 5. Как би се заменил fixture с обучен модел?
 
 Необходимо е обучен модел да бъде хостнат в реална платформа, например **Red Hat OpenShift AI** (преди OpenShift Data Science). След като platform team осигури endpoint и authentication:
