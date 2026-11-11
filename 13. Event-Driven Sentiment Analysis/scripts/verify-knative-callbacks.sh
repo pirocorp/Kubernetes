@@ -39,6 +39,6 @@ PY
   if test "$i" -eq 30; then cat "$work/app.log"; exit 1; fi
   sleep 1
 done
-python3 tools/verify_knative_callbacks.py
+M13_CALLBACK_BASE_URL=http://127.0.0.1:5081 python3 tools/verify_knative_callbacks.py
 python3 tools/check_external.py --minimum-approved 3
 echo "PASS Knative-style CloudEvent HTTP callback contract (not live Knative)"
