@@ -17,10 +17,11 @@ export ADMIN_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(24))')"
 test "${#API_KEY}" -ge 16
 test "${#ADMIN_KEY}" -ge 16
 export API_UPSTREAM=http://127.0.0.1:8080
-python3 tools/gateway.py
+python3 tools/gateway.py > /tmp/m10-gateway.log 2>&1 &
+GATEWAY_PID=$!
 ```
 
-Или във фон (същия shell): `python3 tools/gateway.py > /tmp/m10-gateway.log 2>&1 & GATEWAY_PID=$!`. **Не** стартирай две копия на порт 8081.
+**Продължи в същия Bash shell**, в който са `API_KEY` и `ADMIN_KEY`. При отказ виж `cat /tmp/m10-gateway.log`. Не стартирай второ копие на 8081.
 
 Gateway и API и двата валидират header `X-Api-Key`. Това е **учебна defense-in-depth схема**; няма потребители, IdP, истински API products или billing.
 
