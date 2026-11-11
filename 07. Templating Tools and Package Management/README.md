@@ -134,6 +134,8 @@ kustomize version
 
 ## Using Kustomize
 
+> **NOTE (2026):** The examples below use the supported Kustomize `labels` and `patches` fields instead of deprecated `commonLabels` and `patchesStrategicMerge`. We set `includeSelectors: true` to retain the original behavior: labels are added to selectors and Pod templates as well as resource metadata. `commonAnnotations` remains supported.
+
 ![image](https://user-images.githubusercontent.com/34960418/147357972-a133c2f2-4542-4d50-be8a-d6a2f9c9f2f1.png)
 
 
@@ -149,8 +151,10 @@ metadata:
 
 # Example configuration for the webserver
 # at https://github.com/monopole/hello
-commonLabels:
-  app: hello
+labels:
+- pairs:
+    app: hello
+  includeSelectors: true
 
 resources:
 - deployment.yaml
@@ -253,17 +257,19 @@ Kustomization
 
 ```yaml
 namePrefix: staging-
-commonLabels:
-  variant: staging
-  org: acmeCorporation
+labels:
+- pairs:
+    variant: staging
+    org: acmeCorporation
+  includeSelectors: true
 commonAnnotations:
   note: Hello, I am staging!
 # Location of base variant
 resources:
 - ../../base
 # Patch files
-patchesStrategicMerge:
-- map.yaml
+patches:
+- path: map.yaml
 ```
 
 ConfigMap patch (map.yaml)
@@ -315,15 +321,17 @@ Kustomization
 
 ```yaml
 namePrefix: production-
-commonLabels:
-  variant: production
-  org: acmeCorporation
+labels:
+- pairs:
+    variant: production
+    org: acmeCorporation
+  includeSelectors: true
 commonAnnotations:
   note: Hello, I am production!
 resources:
 - ../../base
-patchesStrategicMerge:
-- deployment.yaml
+patches:
+- path: deployment.yaml
 ```
 
 Deployment (deployment.yaml)
