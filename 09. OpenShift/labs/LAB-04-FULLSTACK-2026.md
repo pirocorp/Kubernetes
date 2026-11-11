@@ -24,7 +24,7 @@ flowchart LR
 
 ## 2. Предпоставки и версия
 
-- [Developer Sandbox](https://developers.redhat.com/developer-sandbox), текущият личен Project, CLI `oc` от конзолата, Bash, `curl`, `git` и `openssl`. За safe login използвай [Lab 09-A](./LAB-01-SANDBOX-CLI-2026.md), но инструкции за source/environment са дадени **тук**.
+- [Developer Sandbox](https://developers.redhat.com/developer-sandbox), текущият личен Project, CLI `oc` от конзолата, Bash, `curl`, `git` и `openssl`. За frontend lockfile използвай **Node.js 22 с npm 10–11** локално или **Docker** с официалния UBI9 Node.js 22 image (командите са дадени в раздел 6). За safe login използвай [Lab 09-A](./LAB-01-SANDBOX-CLI-2026.md), но инструкции за source/environment са дадени **тук**.
 - Нужен е стандартен PVC с default динамичен StorageClass, права за Deployment/Service/BuildConfig/ImageStream/Route/Secret и образи от публичен registry; **никакъв** cluster-admin.
 - Използваме **Python 3.12 S2I, Node.js 22 S2I, MariaDB 10.11**. Target OpenShift = предоставената от Red Hat Sandbox версия, проверена чрез `oc version` (не я изравнявай с Kubernetes 1.37 от Modules 00–08).
 - Външни зависимости при изпълнение: Red Hat UBI registries, Quay image за MariaDB, Python package index за Flask/PyMySQL/gunicorn, npm registry за React/Express. Увери се, че тези registries и package indexes са достъпни от Sandbox по време на build.
@@ -38,6 +38,11 @@ oc get storageclass
 oc get resourcequota
 oc auth can-i create persistentvolumeclaims
 oc auth can-i create buildconfigs.build.openshift.io
+oc auth can-i create imagestreams.image.openshift.io
+oc auth can-i create builds.build.openshift.io
+oc auth can-i create secrets
+oc auth can-i create deployments.apps
+oc auth can-i create services
 oc auth can-i create routes.route.openshift.io
 oc get deploy,svc,pvc,secret,bc,is
 ```
@@ -147,11 +152,41 @@ curl -fsS http://127.0.0.1:18081/quotes
 curl -fsS http://127.0.0.1:18081/quotes/2
 ```
 
-**Очаквано:** `ready`, `v1` и 3 JSON quotes. Спри port-forward с Ctrl+C след проверката.
+**Очаквано:** `ready`, `v1` и 3 JSON quotes. Спри port-forward с Ctrl+C след проверката; не го оставяй във фонов режим или да блокира следващите команди.
 
 ## 6. Frontend — React SSR / Node.js 22
 
 Frontend е **React UI**, рендериран на сървъра чрез `react-dom/server` и Express. Чете `http://m09-api:8080/quotes` през вътрешния Kubernetes Service. Така браузърът има само един публичен URL и няма CORS настройки.
+
+### 6.1. Зафиксирaй npm dependency tree за това изпълнение
+
+`package.json` фиксира **директните** версии на React, React-DOM и Express, но без `package-lock.json` транзитивните зависимости могат да се изменят. За да не променяш на ръка версии или да търсиш команди, създай lockfile **преди** S2I binary build:
+
+**Вариант A — локално инсталирани Node.js 22 и npm 10–11:**
+
+```bash
+node --version
+npm --version
+cd "$M09_STACK/frontend"
+npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+npm run build
+test -s package-lock.json
+cd - >/dev/null
+```
+
+**Вариант B — Docker на Linux/WSL, без локална Node инсталация:**
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp \
+  -v "$M09_STACK/frontend:/app" -w /app \
+  registry.access.redhat.com/ubi9/nodejs-22:latest \
+  bash -lc 'npm install --package-lock-only --ignore-scripts --no-audit --no-fund && npm run build'
+test -s "$M09_STACK/frontend/package-lock.json"
+```
+
+**Избери само един вариант.** Не изпълнявай `npm install` без `--package-lock-only` локално в тази директория: `node_modules` не трябва да се качва със `oc start-build --from-dir`. `package-lock.json` ще бъде включен в binary build source. Неговото съдържание се създава от npm **в момента на упражнението**, а не е еднакво за всички бъдещи изпълнения; запази локалния lockfile, ако повториш същия build по-късно. За production се изисква **commit-нат и проверен lockfile и `npm ci`**. <https://docs.npmjs.com/cli/v11/commands/npm-ci/>
+
+### 6.2. S2I build, Deployment и HTTPS Route
 
 ```bash
 oc import-image m09-node22 --from=registry.access.redhat.com/ubi9/nodejs-22:latest --confirm
@@ -163,13 +198,15 @@ oc set env deployment/m09-web API_URL=http://m09-api:8080/quotes
 oc set probe deployment/m09-web --readiness --get-url=http://:8080/healthz
 oc rollout status deployment/m09-web --timeout=240s
 oc get svc m09-web -o yaml
-oc create route edge m09-web --service=m09-web --port=8080 --insecure-policy=Redirect
+M09_WEB_PORT="$(oc get svc m09-web -o jsonpath='{.spec.ports[0].port}')"
+test "$M09_WEB_PORT" = "8080" || { echo "Frontend Service не е на очаквания port 8080" >&2; false; }
+oc create route edge m09-web --service=m09-web --port="$M09_WEB_PORT" --insecure-policy=Redirect
 WEB_HOST="$(oc get route m09-web -o jsonpath='{.spec.host}')"
 curl -fsS "https://$WEB_HOST/" | grep 'OpenShift Quotes - React SSR'
 curl -fsS "https://$WEB_HOST/" | grep 'Kubernetes is the engine'
 ```
 
-**Очаквано:** HTTPS page с 3 цитата от MariaDB и заглавие `OpenShift Quotes - React SSR`. Ако Route 503, провери Pod readiness, Endpoints и backend. Ако frontend връща 503, виж `oc logs deployment/m09-web`; Node DNS service `m09-api` трябва да е в **същия namespace**. Не използвай `curl -k` като нормален HTTPS тест.
+**Очаквано:** генериран локален `package-lock.json`, успешна проверка на `server.js` и HTTPS page с 3 цитата от MariaDB и заглавие `OpenShift Quotes - React SSR`. Ако Route 503, провери Pod readiness, Endpoints и backend. Ако frontend връща 503, виж `oc logs deployment/m09-web`; Node DNS service `m09-api` трябва да е в **същия namespace**. Не използвай `curl -k` като нормален HTTPS тест.
 
 ## 7. Scaling, update, database self-healing
 
@@ -253,5 +290,7 @@ oc get deploy,svc,route,pvc,bc,is,secret
 - [ ] API 1→2 replicas (quota permitting), `v1→v2` rollout и undo.
 - [ ] DB Pod deletion → нов Pod и същите 3 SQL records.
 - [ ] Cleanup всички създадени resources и никакво SCC escalation.
+
+**Забележка:** npm lockfile се генерира при изпълнение на този lab. Това премахва пропуснатата техническа стъпка, но **не е същото като предварително проверен lockfile, committed в main**. Runtime готовността зависи и от quota/registry/package достъпа на конкретния Sandbox.
 
 **Използвани API:** `apps/v1` Deployments, `v1` PVC/Secret/Service, OpenShift `build.openshift.io/v1` BuildConfig, `route.openshift.io/v1` Route, Kubernetes readiness/liveness probes. **Съвместимост:** за OpenShift Sandbox с указаните API и разрешени Builds; провери действителните права, квоти и наличност на образите в твоя Sandbox. Оригиналният browser-side React се заменя с SSR, за да остане пътят лесен за диагностика; това е изрично отклонение от Red Hat примера.
