@@ -42,7 +42,7 @@ app.Use(async (context, next) =>
 
 app.MapGet("/healthz", () => Results.Text("ok", "text/plain"));
 
-app.MapPost("/v1/placeorder", async (HttpContext context) =>
+app.MapPost("/v1/placeorder", async Task<IResult> (HttpContext context) =>
 {
     if (major == "v2")
         return Results.NotFound(new ApiError("not_found", "Unsupported major version"));
@@ -83,7 +83,7 @@ app.MapPost("/v1/placeorder", async (HttpContext context) =>
     }
 });
 
-app.MapPost("/v2/placeorder", async (HttpContext context) =>
+app.MapPost("/v2/placeorder", async Task<IResult> (HttpContext context) =>
 {
     if (major == "v1")
         return Results.NotFound(new ApiError("not_found", "Unsupported major version"));
