@@ -41,7 +41,7 @@ jobs:
           cal=yaml.safe_load((root/'calico-installation.yaml').read_text())
           assert cfg['apiVersion']=='kind.x-k8s.io/v1alpha4'
           assert cfg['name']=='course-lab'
-          assert [n['role'] for n in cfg['nodes']]==['control-plane','worker','worker']
+          assert [n['role'] for n in cfg['nodes']]==['control-plane','worker','worker','worker']
           assert all(n['image'].startswith('kindest/node:v1.37.0@sha256:') for n in cfg['nodes'])
           assert len(set(n['image'] for n in cfg['nodes']))==1
           assert cfg['networking']['disableDefaultCNI'] is True
@@ -54,11 +54,11 @@ jobs:
           assert all(p['listenAddress']=='127.0.0.1' for p in published)
           assert set([30001,31000,32000,32001,32002,30080,30443])==set(p['containerPort'] for p in published)
           assert len({p['hostPort'] for p in published})==len(published)
-          print('PASS: pinned 1.37/Calico VXLAN cluster, three nodes and safe loopback mapping')
+          print('PASS: pinned 1.37/Calico VXLAN cluster, four nodes and safe loopback mapping')
           PY
 
   live-kind:
-    name: Boot, verify and destroy actual three-node Kubernetes/Calico cluster
+    name: Boot, verify and destroy actual four-node Kubernetes/Calico cluster
     needs: lint
     runs-on: ubuntu-latest
     timeout-minutes: 25

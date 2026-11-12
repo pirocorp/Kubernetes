@@ -2,11 +2,36 @@
 
 > **Learning edition (Kubernetes 1.37).** A cluster is built, operated and recovered as a single progressive lesson. The 2021 Debian 10 / Kubernetes 1.21 installation and upgrade *commands* have been replaced by the fully documented Kubernetes 1.37 procedures. Core original explanations are retained at their relevant topics, while the original DOCX/ZIP remain available as historical artifacts (not executable setup instructions).
 
-**Optional quick-start for application-focused chapters:** the [disposable kind + Calico lab](../lab-environments/kind/README.md) runs three genuine Kubernetes v1.37.0 nodes in Ubuntu Docker containers with `make up` / `make down`. It **does not** replace this Module 02's VM operating-system, manual kubeadm initialization/join, etcd recovery or upgrade objectives. Use this module's original VM-based setup when those are the exercise itself.
+**Optional quick-start for application-focused chapters:** the [disposable kind + Calico lab](../lab-environments/kind/README.md) runs **four** genuine Kubernetes v1.37.0 nodes (1 Control Plane + 3 Workers) in Ubuntu Docker containers with `make up` / `make down`. It **does not** replace this Module 02's VM operating-system, manual kubeadm initialization/join, etcd recovery or upgrade objectives. Use this module's original VM-based setup when those are the exercise itself.
 
 ## Learning path and objectives
 
 Build a working 1-control-plane / 2-worker Ubuntu 24.04 cluster with **containerd 2.x and Calico 3.33**, explore alternative learning environments, then learn maintenance, etcd backup/restore, upgrades and highly available architecture. Destructive labs require fresh disposable VMs. See the [course README](../README.md) for shared safety rules.
+
+### Which Module 02 exercises work with the disposable kind lab?
+
+> **The two environments serve different learning outcomes.** The [4-node kind profile](../lab-environments/kind/README.md) supplies the *real Kubernetes API, scheduler, kubelet, workloads, CNI and Node objects*. It does **not** provision four Ubuntu 24.04 virtual machines or teach the actual OS/bootstrap lifecycle. Use each route below for its intended learning outcome; do not run host-level `sudo kubeadm` / `apt` / `systemctl` commands on your Ubuntu host expecting them to configure containerized kind nodes.
+
+| Module 02 section | Four-node kind lab | Why / what to do |
+|---|---|---|
+| **0–4, 6 (host prerequisites, containerd, kubeadm, init/join)** | **No — VM track** | kind builds its nodes via kubeadm internally. The exact Ubuntu 24.04 configuration, kernel settings, package installation and manual join are **different exercises** requiring real VMs |
+| **5 (Calico installation)** | **Yes, through `make up`** | A genuine Calico Operator installs VXLAN/BGP-disabled networking inside kind; **do not reinstall** it by running section 5 again |
+| **7 (Kubernetes verification)** | **Yes** | Use `make verify`, plus `kubectl --context kind-course-lab get nodes -o wide` to inspect 1 Control Plane + 3 Workers |
+| **8 (kubectl client access)** | **Yes with changed endpoint** | The generated `kind-course-lab` kubeconfig uses the Docker-published local API endpoint; do not copy VM `/etc/kubernetes/admin.conf` instructions |
+| **Homework Task 1 (Minikube)** | **Independent environment** | This task specifically teaches Minikube; it is not fulfilled by kind |
+| **Homework Task 2 (3-node kind)** | **Same concept, different topology** | Our default *daily* profile uses **four nodes**, while the original task explicitly tests a **3-node** configuration. Run the task's separate kind cluster if you need its exact 3-node acceptance condition, or adapt the expected node count/hostPort for our four-node setup |
+| **Homework Task 3 (Vagrant)** | **No — VM track** | Provisioning Ubuntu VMs with Vagrant is the actual target skill |
+| **9 (Headlamp)** | **Yes** | Deploy and port-forward the real Kubernetes dashboard resources using the **explicit kind context** |
+| **10 (cordon/drain/uncordon)** | **Yes** | Real scheduler/eviction effects. With **three workers**, the app can reschedule across the remaining workers; physical host failure remains out of scope |
+| **11 (etcd snapshot)** | **Partly** | Real etcd runs inside the kind control-plane node, so snapshots/inspection are possible; the module's **host-path and etcdutl installation commands** assume the VM layout and must not be copied blindly |
+| **12 (etcd restore)** | **No — VM track** | Static-Pod/host-directory restore, kubelet service control and recovery of a broken OS-level control plane are taught against disposable VMs |
+| **13 (in-place kubeadm upgrade)** | **No — VM track** | `make reset` with a different pinned kind image creates a new cluster — **not** the module's real 1.36→1.37 node-by-node rolling upgrade |
+| **14 (3 Control Plane HA + HAProxy)** | **No for the default 1+3 layout** | kind can create multi-control-plane clusters, but all Docker nodes still share one Ubuntu host and the module's HAProxy/VM failover topology is a separate infrastructure exercise |
+| **15 (Calico NetworkPolicy)** | **Yes** | Actual Calico enforcement across four containerized Kubernetes nodes |
+| **16 (troubleshooting)** | **Mostly** | API, Pods, DNS, CNI, scheduler and service debugging are real; host OS/kernel/VM problems are not equivalent |
+| **17 (alternative Flannel)** | **Separate clean cluster** | Do not install Flannel over this profile's preinstalled Calico; use a distinct fresh cluster and CNI configuration |
+
+**Takeaway:** use kind for the Kubernetes *operation and workload* skills, and VMs for **installing, repairing, upgrading and providing high availability for the infrastructure itself**. These are complementary, not duplicate systems.
 
 ## Kubernetes 1.37 integrated labs
 

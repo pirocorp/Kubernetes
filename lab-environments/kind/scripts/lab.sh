@@ -58,7 +58,11 @@ verify() {
   kc get nodes -o wide
   local count version bgp vxlan cidr
   count="$(kc get nodes -o name | wc -l | tr -d ' ')"
-  [[ "$count" == 3 ]] || die "Expected 3 Kubernetes nodes, found $count"
+  local control_planes workers
+  control_planes="$(kc get nodes -l node-role.kubernetes.io/control-plane -o name | wc -l | tr -d ' ')"
+  workers="$((count - control_planes))"
+  [[ "$control_planes" == 1 && "$workers" -ge 3 ]] ||
+    die "Expected exactly 1 Control Plane and at least 3 Workers; found ${control_planes} Control Planes and ${workers} Workers"
   kc wait --for=condition=Ready nodes --all --timeout=420s
   version="$(kc get node course-lab-control-plane -o jsonpath='{.status.nodeInfo.kubeletVersion}')"
   [[ "$version" == v1.37.0 ]] || die "Wrong Kubernetes version: $version"
@@ -69,7 +73,7 @@ verify() {
     die "Calico settings differ: bgp=$bgp, encapsulation=$vxlan, cidr=$cidr"
   kc -n calico-system rollout status daemonset/calico-node --timeout=420s
   kc -n kube-system rollout status deployment/coredns --timeout=240s
-  log "PASS: 1 control plane, 2 workers Ready, Kubernetes v1.37.0, Calico VXLAN, CoreDNS"
+  log "PASS: 1 control plane + at least 3 workers Ready, Kubernetes v1.37.0, Calico VXLAN, CoreDNS"
   kc get storageclass
 }
 
@@ -78,7 +82,7 @@ up() {
   if has_cluster; then
     log "Cluster course-lab already exists. Reusing; use 'make reset' to apply changed node config."
   else
-    log "Creating Kubernetes v1.37.0 as 3 Docker container nodes"
+    log "Creating Kubernetes v1.37.0 as 4 Docker container nodes (1 control plane + 3 workers)"
     kind create cluster --name "$NAME" --config "$CONFIG"
   fi
   kc cluster-info >/dev/null || die "Context $CTX unreachable. Check 'kind export logs --name $NAME'."

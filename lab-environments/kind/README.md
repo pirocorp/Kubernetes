@@ -1,12 +1,12 @@
 # Disposable Kubernetes 1.37 lab on Ubuntu (kind + Calico)
 
-**Goal:** an actual Kubernetes API, control plane, containerd, kubelet and **three Kubernetes Node objects** running as Docker containers, built and destroyed from code. This is the **fast application-lab profile** of the [Kubernetes/OpenShift course](../../README.md), not a replacement for the Module 02 VM/kubeadm operating-system labs. No production HA or physical fault isolation is claimed.
+**Goal:** an actual Kubernetes API, control plane, containerd, kubelet and **four Kubernetes Node objects** (1 Control Plane + 3 Workers) running as Docker containers, built and destroyed from code. This is the **fast application-lab profile** of the [Kubernetes/OpenShift course](../../README.md), not a replacement for the Module 02 VM/kubeadm operating-system labs. No production HA or physical fault isolation is claimed.
 
 | Pinned component | Version/configuration |
 |---|---|
 | [kind](https://kind.sigs.k8s.io/) | **v0.33.0** |
 | Kubernetes node image | **v1.37.0**, exact SHA-256 digest in `kind-config.yaml` |
-| Topology | **1 Control Plane + 2 Workers** |
+| Topology | **1 Control Plane + 3 Workers** (default; script accepts additional Workers) |
 | Runtime inside nodes | containerd, managed by kind/kubeadm |
 | CNI | [Calico OSS](https://docs.tigera.io/calico/latest/getting-started/kubernetes/kind) **3.33.0**, VXLAN, BGP disabled |
 | Pod CIDR / Service CIDR | `10.244.0.0/16` / `10.96.0.0/12` |
@@ -41,7 +41,7 @@ sudo apt-get update && sudo apt-get install -y make curl
 
 **Security:** Docker daemon access is root-equivalent; prefer a dedicated Ubuntu lab machine or account. **Context note:** `kind create cluster` may change the *default* kubeconfig context to `kind-course-lab`; always inspect `kubectl config current-context` before running unrelated commands, even though our lifecycle script itself always targets an explicit context. The lab scripts **never** use `sudo` to provision workloads, never modify your host network/firewall, and never invoke `kubectl` without explicit `--context kind-course-lab`. Access to Docker, registry.k8s.io, quay.io and upstream Calico manifest URLs is required. If you are running Ubuntu behind a VPN, verify there is **no subnet overlap** with the cluster Pod/Service CIDRs or Docker's bridge; if you change the Pod CIDR, update **both** YAML files.
 
-**Host capacity planning (guidance, not an enforced requirement):** reserve roughly **8–12 GiB free RAM**, several CPUs and 15–25 GB free disk for a three-node lab plus image cache; actual needs vary by workloads. Heavy Kafka/DB exercises require more. kind does not add capacity — all nodes share your Ubuntu host's kernel.
+**Host capacity planning (guidance, not an enforced requirement):** reserve roughly **10–16 GiB free RAM**, several CPUs and 15–25 GB free disk for a four-node lab plus image cache; actual needs vary by workloads. Heavy Kafka/DB exercises require more. kind does not add capacity — all nodes share your Ubuntu host's kernel.
 
 ## 2. Everything else is infrastructure as code
 
@@ -51,7 +51,7 @@ From the repository root:
 cd lab-environments/kind
 
 make tools       # Verify host prerequisites; no changes
-make up          # Create/reuse 3 Docker node containers; bootstrap Calico
+make up          # Create/reuse 4 Docker node containers; bootstrap Calico
 make verify      # Confirm 3 Ready nodes, Kubernetes 1.37, Calico VXLAN, CoreDNS
 make status      # List cluster nodes and running Pods
 
@@ -114,7 +114,7 @@ If Ubuntu is remote and you work from Windows/another machine, use **SSH forward
 | Module | Real Kubernetes in kind? | Limitation or addition |
 |---|---|---|
 | **01 Core Concepts** | **Yes** | Same Pod/Namespace/Service/NodePort APIs; optional image pulls remain external |
-| **02 Cluster Setup** | **Partly** | kind calls kubeadm internally, but **does not teach Ubuntu OS preparation, manual kubeadm init/join, real node upgrade or disaster recovery**; use the [VM track](../../02.%20Cluster%20Setup%20and%20Management/README.md) |
+| **02 Cluster Setup** | **Partly** | Real Kubernetes for Calico, Headlamp, cordon/drain, RBAC and NetworkPolicy; Ubuntu installation, manual kubeadm init/join, VM-oriented etcd restore, in-place node upgrades and HAProxy/VM HA require [the Module 02 VM track](../../02.%20Cluster%20Setup%20and%20Management/README.md#which-module-02-exercises-work-with-the-disposable-kind-lab) |
 | **03 Security / NetworkPolicy** | **Yes** | Real X.509/RBAC/ResourceQuota/Calico policies; Docker host remains shared |
 | **04 Storage** | **Partly** | ConfigMaps, Secrets, PVCs work; **NFS lessons require an NFS server reachable by the kind containers**, and PV behavior depends on provisioner |
 | **05 Advanced / Ingress / HPA** | **Yes, after add-ons** | Module 05 installs pinned F5 NGINX and Metrics Server; host ingress needs above pinned NodePorts |
@@ -140,4 +140,4 @@ For a future **real OpenShift** lab on the same Ubuntu host, use a **separate pr
 | Pods Pending due to storage | `kubectl --context kind-course-lab get pvc,sc` | Inspect StorageClass/claim binding; NFS lab still needs reachable NFS |
 | Host system issues | `kind export logs --name course-lab` | Review kubelet/docker logs; try fresh `make reset` after fixing host prerequisites |
 
-**Scope and verification:** The YAML/scripts are statically checked in GitHub Actions; the optional live CI workflow attempts to boot and destroy a real three-node kind cluster. That is independent of the VM/kubeadm and OpenShift platform labs. Never describe an unexecuted exercise as passed.
+**Scope and verification:** The YAML/scripts are statically checked in GitHub Actions; the optional live CI workflow attempts to boot and destroy a real four-node kind cluster. That is independent of the VM/kubeadm and OpenShift platform labs. Never describe an unexecuted exercise as passed.
