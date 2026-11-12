@@ -5,9 +5,9 @@
 ## How to use these resources
 
 1. Read the [course-wide 2026 roadmap](../COURSE-2026.md) for cluster prerequisites, module ordering, checks and cleanup.
-2. Prepare a Kubernetes **1.37 + containerd 2 + Calico 3.33** cluster from [Module 02 SETUP-2026.md](../02.%20Cluster%20Setup%20and%20Management/SETUP-2026.md). Unlike the original slides, this is the modern documented course environment.
-3. Work through Modules 01–07 using each module's **2026** lab guide.
-4. Take the modern [Module 08 EXAM-2026.md](../08.%20Exam%20Preparation/EXAM-2026.md) as a practical final assessment.
+2. Prepare a Kubernetes **1.37 + containerd 2 + Calico 3.33** cluster from [Module 02 integrated README](../02.%20Cluster%20Setup%20and%20Management/README.md#kubernetes-137-integrated-labs). Unlike the original slides, this is the modern documented course environment.
+3. Work through Modules 01–07 using the **integrated 1.37 lab in each module README**, then compare with the preserved original lecture in that same file.
+4. Take the modern [Module 08 integrated exam](../08.%20Exam%20Preparation/README.md#kubernetes-137-integrated-labs) as a practical final assessment.
 
 ## Learning objectives
 
@@ -17,4 +17,20 @@ The original blueprint covers: Pods, Services and Deployments; namespaces/labels
 
 ## Static validation criteria
 
-Every executable 2026 module document supplies: platform prerequisites, exact file paths/commands, target state, verification commands, failure diagnostics, and teardown. No live lab has been run as part of this documentation modernization.
+Every integrated module README supplies: platform prerequisites, exact file paths/commands, target state, verification commands, failure diagnostics, and teardown. No live lab has been run as part of this documentation modernization.
+
+
+## Learning bridge: original blueprint to the current course
+
+| Original skill area | Modern chapter and validation focus |
+|---|---|
+| Kubernetes objects, Pods, Services and controllers | [01 — Core Concepts](../01.%20Core%20Concepts/Readme.md): desired state, matching selectors, deployed applications and reachable endpoints |
+| Cluster components, maintenance and resilience | [02 — Cluster Setup](../02.%20Cluster%20Setup%20and%20Management/README.md): kubeadm, containerd, Calico, etcd backup/recovery and HA |
+| Authentication, policy and resource governance | [03 — Security](../03.%20Security%20and%20Policies/README.md): certificate identities, RBAC, quotas and tested NetworkPolicies |
+| Persistence, configuration and StatefulSets | [04 — Storage](../04.%20Storage%20and%20Persistence/README.md): static NFS PV/PVC, reclaim behavior and configuration injection |
+| Pod patterns, scheduling, ingress and scaling | [05 — Advanced](../05.%20Advanced%20Concepts/README.md): init containers, HTTPS fanout, ingress variants and autoscaling |
+| Application health and systematic debugging | [06 — Observability](../06.%20Observability%20and%20Troubleshooting/README.md): diagnose broken probes, Services and NFS |
+| Reusable resource templates and packaging | [07 — Templating](../07.%20Templating%20Tools%20and%20Package%20Management/README.md): sed, Kustomize and Helm |
+| Timed applied assessment | [08 — Exam](../08.%20Exam%20Preparation/README.md): nine practical tasks and separate grading key |
+
+The original blueprint and introduction slides remain unchanged. This bridge maps their learning objectives to the supported labs; it does not claim that the old exam infrastructure is supported.
