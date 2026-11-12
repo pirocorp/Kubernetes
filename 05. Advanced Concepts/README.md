@@ -359,6 +359,60 @@ Like the HPA but for cluster nodes. Based on cluster utilization it can **change
 <!-- PRESERVED_THEORY_END -->
 
 
+## Horizontal Pod Autoscaler Example
+
+> **NOTE (2026):** `autoscaling/v2beta2` was removed in Kubernetes 1.26; the supported HPA API is `autoscaling/v2`. Use Metrics Server **v0.9.1**, compatible with Kubernetes 1.37. Do **not** edit arbitrary upstream YAML by line number to add insecure flags: check TLS errors first and use the dedicated lab-only workaround below if needed. The ready-to-use manifest is [labs/auto-scale-hpa-2026.yaml](./labs/auto-scale-hpa-2026.yaml).
+
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.9.1/components.yaml
+kubectl -n kube-system rollout status deployment/metrics-server --timeout=180s
+kubectl top nodes
+kubectl top pods -A
+```
+
+If `kubectl top` reports an X.509 error about **untrusted kubelet serving certificates**, first inspect `kubectl -n kube-system logs deploy/metrics-server` and configure trusted serving certificates where possible. **Disposable test cluster only:** to bypass kubelet certificate verification temporarily, run:
+
+```bash
+kubectl -n kube-system patch deployment metrics-server --type=json \
+  -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+kubectl -n kube-system rollout status deployment/metrics-server --timeout=180s
+kubectl top nodes
+```
+
+Do **not** use the insecure TLS workaround in production.
+
+Use the provided modern example (Deployment, Service, `autoscaling/v2` HPA):
+
+```bash
+kubectl apply -f "05. Advanced Concepts/labs/auto-scale-hpa-2026.yaml"
+kubectl rollout status deployment/auto-scale-deploy --timeout=180s
+kubectl get hpa,deploy,pods,svc
+kubectl describe hpa auto-scale-deploy
+```
+
+**Expected:** initial target / CPU metrics become available after Metrics Server has collected samples, initial Deployment starts with 3 replicas and the HPA adjusts between **1 and 5** Pods as load changes. Scaling down may take several minutes.
+
+Load generator (in a second terminal, stop with Ctrl+C):
+
+```bash
+kubectl run -it --rm --restart=Never load-generator --image=busybox:1.36 -- \
+  sh -c "while true; do wget -q -O- http://auto-scale-svc.default.svc.cluster.local >/dev/null; done"
+```
+
+While load runs:
+
+```bash
+kubectl get hpa,deployment --watch
+```
+
+**Expected:** CPU pressure can cause scale-up; HPA responds based on observed metrics, not an exact fixed time. Confirm `kubectl get hpa auto-scale-deploy -o yaml` shows target values rather than `<unknown>`.
+
+```bash
+kubectl delete -f "05. Advanced Concepts/labs/auto-scale-hpa-2026.yaml" --ignore-not-found
+# Only if Metrics Server was installed specifically for this disposable lab:
+kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.9.1/components.yaml --ignore-not-found
+```
+
 <!-- MODERN_LAB_BEGIN ADVANCED-2026.md 5 -->
 ### 4. Horizontal Pod Autoscaler (HPA) practical lab
 
@@ -745,6 +799,34 @@ Host rules can route distinct DNS hostnames to different Services.
 
 
 
+
+## Installing Ingress Controllers — Kubernetes 1.37 lab (2026)
+
+> **NOTE (2026):** The original 2021 manifest-based NGINX v2.0.3 and HAProxy `master` installation steps are retained in the 2021 source material, not recommended for the current lab. For the HTTPS fanout exercise here, use **F5 NGINX Ingress Controller** (NGINX Open Source edition) with Helm, which understands the existing `nginx.org/rewrites` annotation. This is **not** the retired community `ingress-nginx` controller. Start with a working Kubernetes 1.37 + Calico cluster from [Module 02's current cluster setup](../02.%20Cluster%20Setup%20and%20Management/README.md#kubernetes-137--modern-kubeadm-cluster-setup-2026) and an installed Helm 3.19+ client.
+
+### NGINX — primary lab controller (Helm chart 2.8.1 / controller 5.7.1)
+
+Use a fresh lab cluster without a conflicting `IngressClass` named `nginx`. This pinned F5 chart/controller release is listed as compatible with Kubernetes 1.37.
+
+```bash
+kubectl get nodes
+helm version
+kubectl get ingressclass
+
+helm upgrade --install nginx-ingress oci://ghcr.io/nginx/charts/nginx-ingress \
+  --version 2.8.1 \
+  --namespace nginx-ingress --create-namespace \
+  --set controller.service.type=NodePort \
+  --set controller.ingressClass.name=nginx
+
+# The Helm chart creates the IngressClass and controller resources.
+kubectl get ingressclass nginx -o yaml
+kubectl get pods -n nginx-ingress
+kubectl get svc -n nginx-ingress
+helm status nginx-ingress -n nginx-ingress
+```
+
+**Expected:** NGINX controller Pod(s) become `Running/Ready`, `IngressClass/nginx` exists, and a NodePort Service exposes HTTP (Service port 80) and HTTPS (Service port 443). Note the **HTTPS NodePort** from `kubectl get svc -n nginx-ingress` (usually 30000–32767). You must be able to reach a cluster node on this port from your browser/workstation; check the node firewall.
 
 <!-- MODERN_LAB_BEGIN ADVANCED-2026.md 3 -->
 ### 2. Original Homework Problem 2 — HTTPS fanout with F5 NGINX Ingress

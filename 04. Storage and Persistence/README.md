@@ -204,6 +204,57 @@ spec:
 <!-- PRESERVED_THEORY_END -->
 
 
+## Git repository files in a Pod — `emptyDir` + init container (Kubernetes 1.37)
+
+> **NOTE (2026):** The old `gitRepo` volume driver was permanently disabled in Kubernetes **1.36**. It cannot be used on the course's **1.37** cluster. The supported equivalent uses an init container with Git to populate an `emptyDir`, then mounts the same directory in the application container. It clones only at Pod creation, **not** continuously. Original archive `M4-Practice-Storage-and-Persistence (files).zip/part1/git-pod.yaml` is a historical 2021 artifact.
+
+The complete manifest is included both below and as [`labs/git-pod-2026.yaml`](./labs/git-pod-2026.yaml). Run the commands from the **Module 04 directory** (or adjust the relative path if at the repository root):
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-git
+  labels:
+    app: notes
+spec:
+  initContainers:
+  - name: clone-repository
+    image: alpine:3.22
+    command: ["/bin/sh", "-ec"]
+    args:
+    - |
+      apk add --no-cache git
+      git clone --depth 1 --branch main https://github.com/shekeriev/k8s-notes.git /work
+    volumeMounts:
+    - name: git-volume
+      mountPath: /work
+  containers:
+  - name: container-git
+    image: php:8.4-apache
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: git-volume
+      mountPath: /var/www/html
+  volumes:
+  - name: git-volume
+    emptyDir: {}
+```
+
+```bash
+kubectl apply -f labs/git-pod-2026.yaml
+kubectl wait --for=condition=Ready pod/pod-git --timeout=180s
+kubectl logs pod-git -c clone-repository
+kubectl exec pod-git -- ls -la /var/www/html
+kubectl port-forward pod/pod-git 8080:80
+# From another terminal: curl http://localhost:8080/
+# Ctrl+C to stop port-forward; clean up:
+kubectl delete -f labs/git-pod-2026.yaml
+```
+
+**Expected:** init container completes, web container is Ready and Git files are visible at `/var/www/html`. Requires outbound HTTPS and access to the public GitHub repository.
+
 <!-- MODERN_LAB_BEGIN STORAGE-2026.md 6 -->
 ### 6. `gitRepo` alternative
 
