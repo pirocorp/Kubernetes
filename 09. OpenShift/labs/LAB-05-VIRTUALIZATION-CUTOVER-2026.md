@@ -22,6 +22,8 @@ flowchart TB
 
 **Ограничение на Sandbox:** Red Hat FAQ към 11.11.2026 съобщава, че **Linux VM се спира след 1 час непрекъсната работа**, а Pods се изтриват след 12 часа. Изпълни този lab **в една сесия**, с готови манифести. Планирай време за provisioning на VM, прекъсвания и евентуално повторно стартиране.
 
+**Преди VM опита:** прегледай [профил 09-E](../../docs/OPENSHIFT-LAB-PROFILES.md#module-09-e--virtualization) и изпълни от корена на репото `bash scripts/check-openshift-profile.sh m09-vm`. PASS доказва само API/RBAC, не наличен boot template или достатъчна quota. Ако са недостъпни, използвай изрично ограничения container-only fallback от раздел 12 и **не** отчитай VM сценария за изпълнен.
+
 ## 2. Prerequisites / preflight
 
 Нужно е:

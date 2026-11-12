@@ -38,6 +38,10 @@
 
 **Chapter structure:** Open each module's **README**. For Modules 01–08, each chapter now follows the natural sequence **concept → current lab → validation**, instead of showing all labs before a separate old lecture. Concepts and illustrative examples from the original materials are retained, but obsolete duplicated execution instructions are not. The old `*-2026.md` URLs are compatibility pointers, not a second curriculum. For Modules 09–15, follow their README and linked labs.
 
+## OpenShift execution environments
+
+The OpenShift exercises have **two practical tracks**: namespace-level Developer Sandbox and operator-enabled platform labs. See the [OpenShift Lab Profiles and safe capability preflights](./docs/OPENSHIFT-LAB-PROFILES.md). VM, Istio Service Mesh, Knative KafkaSource and managed CDC require independently provisioned capabilities; local simulators do not prove those learning outcomes. Run `bash scripts/check-openshift-profile.sh PROFILE` before the advanced labs.
+
 ## Lab setup and cross-module dependencies
 
 | Dependency | What you must supply or verify |

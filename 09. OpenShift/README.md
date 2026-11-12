@@ -15,6 +15,8 @@
 
 ---
 
+**Среда за упражнения:** виж [общите OpenShift профили L/S/P и read-only preflight](../docs/OPENSHIFT-LAB-PROFILES.md). Lab 09-E се изпълнява с истинска VM само ако Virtualization API, VM template, storage и namespace permissions действително са налични; container-only Route fallback НЕ е VM миграция.
+
 ## 1. Какво е OpenShift и как се свързва с Kubernetes
 
 Достатъчни са основните понятия от Kubernetes: **контейнер**, **Pod**, **Deployment**, **Service**, **Namespace**, **RBAC** и **Ingress**. Ако ги знаеш, OpenShift няма да е нов свят от нулата — той използва Kubernetes и добавя интегрирана платформа за разработване, доставка, сигурност и експлоатация на приложения.

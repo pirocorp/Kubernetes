@@ -6,6 +6,8 @@
 
 **Нашата адаптация:** запазваме **всички пет задачи**, но предоставяме самодостатъчен код. Оригиналният redirector image използва Go; тук за последователност със заглавието и независимост от чужд registry използваме собствен Node.js redirector. Добавени са Docker Compose и Postgres за доказано изпълним локален end-to-end път, при което **само frontend се публикува през Route**. Това не е C# модул — JavaScript/Node.js са съзнателна цел на оригинала.
 
+**Препоръчан OpenShift профил:** [Developer Sandbox / namespace](../docs/OPENSHIFT-LAB-PROFILES.md). PostgreSQL Lab 10-C вече има собствен PVC/emptyDir Deployment, без задължителен `postgresql-ephemeral` template.
+
 ## 1. Какво ще научиш?
 
 - Да подготвиш Node.js 22, Git, Bash, Docker/Podman и OpenShift CLI \`oc\`.
