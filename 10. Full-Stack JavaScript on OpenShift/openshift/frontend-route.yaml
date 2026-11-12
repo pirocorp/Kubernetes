@@ -1,0 +1,16 @@
+# Only the frontend is exposed through a public Route. Other services remain ClusterIP.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: m10-frontend
+  labels:
+    training: module10
+spec:
+  to:
+    kind: Service
+    name: m10-frontend
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
