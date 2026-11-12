@@ -42,7 +42,11 @@ jobs:
         working-directory: "14. CDC Legacy Modernization"
         run: |
           docker compose ps || true
-          docker compose logs --tail=100 connect kafka modern legacy legacy-db cashback-db search || true
+          docker compose exec -T cashback-db psql -U cashback -d cashback -c "SELECT COUNT(*) AS sales FROM sale_stage" || true
+          docker compose exec -T cashback-db psql -U cashback -d cashback -c "SELECT COUNT(*) AS line_items FROM item_stage" || true
+          docker compose exec -T cashback-db psql -U cashback -d cashback -c "SELECT COUNT(*) AS expenses FROM expenses" || true
+          docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:19092 --describe --group m14-projections || true
+          docker compose logs --tail=50 connect modern kafka || true
       - name: Remove CI demo containers and data
         if: always()
         working-directory: "14. CDC Legacy Modernization"
