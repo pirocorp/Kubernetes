@@ -9,7 +9,7 @@
 ## Getting started
 
 1. **Read [Module 00 — resources and blueprint](./00.%20Resources/README.md)** to understand the original learning objectives and assessment scope.
-2. **Build your lab cluster** by following [Module 02 — integrated Kubernetes 1.37 setup](./02.%20Cluster%20Setup%20and%20Management/README.md#kubernetes-137-integrated-labs), sections **0–8**. The default topology is one control-plane VM and two worker VMs. Check that all nodes are `Ready`, Calico is healthy and your workstation `kubectl` context works.
+2. **Choose a lab environment.** For fast, disposable application labs use [**kind + Calico on Ubuntu (cluster-as-code)**](./lab-environments/kind/README.md): one real Kubernetes 1.37 control plane and three worker nodes as Docker containers, created/deleted with `make up` / `make down`. For **host preparation, manual kubeadm bootstrapping, etcd recovery, upgrades and physical-node/VM operations**, follow [Module 02 — integrated Kubernetes 1.37 VM setup](./02.%20Cluster%20Setup%20and%20Management/README.md#kubernetes-137-integrated-labs), sections **0–8**. Both paths use Calico VXLAN and BGP disabled; kind is **not** an identical substitute for manual VM node administration.
 3. **Study [Module 01](./01.%20Core%20Concepts/Readme.md)**, then return to Module 02 for its optional homework and advanced cluster management; continue through Modules 03–08 in order. **Complete one lab at a time**, including its verification and cleanup.
 4. **Take [Module 08 — practice exam](./08.%20Exam%20Preparation/README.md#kubernetes-137-integrated-labs)** after the preceding modules. Continue with Module 09 OpenShift, then Modules 10–15 for full-stack, API, service-mesh, event-driven and CDC projects.
 
