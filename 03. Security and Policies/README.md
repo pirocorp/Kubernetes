@@ -4,7 +4,7 @@
 
 ## Recommended learning path
 
-1. Use the course-wide [Kubernetes 1.37 roadmap](../COURSE-2026.md) to establish the required environment.
+1. Use the course-wide [Kubernetes 1.37 roadmap](../README.md) to establish the required environment.
 2. Read the preserved original lecture for conceptual depth, then complete [the integrated labs](#kubernetes-137-integrated-labs) in order with their verification and cleanup steps.
 3. Contrast historical methods with their current counterparts below; retain the principle, not obsolete commands or manifest API versions.
 

@@ -5,7 +5,7 @@
 ## Recommended learning path
 
 1. Review the topics in the original lecture and identify the underlying concepts; they remain valuable even when an example version is obsolete.
-2. Work through the [Kubernetes 1.37 integrated labs](#kubernetes-137-integrated-labs) and execute their preflight, manifests, validation, troubleshooting and cleanup in order. Follow [COURSE-2026.md](../COURSE-2026.md) for the shared lab baseline.
+2. Work through the [Kubernetes 1.37 integrated labs](#kubernetes-137-integrated-labs) and execute their preflight, manifests, validation, troubleshooting and cleanup in order. Follow [the main course README](../README.md) for the shared lab baseline.
 3. Compare the modern behavior with the [preserved original lecture](#preserved-original-lecture--historical-reference) and explain **why** outdated commands/APIs have been replaced.
 
 | Original learning content (preserved below) | Kubernetes 1.37 expansion |

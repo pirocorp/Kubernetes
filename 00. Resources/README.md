@@ -4,7 +4,7 @@
 
 ## How to use these resources
 
-1. Read the [course-wide 2026 roadmap](../COURSE-2026.md) for cluster prerequisites, module ordering, checks and cleanup.
+1. Read the [course-wide 2026 roadmap](../README.md) for cluster prerequisites, module ordering, checks and cleanup.
 2. Prepare a Kubernetes **1.37 + containerd 2 + Calico 3.33** cluster from [Module 02 integrated README](../02.%20Cluster%20Setup%20and%20Management/README.md#kubernetes-137-integrated-labs). Unlike the original slides, this is the modern documented course environment.
 3. Work through Modules 01–07 using the **integrated 1.37 lab in each module README**, then compare with the preserved original lecture in that same file.
 4. Take the modern [Module 08 integrated exam](../08.%20Exam%20Preparation/README.md#kubernetes-137-integrated-labs) as a practical final assessment.
