@@ -1,10 +1,10 @@
-# Lab 11-A — API versioning strategy, SemVer и съвместимост на договорите
+# Lab 12-A — API versioning strategy, SemVer и съвместимост на договорите
 
 **Учебна цел:** да определяш кога е нужна нова версия, кои промени нарушават съществуващи клиенти и как се планира съвместно съществуване на две major версии. Източник: [Red Hat API Versioning — Architecture](https://www.solutionpatterns.io/solution-pattern-api-versioning/api-versioning/02-architecture.html) и [основният Solution Pattern](https://www.solutionpatterns.io/solution-pattern-api-versioning/api-versioning/index.html).
 
 ## 1. Предпоставки
 
-Python **3.10+**, Bash, Git. **Не** се изискват .NET, Docker, OpenShift, Apicurio, 3scale или платени услуги. Изпълни от корена на Module 11:
+Python **3.10+**, Bash, Git. **Не** се изискват .NET, Docker, OpenShift, Apicurio, 3scale или платени услуги. Изпълни от корена на Module 12:
 
 ```bash
 pwd

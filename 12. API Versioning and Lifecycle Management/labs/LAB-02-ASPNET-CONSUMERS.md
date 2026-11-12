@@ -1,11 +1,11 @@
-# Lab 11-B — ASP.NET Core 10: две API версии и три поколения клиенти
+# Lab 12-B — ASP.NET Core 10: две API версии и три поколения клиенти
 
 **Учебна цел:** изпълни реален OrderPlacement API с URL versioning и демонстрирай как клиент 1.0.0 работи върху 1.1.0 backend, но не може да изпраща стар payload към v2. Оригинал: [Red Hat — Enable Versions 1.0.0, 1.1.0 and 2.0.0](https://www.solutionpatterns.io/solution-pattern-api-versioning/api-versioning/03-demo.html).
 
 ## 1. Предпоставки
 
 - Инсталиран **.NET 10 SDK**, Python 3.10+, Bash, Git, свободен TCP **8080**. Не са необходими NuGet библиотеки извън .NET shared framework, база данни, OpenShift или 3scale.
-- Работна директория = коренът на Module 11. Файловете са [Program.cs](../src/OrderPlacementApi/Program.cs), [csproj](../src/OrderPlacementApi/OrderPlacementApi.csproj), [три JSON payload-а](../examples/order-1.0.0.json) и [проверки](../tools/check.py).
+- Работна директория = коренът на Module 12. Файловете са [Program.cs](../src/OrderPlacementApi/Program.cs), [csproj](../src/OrderPlacementApi/OrderPlacementApi.csproj), [три JSON payload-а](../examples/order-1.0.0.json) и [проверки](../tools/check.py).
 - `API_KEY` е само учебна тайна; **не** го записвай в Git. API е bind-нат на `127.0.0.1:8080`; не го публикувай в интернет.
 
 ```bash
@@ -42,7 +42,7 @@ ASPNETCORE_URLS=http://127.0.0.1:8080 \
 V1_LIFECYCLE=active ALLOWED_MAJOR=both \
 dotnet run --project src/OrderPlacementApi/OrderPlacementApi.csproj --no-build --no-launch-profile \
   > .runtime/api.log 2>&1 &
-M11_API_PID=$!
+M12_API_PID=$!
 ```
 
 След стартиране:
@@ -84,7 +84,7 @@ python3 tools/check.py --base-url http://127.0.0.1:8080 --v1-status active
 |---|---|---|
 | `dotnet: command not found` | SDK липсва | Инсталирай .NET SDK **10**, а не само runtime |
 | `dotnet build` fail | `dotnet restore` и error output | Провери SDK, csproj и source; без root права |
-| `Connection refused` | API не е стартирано | `cat .runtime/api.log` и `kill -0 "$M11_API_PID"` |
+| `Connection refused` | API не е стартирано | `cat .runtime/api.log` и `kill -0 "$M12_API_PID"` |
 | `HTTP 401` | Няма ключ/различен ключ | Запази същия `API_KEY` в същия shell |
 | `HTTP 400` | Входният payload не съвпада със schema | Сравни трите JSON примера и съответния OpenAPI |
 | v1 не е наличен | `ALLOWED_MAJOR=v2` | За локалния lab използвай `both`; за OpenShift има отделни инстанции |
@@ -95,9 +95,9 @@ python3 tools/check.py --base-url http://127.0.0.1:8080 --v1-status active
 Тези команди спират **само** стартирания от упражнението процес:
 
 ```bash
-if test -n "${M11_API_PID:-}"; then
-  kill "$M11_API_PID" 2>/dev/null || true
-  unset M11_API_PID
+if test -n "${M12_API_PID:-}"; then
+  kill "$M12_API_PID" 2>/dev/null || true
+  unset M12_API_PID
 fi
 unset API_KEY
 ```

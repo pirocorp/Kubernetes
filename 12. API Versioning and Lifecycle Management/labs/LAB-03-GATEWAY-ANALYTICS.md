@@ -1,12 +1,12 @@
-# Lab 11-C — API Provider: version routing, analytics и 3scale concepts
+# Lab 12-C — API Provider: version routing, analytics и 3scale concepts
 
 **Учебна цел:** да виждаш кои consumers още използват v1, да поддържаш паралелни major линии и да разделяш backend routing от API management. Това адаптира provider/consumer частите от [Red Hat workshop](https://www.solutionpatterns.io/solution-pattern-api-versioning/api-versioning/03-demo.html), **без** да инсталира 3scale в чужд shared cluster.
 
 ## 1. Предпоставки
 
 - Linux/macOS/WSL Bash, Python 3.10+, **.NET SDK 10**, Git, свободни TCP портове **8080 (API)** и **8081 (gateway)**.
-- Работна директория: коренът на Module 11. Всички необходими файлове са включени: [C# API](../src/OrderPlacementApi/Program.cs), [gateway.py](../tools/gateway.py), [policy.py](../tools/policy.py), [metrics.py](../tools/metrics.py), [HTTP тестовете](../tools/check.py).
-- Не е нужно да изпълняваш Lab 11-B предварително — стартът на API е даден по-долу. Не работи едновременно с друга инстанция на портове 8080/8081. Не използвай production credentials.
+- Работна директория: коренът на Module 12. Всички необходими файлове са включени: [C# API](../src/OrderPlacementApi/Program.cs), [gateway.py](../tools/gateway.py), [policy.py](../tools/policy.py), [metrics.py](../tools/metrics.py), [HTTP тестовете](../tools/check.py).
+- Не е нужно да изпълняваш Lab 12-B предварително — стартът на API е даден по-долу. Не работи едновременно с друга инстанция на портове 8080/8081. Не използвай production credentials.
 
 ## 2. Подготви две локални услуги
 
@@ -19,10 +19,10 @@ test "${#API_KEY}" -ge 16 && test "${#ADMIN_KEY}" -ge 16
 ASPNETCORE_URLS=http://127.0.0.1:8080 V1_LIFECYCLE=active ALLOWED_MAJOR=both \
   dotnet run --project src/OrderPlacementApi/OrderPlacementApi.csproj \
     --no-build --no-launch-profile > .runtime/api.log 2>&1 &
-M11_API_PID=$!
+M12_API_PID=$!
 python3 tools/policy.py set active
 python3 tools/gateway.py > .runtime/gateway.log 2>&1 &
-M11_GATEWAY_PID=$!
+M12_GATEWAY_PID=$!
 ```
 
 Провери, че и двете приложения са готови:
@@ -84,11 +84,11 @@ python3 tools/metrics.py
 | metrics HTTP `401` | `ADMIN_KEY` | `tools/metrics.py` чете ADMIN_KEY от environment |
 | `Address already in use` | портове 8080 и 8081 | Спри **собствен** предходен процес |
 
-За следващия **Lab 11-D** можеш да запазиш и двата процеса и двете environment променливи. Ако приключваш:
+За следващия **Lab 12-D** можеш да запазиш и двата процеса и двете environment променливи. Ако приключваш:
 
 ```bash
-if test -n "${M11_GATEWAY_PID:-}"; then kill "$M11_GATEWAY_PID" 2>/dev/null || true; unset M11_GATEWAY_PID; fi
-if test -n "${M11_API_PID:-}"; then kill "$M11_API_PID" 2>/dev/null || true; unset M11_API_PID; fi
+if test -n "${M12_GATEWAY_PID:-}"; then kill "$M12_GATEWAY_PID" 2>/dev/null || true; unset M12_GATEWAY_PID; fi
+if test -n "${M12_API_PID:-}"; then kill "$M12_API_PID" 2>/dev/null || true; unset M12_API_PID; fi
 unset API_KEY ADMIN_KEY
 rm -f .runtime/lifecycle.json
 ```

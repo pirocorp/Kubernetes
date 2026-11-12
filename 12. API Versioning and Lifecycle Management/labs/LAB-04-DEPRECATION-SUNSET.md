@@ -1,4 +1,4 @@
-# Lab 11-D — Deprecation, sunset, клиентска миграция и rollback
+# Lab 12-D — Deprecation, sunset, клиентска миграция и rollback
 
 **Учебна цел:** да управляваш безопасен lifecycle на стара major API версия, да уведомиш consumer-ите, да наблюдаваш тяхното преминаване към v2 и да различаваш `deprecated` от действително `retired`. Основен източник: [Red Hat API Versioning workshop — deprecate and sunset](https://www.solutionpatterns.io/solution-pattern-api-versioning/api-versioning/03-demo.html).
 
@@ -6,8 +6,8 @@
 
 ## 1. Предпоставки и самостоятелно стартиране
 
-- Python 3.10+, .NET SDK 10, Bash, портове **8080/8081** и файловете от Module 11.
-- Изпълни **в един и същ Bash shell**. Ако Lab 11-C още работи със същия ключ и `active` policy, пропусни само стартирането на процесите и премини към раздел 2.
+- Python 3.10+, .NET SDK 10, Bash, портове **8080/8081** и файловете от Module 12.
+- Изпълни **в един и същ Bash shell**. Ако Lab 12-C още работи със същия ключ и `active` policy, пропусни само стартирането на процесите и премини към раздел 2.
 - Ако започваш **директно** оттук, изпълни целия блок:
 
 ```bash
@@ -18,10 +18,10 @@ export ADMIN_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(24))')"
 ASPNETCORE_URLS=http://127.0.0.1:8080 V1_LIFECYCLE=active ALLOWED_MAJOR=both \
   dotnet run --project src/OrderPlacementApi/OrderPlacementApi.csproj \
     --no-build --no-launch-profile > .runtime/api.log 2>&1 &
-M11_API_PID=$!
+M12_API_PID=$!
 python3 tools/policy.py set active
 python3 tools/gateway.py > .runtime/gateway.log 2>&1 &
-M11_GATEWAY_PID=$!
+M12_GATEWAY_PID=$!
 curl -fsS http://127.0.0.1:8081/healthz
 ```
 
@@ -108,8 +108,8 @@ python3 tools/check.py --base-url http://127.0.0.1:8081 --v1-status active
 ### Cleanup
 
 ```bash
-if test -n "${M11_GATEWAY_PID:-}"; then kill "$M11_GATEWAY_PID" 2>/dev/null || true; unset M11_GATEWAY_PID; fi
-if test -n "${M11_API_PID:-}"; then kill "$M11_API_PID" 2>/dev/null || true; unset M11_API_PID; fi
+if test -n "${M12_GATEWAY_PID:-}"; then kill "$M12_GATEWAY_PID" 2>/dev/null || true; unset M12_GATEWAY_PID; fi
+if test -n "${M12_API_PID:-}"; then kill "$M12_API_PID" 2>/dev/null || true; unset M12_API_PID; fi
 unset API_KEY ADMIN_KEY
 rm -f .runtime/lifecycle.json
 ```

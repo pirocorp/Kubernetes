@@ -3,12 +3,12 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: m11-order-v2
-  labels: {training: module11}
+  name: m12-order-v2
+  labels: {training: module12}
 spec:
   host: HOST_PLACEHOLDER
   path: /v2
-  to: {kind: Service, name: m11-order-v2, weight: 100}
+  to: {kind: Service, name: m12-order-v2, weight: 100}
   port: {targetPort: http}
   tls:
     termination: edge
