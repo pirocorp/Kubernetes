@@ -156,6 +156,10 @@ kubectl delete namespace homework --ignore-not-found
 <!-- PRESERVED_THEORY_END -->
 
 
+### Helm Installation
+
+Install a supported Helm 3 client using the [official Helm installation instructions](https://helm.sh/docs/intro/install/). Verify the client with `helm version` before starting the chart lab. The old unpinned installer steps have been removed from the execution path.
+
 <!-- MODERN_LAB_BEGIN LAB-2026.md 4 -->
 ### Task 3 — Helm chart of NGINX with ConfigMap-hosted HTML and picture
 

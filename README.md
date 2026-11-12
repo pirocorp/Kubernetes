@@ -2,7 +2,7 @@
 
 **16 modules (00–15)** · **Kubernetes 1.37 baseline** · Ubuntu Server 24.04 LTS · containerd 2.x · Calico 3.33 (VXLAN; BGP disabled)
 
-> **Start here.** This `README.md` is the **single course guide and navigation hub**. Each module's own README contains its explanations, current hands-on labs, expected results, troubleshooting and cleanup. **Modules 01–08 also preserve the complete original 2021 lecture notes** for comparison. The **complete original root-level foundational lecture** (containerization, Docker and Kubernetes concepts, diagrams, and command examples) is preserved [at the bottom of this README](#original-foundations-lecture--historical-reference).
+> **Start here.** This `README.md` is the **single course guide and navigation hub**. Each module's own README contains its explanations, current hands-on labs, expected results, troubleshooting and cleanup. **Modules 01–08 preserve the useful original conceptual explanations, while replacing obsolete 2021 lab procedures with the Kubernetes 1.37 exercises at the relevant points in each lesson.** Original DOCX/PPTX/ZIP resources remain in the repository for historical reference. The **complete original root-level foundational lecture** (containerization, Docker and Kubernetes concepts, diagrams, and command examples) is preserved [at the bottom of this README](#original-foundations-lecture--historical-reference).
 
 > **Verification boundary:** The Kubernetes 1.37 modules 00–08 have been **statically audited** for prerequisites, source references, command paths, manifest versions, expected results and cleanup. **They have not been executed end-to-end on a live Kubernetes 1.37 cluster**; actual success requires accessible VMs, images/charts and permissions. Other modules have their own distinct validation status; a passing CI run is not proof of a real OpenShift deployment.
 
@@ -36,7 +36,7 @@
 | 14 — Event-Driven Sentiment Analysis | [Event-driven analytics](./14.%20Event-Driven%20Sentiment%20Analysis/README.md) | Kafka, CloudEvents, Globex, PostgreSQL, InfluxDB/Grafana, Knative |
 | 15 — CDC Legacy Modernization | [CDC modernization](./15.%20CDC%20Legacy%20Modernization/README.md) | PostgreSQL WAL, Debezium Kafka Connect, search and cashback projections |
 
-**Chapter structure:** Open each module's **README**. For Modules 01–08, the supported Kubernetes 1.37 labs are integrated directly into the lesson and the original explanations remain under a marked *historical reference* section. The old `*-2026.md` URLs are compatibility pointers, not a second curriculum. For Modules 09–15, follow their README and linked labs.
+**Chapter structure:** Open each module's **README**. For Modules 01–08, each chapter now follows the natural sequence **concept → current lab → validation**, instead of showing all labs before a separate old lecture. Concepts and illustrative examples from the original materials are retained, but obsolete duplicated execution instructions are not. The old `*-2026.md` URLs are compatibility pointers, not a second curriculum. For Modules 09–15, follow their README and linked labs.
 
 ## Lab setup and cross-module dependencies
 

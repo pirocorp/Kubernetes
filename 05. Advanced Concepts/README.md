@@ -8,6 +8,8 @@ Study how containers collaborate in Pods, understand workload scheduling and aut
 
 ## Kubernetes 1.37 integrated labs
 
+> **Learning order:** Modern exercises retain their original homework numbering for cross-reference but appear beside the relevant theory: init containers (Problem 1), HPA (Exercise 4), and then the Ingress controller problems (2–3). They are independent labs; clean up one before moving to another.
+
 
 <!-- MODERN_LAB_BEGIN ADVANCED-2026.md 0 -->
 ## Module 05 — Advanced Concepts and Homework (Kubernetes 1.37)

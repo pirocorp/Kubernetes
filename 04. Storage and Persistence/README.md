@@ -35,6 +35,8 @@ kubectl config current-context
 **Expected:** cluster version 1.37.x; cp1 and both workers Ready; you have chosen the correct lab context. A default StorageClass is allowed: our **static** NFS solution explicitly uses `storageClassName: ""` for PVs and PVCs to prevent an accidental match to dynamic provisioning.
 <!-- MODERN_LAB_END -->
 
+> **Reading order:** The optional historical `gitRepo` replacement is numbered *6* in the original lab guide but appears early here because it directly demonstrates the `emptyDir` concept. The NFS and StatefulSet core exercises numbered 2–5 follow below.
+
 ## Containers and ephemeral data — original concepts
 
 > The Docker examples here teach bind mounts and volumes conceptually. They are **supplementary** and are not the Kubernetes 1.37 homework procedure.
