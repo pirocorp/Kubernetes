@@ -42,7 +42,7 @@ ls -l .env .runtime/postgres.params .runtime/database.env
 
 ```bash
 oc process -n openshift postgresql-ephemeral \
-  --param-file=.runtime/postgres.params --local -o name
+  --param-file=.runtime/postgres.params -o name
 oc process -n openshift postgresql-ephemeral \
   --param-file=.runtime/postgres.params | oc apply -f -
 oc get svc/m10-postgres dc/m10-postgres
