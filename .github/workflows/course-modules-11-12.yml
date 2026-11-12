@@ -1,4 +1,4 @@
-name: Course modules 11-11 local verification
+name: Course modules 11-12 local verification
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  module-10:
+  module-11:
     name: Module 11 contract, C# and API management
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -28,7 +28,7 @@ jobs:
         shell: bash
         run: bash "11. API-First Development and API Management/scripts/verify-local.sh"
 
-  module-11:
+  module-12:
     name: Module 12 contract versions, C# and lifecycle
     runs-on: ubuntu-latest
     timeout-minutes: 15
