@@ -1,4 +1,4 @@
-> **Kubernetes 1.37 execution track (2026):** [Start with the complete course roadmap — COURSE-2026.md](./COURSE-2026.md). Modules **00–08** have modern executable guides, required prerequisites, expected results, checks and cleanup. **09 OpenShift is excluded** from this review. Older examples below are retained as historical notes.
+> **Kubernetes 1.37 integrated course (2026):** [Start with COURSE-2026.md](./COURSE-2026.md). Modules **01–08** now have the complete modern hands-on labs embedded in their original module README files, with the complete historical teaching notes preserved below them. Module 00 is the blueprint. The former `*-2026.md` documents are compatibility pointers. Module 09 OpenShift is a separate track.
 
 > **Additional learning:** [Module 09 — OpenShift](./09.%20OpenShift/README.md) · [Module 10 — Full-stack JavaScript on OpenShift](./10.%20Full-Stack%20JavaScript%20on%20OpenShift/README.md) · [Module 11 — API-First Development & API Management](./11.%20API-First%20Development%20and%20API%20Management/README.md) · [Module 12 — API Versioning & Lifecycle Management](./12.%20API%20Versioning%20and%20Lifecycle%20Management/README.md) · [Module 13 — API Management & Service Mesh](./13.%20API%20Management%20and%20Service%20Mesh/README.md) · [Module 14 — Event-Driven Sentiment Analysis](./14.%20Event-Driven%20Sentiment%20Analysis/README.md) · [Module 15 — Legacy Modernization with CDC](./15.%20CDC%20Legacy%20Modernization/README.md). Modules 09–15 are **separate from the 00–08 Kubernetes 1.37 audit scope**.
 
@@ -109,7 +109,7 @@ A **container** is a **standard unit of software that packages up code and all i
   - **Pulling** images
   - **Starting** and **stopping**
 - It is **pluggable**
-- **NOTE (2026):** Kubernetes has **no built-in default Docker runtime**. It uses the Container Runtime Interface (CRI); `kubeadm` detects an installed runtime or asks you to specify one. The built-in Docker integration (`dockershim`) was removed in Kubernetes **v1.24**. Use `containerd` (as in our [2026 setup lab](./02.%20Cluster%20Setup%20and%20Management/SETUP-2026.md)), `CRI-O`, or Docker Engine with the separate `cri-dockerd` adapter.
+- **NOTE (2026):** Kubernetes has **no built-in default Docker runtime**. It uses the Container Runtime Interface (CRI); `kubeadm` detects an installed runtime or asks you to specify one. The built-in Docker integration (`dockershim`) was removed in Kubernetes **v1.24**. Use `containerd` (as in our [integrated 2026 setup lab](./02.%20Cluster%20Setup%20and%20Management/README.md#kubernetes-137-integrated-labs)), `CRI-O`, or Docker Engine with the separate `cri-dockerd` adapter.
 
 #### (Worker) Nodes: kube-proxy
 

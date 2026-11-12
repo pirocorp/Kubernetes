@@ -1,0 +1,33 @@
+name: Integrated Kubernetes 1.37 Course (Modules 00–08)
+
+on:
+  pull_request:
+    paths:
+      - '0[0-8].*/**'
+      - 'COURSE-2026.md'
+      - 'README.md'
+      - 'scripts/check-integrated-course.py'
+      - '.github/workflows/course-modules-00-08.yml'
+  push:
+    branches:
+      - main
+      - 'feat/integrate-k8s-137-into-original-modules-00-08'
+    paths:
+      - '0[0-8].*/**'
+      - 'COURSE-2026.md'
+      - 'README.md'
+      - 'scripts/check-integrated-course.py'
+      - '.github/workflows/course-modules-00-08.yml'
+
+jobs:
+  validate-integrated-lessons:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout full history for exact original-source comparison
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check integrated 1.37 lessons, legacy fidelity and local links
+        run: python3 scripts/check-integrated-course.py

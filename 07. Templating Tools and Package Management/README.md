@@ -1,3 +1,137 @@
+# Module 07 — Templating Tools and Package Management
+
+> **Integrated edition · Kubernetes 1.37 (2026).** The modern exercises are now inside the original module's README, with the original lesson retained **verbatim** after the labs. Keep historical documentation for concepts and comparisons; use the modern text for actual commands, versions and validations.
+
+## Recommended learning path
+
+1. Start from the [2026 course roadmap](../COURSE-2026.md) and check your disposable cluster's prerequisites.
+2. Work through the [integrated modern lab](#kubernetes-137-integrated-labs) in this README, following expected results, failure diagnosis and cleanup.
+3. Return to the [preserved original lecture](#preserved-original-lecture--historical-reference), compare approaches, and reinforce your understanding. Historical artifacts are not a substitute for the 1.37 runbook.
+
+| Concepts and teaching value preserved | Kubernetes 1.37 integration |
+|---|---|
+| Manual sed-based substitution | Render, inspect, apply and clean up current manifests |
+| Kustomize base and environment overlays | Modern patches/labels and production vs test |
+| Helm charts, templates, releases | Pinned working NGINX chart, ConfigMap HTML/SVG, lint/test |
+
+## Kubernetes 1.37 integrated labs
+
+> **Execution boundary:** the lab below is the documented modern path, not a verified live-cluster run. Keep the practice questions and their solutions separate where the original exercise requires independent work.
+
+## Module 07 — Templating and Helm homework (Kubernetes 1.37)
+
+> **NOTE (2026):** This document is the executable path for **all three** original Module 07 homework tasks. It uses supported `kubectl kustomize`, `labels`/ `patches`, the updated version-pinned NGINX Helm chart and real repository paths. Original 2021 DOCX/ZIP/old screenshots are preserved as historical course material.
+
+### Prerequisites
+
+- Kubernetes **1.37** cluster from [Module 02 SETUP-2026.md](../02.%20Cluster%20Setup%20and%20Management/SETUP-2026.md), Calico, Ready nodes and admin `kubectl`.
+- Helm client (see [main Module 07 README Helm Installation](./README.md#helm-installation)); `sed` command on Linux/macOS or in a suitable UNIX shell on Windows for Task 1.
+- Internet access for the `shekeriev/k8s-oracle` training image (Tasks 1–2) and pinned `nginx:1.30.6-alpine-slim` (Task 3).
+- From workstation: a Node IP reachable on the requested NodePort, **or** use `kubectl port-forward`. Run **one task at a time**; NodePorts must be free.
+- The commands below assume the current directory is the **repository root**.
+
+```bash
+kubectl config current-context
+kubectl version
+kubectl get nodes
+helm version
+kubectl get svc -A
+```
+
+### Task 1 — simple `sed` template
+
+Source: `Homework/Solution/Problem 1/homework.yaml`, with placeholders `%replicas%` and `%nodeport%`. Unlike a valid Kubernetes resource, this is a **template**; render it before applying.
+
+```bash
+cd "07. Templating Tools and Package Management/Homework/Solution/Problem 1"
+sed 's/%replicas%/3/g; s/%nodeport%/30001/g' homework.yaml > result.yaml
+grep -E 'replicas:|nodePort:' result.yaml
+kubectl apply -f result.yaml
+kubectl -n homework rollout status deployment/homework --timeout=180s
+kubectl -n homework get deploy,pods,svc
+kubectl -n homework get svc homework-svc
+```
+
+**Expected:** Namespace `homework`, 3 Pods serving `shekeriev/k8s-oracle`, Service port **5000** to Pod port **5000**, NodePort **30001**. Verify `http://<reachable-node-ip>:30001`; use a different reachable port if it conflicts with another task.
+
+```bash
+kubectl delete namespace homework --ignore-not-found
+rm -f result.yaml
+cd ../../../../
+```
+
+**Shell note:** from `07. Templating Tools and Package Management/Homework/Solution/Problem 1`, `cd ../../../../` returns to the **repository root** (four parent levels). The next task's paths assume that root working directory.
+
+### Task 2 — Kustomize production and test overlays
+
+The executable source is `Homework/Solution/Problem 2/`. The base contains **Deployment + Service**, but **does not include a Namespace object**. This is intentional: `namePrefix: production-` / `test-` would rename a Namespace object, breaking the intended shared `homework` namespace. Create the namespace separately.
+
+```bash
+# From the repository root:
+kubectl create namespace homework --dry-run=client -o yaml | kubectl apply -f -
+kubectl kustomize "07. Templating Tools and Package Management/Homework/Solution/Problem 2/overlays/production"
+kubectl kustomize "07. Templating Tools and Package Management/Homework/Solution/Problem 2/overlays/test"
+kubectl apply -k "07. Templating Tools and Package Management/Homework/Solution/Problem 2/overlays/production"
+kubectl apply -k "07. Templating Tools and Package Management/Homework/Solution/Problem 2/overlays/test"
+kubectl -n homework get deployments,pods,services
+kubectl -n homework get endpointslices
+```
+
+**Expected:** `production-homework` has **3 replicas**, `test-homework` has **1 replica**; both workloads run in `namespace/homework` with matching selectors, with NodePorts **32001** and **32002**. The overlays use `labels: [{pairs, includeSelectors: true}]` and `patches`, not deprecated `commonLabels` / `patchesStrategicMerge`. Open the two URLs `http://<node-ip>:32001` and `http://<node-ip>:32002`.
+
+```bash
+kubectl delete namespace homework --ignore-not-found
+```
+
+### Task 3 — Helm chart of NGINX with ConfigMap-hosted HTML and picture
+
+The executable directory is `Homework/Solution/Problem 3/webchart/`. The chart has explicit image tag **nginx:1.30.6-alpine-slim**, 3 replicas by default, ConfigMap-hosted `index.html` and `logo.svg`, and Service NodePort **31000**. Parameters are `replicasCount`, `greetingMessage`, and `nodePort`.
+
+```bash
+# From repository root:
+helm lint "07. Templating Tools and Package Management/Homework/Solution/Problem 3/webchart"
+helm template demo "07. Templating Tools and Package Management/Homework/Solution/Problem 3/webchart"
+helm upgrade --install demo "07. Templating Tools and Package Management/Homework/Solution/Problem 3/webchart"
+kubectl rollout status deployment/demo-deployment --timeout=180s
+kubectl get deployments,pods,services,configmaps
+kubectl port-forward svc/demo-svc 8080:80
+# In second terminal:
+# curl -fsS http://localhost:8080/
+# curl -fsS http://localhost:8080/logo.svg
+```
+
+**Expected:** 3 Ready NGINX Pods and a working web page with greeting and a local embedded SVG picture. The HTTP body shows `Hello from NGINX chart :)`; the `logo.svg` request returns SVG source. Stop port-forward with Ctrl+C.
+
+Example of **parametrization** without changing the chart:
+
+```bash
+helm upgrade demo "07. Templating Tools and Package Management/Homework/Solution/Problem 3/webchart" \
+  --set replicasCount=2 --set nodePort=31000 \
+  --set-string greetingMessage='Hello from a customized Helm lab'
+kubectl rollout status deployment/demo-deployment --timeout=180s
+helm status demo
+helm uninstall demo
+```
+
+**Expected:** 2 replicas after upgrade; updated greeting; Service still uses NodePort 31000. Do not run another lab using this NodePort simultaneously.
+
+### Static acceptance checklist
+
+- [ ] Correct K8s context; Ready Nodes; no duplicate NodePorts
+- [ ] Task 1 templates expanded (no `%replicas%` / `%nodeport%` left) before applying
+- [ ] Task 2 shared Namespace created separately; 3/1 replicas; both Services have endpoints
+- [ ] Task 3 passes `helm lint`, `helm template`, and the expected HTML/SVG behavior
+- [ ] Check each task's desired state, then clean up before starting another one
+
+See [Author Solution README](./Homework/Solution/Author%20Solution/README.md) for step-by-step historical and synchronized examples. The executable source files are authoritative if old screenshots differ.
+
+---
+
+## Preserved original lecture — historical reference
+
+> **2021 lecture / exam notes.** The content below is preserved byte-for-byte for educational comparison. Follow the integrated 1.37 lab above instead of reusing retired APIs, network plugins, URLs, or old examination environment assumptions.
+
+<!-- ORIGINAL_MODULE_README_PRESERVED_START -->
 > **Kubernetes 1.37 lab (2026):** [LAB-2026.md](./LAB-2026.md) provides the complete, self-contained runbook for the three Module 07 homework tasks (sed, Kustomize and Helm), current manifests, expected results, verification and cleanup. Older examples below are retained as original course explanations.
 
 # Manual Approach (using [sed](https://www.gnu.org/software/sed/manual/sed.html))
