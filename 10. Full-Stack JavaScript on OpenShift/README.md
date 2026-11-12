@@ -6,13 +6,15 @@
 
 **Нашата адаптация:** запазваме **всички пет задачи**, но предоставяме самодостатъчен код. Оригиналният redirector image използва Go; тук за последователност със заглавието и независимост от чужд registry използваме собствен Node.js redirector. Добавени са Docker Compose и Postgres за доказано изпълним локален end-to-end път, при което **само frontend се публикува през Route**. Това не е C# модул — JavaScript/Node.js са съзнателна цел на оригинала.
 
+**Препоръчан OpenShift профил:** [Developer Sandbox / namespace](../docs/OPENSHIFT-LAB-PROFILES.md). PostgreSQL Lab 10-C вече има собствен PVC/emptyDir Deployment, без задължителен `postgresql-ephemeral` template.
+
 ## 1. Какво ще научиш?
 
 - Да подготвиш Node.js 22, Git, Bash, Docker/Podman и OpenShift CLI \`oc\`.
 - Да изградиш frontend от JavaScript source и да провериш **локално** същия HTTP интерфейс, който после работи в контейнер.
 - Да различаваш image build, image registry, ImageStream, Deployment, Service и OpenShift Route.
 - Да използваш **Podman build → Quay push → OpenShift pull**, както в оригинала, или включения **OpenShift binary Docker build** без външен registry акаунт.
-- Да създадеш PostgreSQL от \`postgresql-ephemeral\` template **само когато наистина е наличен** и да инициализираш предоставения SQL.
+- Да разгърнеш PostgreSQL с **собствени namespaced manifests** (PVC или ефимерен вариант) без зависимост от template, да инициализираш SQL, и по желание да повториш оригиналния Red Hat \`postgresql-ephemeral\` template сценарий.
 - Да създадеш backend от source чрез S2I (при наличен Node builder), с реален Docker build fallback.
 - Да използваш \`Secret\`, \`oc set env\`, \`/healthz\` и \`/readyz\` за свързване на услугите.
 - Да добавиш redirector като отделен контейнерен microservice и да провериш HTTP 201 при създаване на URL и **302 Location** при отваряне.
@@ -37,7 +39,7 @@ flowchart LR
 | Frontend | Статичен HTML/JS, \`/api/shorten\`, \`/r/:code\`, \`/api/status\` | \`127.0.0.1:3110\` | \`m10-frontend\` Service + **един HTTPS Route** |
 | Backend | Валидация на target URL, генериране на short code, SQL INSERT | \`127.0.0.1:3111\` | \`m10-backend\` ClusterIP |
 | Redirector | SELECT по short code, HTTP 302 или 404 | \`127.0.0.1:3112\` | \`m10-redirector\` ClusterIP |
-| PostgreSQL | Durable table \`short_links\` | \`127.0.0.1:5439\` | \`m10-postgres\` Service, ephemeral DB в 10-C |
+| PostgreSQL | Durable table \`short_links\` | \`127.0.0.1:5439\` | \`m10-postgres\` Service, PVC или ephemeral DB в 10-C |
 
 **Защо не изложим backend и database?** Browser работи чрез **един** публичен frontend URL; frontend proxy достъпва другите услуги вътрешно с DNS. Така не са нужни CORS за публични backend адреси и не излагаме случайно DB connection string на клиента. Това **не** е пълна production security architecture: за реална услуга трябва auth, rate limits, anti-abuse/SSRF policy, audit, lifecycle и explicit network policy.
 
@@ -69,11 +71,11 @@ sequenceDiagram
 |---|---|---|
 | **10-A** | [Environment, Git, Node и локално приложение](./labs/LAB-01-ENVIRONMENT-LOCAL.md) | Node syntax, frontend 200/502, пълен local Compose |
 | **10-B** | [Frontend image, Podman/Quay и OpenShift Route](./labs/LAB-02-FRONTEND-CONTAINER.md) | Container build, 1/1 Ready и frontend HTTPS |
-| **10-C** | [PostgreSQL template, Secret и SQL schema](./labs/LAB-03-POSTGRESQL.md) | \`postgresql-ephemeral\` (ако съществува), \`short_links\`, internal DNS |
+| **10-C** | [PostgreSQL Deployment, PVC/emptyDir, Secret и SQL schema](./labs/LAB-03-POSTGRESQL.md) | Собствени OpenShift manifests; template е незадължителен; \`short_links\`, internal DNS |
 | **10-D** | [Backend от source — S2I, env и readiness](./labs/LAB-04-BACKEND-S2I.md) | S2I/Docker build, \`/readyz\`, POST 201 |
 | **10-E** | [Redirector image и завършен 4-tier stack](./labs/LAB-05-REDIRECTOR-INTEGRATION.md) | HTTPS Route → PostgreSQL → HTTP 302 |
 
-**Ред:** 10-A → B → C → D → E. Всички source files, Dockerfiles, SQL и тестови scripts са в настоящия модул. **A може да се изпълни напълно без OpenShift; B–E изискват реален разрешен Project и налични platform prerequisites.** Ако template или S2I builder липсва, това е **явно ограничение**, а не причина да инсталираш Operators със cluster-admin. В B/D има Docker-build fallback; C честно изисква template, когато упражнява именно template-based deployment.
+**Ред:** 10-A → B → C → D → E. Всички source files, Dockerfiles, SQL и тестови scripts са в настоящия модул. **A може да се изпълни напълно без OpenShift; B–E изискват реален разрешен Project и налични platform prerequisites.** Липсата на PostgreSQL template **не блокира** 10-C–E: избери собствения PVC или \`emptyDir\` вариант. B/D имат Docker-build fallback при липсващ S2I builder. Платформените RBAC, image pull и resource quotas остават реални предпоставки, без cluster-admin escalation.
 
 ## 4. От чист checkout — един локален тест без OpenShift
 
@@ -121,7 +123,7 @@ docker compose down -v
 
 **Readiness ≠ Liveness**: \`/healthz\` доказва, че HTTP процесът работи; \`/readyz\` изпълнява SQL \`SELECT 1\` и може да върне 503 при недостъпна DB. В production добави readiness probes към Deployment-ите, resources limits, TLS, credential rotation и monitoring.
 
-**Ephemeral PostgreSQL**: данните може да изчезнат при Pod recreate — приемливо за временен lab, **не** за production. Локалният Compose демонстрира persistence с Docker named volume, различна конфигурация от OpenShift template.
+**PostgreSQL data lifecycle**: при 10-C вариант A (PVC) данните могат да преживеят Pod recreate; при B (\`emptyDir\`) и C (\`postgresql-ephemeral\`) се губят при нов Pod. Нито един от трите варианта не е production HA/backup; локалният Compose използва Docker named volume.
 
 ## 6. Структура на проекта
 
@@ -155,7 +157,7 @@ docker compose down -v
 | Port \`3110/5439\` зает | \`ss -lnt\` | Спри своя предишен process/container |
 | ImagePullBackOff | \`oc describe pod\` | Registry/pull secrets/image name |
 | Forbidden build | \`oc auth can-i create builds\` | Namespace RBAC/quota; не заобикаляй ограниченията |
-| PostgreSQL template липсва | \`oc get template -n openshift postgresql-ephemeral\` | OpenShift template lab е условен; работи с Compose |
+| PostgreSQL template липсва | \`oc get template -n openshift postgresql-ephemeral\` | Използвай самостоятелен Deployment + PVC или \`emptyDir\` от Lab 10-C; не е нужен Compose |
 | S2I Node builder липсва | \`oc get is -n openshift\` | Docker-strategy fallback от 10-D |
 | Backend 503 | \`oc logs deploy/m10-backend\` | Secret, DB DNS, credentials, SQL init |
 | Frontend 502 | \`oc logs deploy/m10-frontend\` | Internal Service URLs, backend/redirector |

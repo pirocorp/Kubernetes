@@ -68,6 +68,55 @@ def split_guide(text: str) -> list[str]:
     return [text[a:b] for a, b in zip(cuts, cuts[1:])]
 
 
+def normalize_approved_module_02_edits(segment: str) -> str:
+    """Account only for intentional navigation repairs in Module 02.
+
+    Keep an exact comparison for every other word in the 81 original lab
+    fragments; the historical source is immutable.
+    """
+    replacements = (
+        (
+            "This is a companion to the original [Cluster Setup and Management notes](./README.md), which document the original Debian 10 / Kubernetes 1.21–1.22 exercises. Do **not** use those historical commands to install a new cluster.",
+            "This **README is the complete supported lab**; historical Debian 10 / Kubernetes 1.21–1.22 procedures are no longer the execution path. Do **not** use historical commands to install a new cluster.",
+        ),
+        (
+            "treat the [historical course notes](./README.md) as learning material and consult the current linked upstream instructions instead of copying their older commands.",
+            "continue with the **current node maintenance, etcd, upgrade and HA exercises further down this README**, and consult the current upstream references listed in section 20.",
+        ),
+        (
+            "following this guide plus the linked SETUP-2026.md is the supported 1.37 path.",
+            "following this integrated README (sections 0–8 for setup) is the supported Kubernetes 1.37 path.",
+        ),
+    )
+    for old, updated in replacements:
+        segment = segment.replace(old, updated)
+    return segment
+
+
+def check_restored_sections(root: Path) -> list[str]:
+    issues = []
+    required = {
+        "04. Storage and Persistence/README.md": (
+            "## Git repository files in a Pod — `emptyDir` + init container (Kubernetes 1.37)",
+            "./labs/git-pod-2026.yaml",
+        ),
+        "05. Advanced Concepts/README.md": (
+            "## Horizontal Pod Autoscaler Example",
+            "## Installing Ingress Controllers — Kubernetes 1.37 lab (2026)",
+            "helm upgrade --install nginx-ingress",
+            "kubectl apply -f https://github.com/kubernetes-sigs/metrics-server",
+        ),
+    }
+    for file, tokens in required.items():
+        source_text = (root / file).read_text(encoding="utf-8")
+        for token in tokens:
+            if token not in source_text:
+                issues.append(f"{file}: missing restored exercise content {token!r}")
+    if not (root / "04. Storage and Persistence/labs/git-pod-2026.yaml").is_file():
+        issues.append("Module 04: missing actual init-container manifest")
+    return issues
+
+
 def markdown_links(content: str):
     fenced = False
     for line in content.splitlines():
@@ -115,7 +164,10 @@ def run() -> int:
             expected = split_guide(source(guide_path))
             for i, segment in enumerate(expected):
                 found = [m[3] for m in matches if m[1] == guide and int(m[2]) == i]
-                if len(found) != 1 or found[0].strip() != change_headings(segment, +1).strip():
+                expected_section = change_headings(segment, +1)
+                if directory == "02. Cluster Setup and Management":
+                    expected_section = normalize_approved_module_02_edits(expected_section)
+                if len(found) != 1 or found[0].strip() != expected_section.strip():
                     failures.append(f"{path}: modern {guide} section {i} missing or changed")
                 else:
                     modern_parts += 1
@@ -139,6 +191,7 @@ def run() -> int:
         link_count += len(list(markdown_links(content)))
         failures.extend(check_links(path, content))
 
+    failures.extend(check_restored_sections(ROOT))
     root = current("README.md")
     original_root = source("README.md", ROOT_LEGACY_SOURCE_COMMIT)
     headings = list(re.finditer(r"(?m)^# Kubernetes$", original_root))

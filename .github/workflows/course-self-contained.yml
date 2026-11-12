@@ -1,0 +1,39 @@
+name: Course self-contained lab verification (non-image fixes)
+on:
+  pull_request:
+    paths:
+      - '0[2-5].*/**'
+      - '09. OpenShift/**'
+      - '10. Full-Stack JavaScript on OpenShift/**'
+      - '1[1-5].*/**'
+      - 'docs/OPENSHIFT-LAB-PROFILES.md'
+      - 'scripts/check-self-contained-labs.py'
+      - 'scripts/check-openshift-profile.sh'
+      - '.github/workflows/course-self-contained.yml'
+  push:
+    branches: [main, 'fix/self-contained-course-2026-no-external-image-changes']
+    paths:
+      - '0[2-5].*/**'
+      - '09. OpenShift/**'
+      - '10. Full-Stack JavaScript on OpenShift/**'
+      - '1[1-5].*/**'
+      - 'docs/OPENSHIFT-LAB-PROFILES.md'
+      - 'scripts/check-self-contained-labs.py'
+      - 'scripts/check-openshift-profile.sh'
+      - '.github/workflows/course-self-contained.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  static-prerequisites-and-database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install YAML parser for Kubernetes manifests
+        run: python -m pip install PyYAML==6.0.2
+      - name: Check actual manifest shapes and security, pinned frontend, profiles and docs
+        run: python3 scripts/check-self-contained-labs.py

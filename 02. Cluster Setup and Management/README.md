@@ -21,7 +21,7 @@ Creation of simple yet working Kubernetes cluster. Small cluster with three node
 <!-- MODERN_LAB_BEGIN SETUP-2026.md 0 -->
 ## Kubernetes 1.37 — modern kubeadm cluster setup (2026)
 
-> **Scope:** New Linux lab clusters only. This is a companion to the original [Cluster Setup and Management notes](./README.md), which document the original Debian 10 / Kubernetes 1.21–1.22 exercises. Do **not** use those historical commands to install a new cluster.
+> **Scope:** New Linux lab clusters only. This **README is the complete supported lab**; historical Debian 10 / Kubernetes 1.21–1.22 procedures are no longer the execution path. Do **not** use historical commands to install a new cluster.
 >
 > **Reference date:** 11 November 2026. **Status:** Documentation reviewed against upstream installation references; not executed against a live cluster.
 <!-- MODERN_LAB_END -->
@@ -385,7 +385,7 @@ Check:
 4. The Kubernetes version and installed runtime match the intended configuration.
 5. Cluster-admin access is limited to trusted administrators.
 
-For further cluster administration (etcd snapshots, control-plane HA, upgrades, node drain), treat the [historical course notes](./README.md) as learning material and consult the current linked upstream instructions instead of copying their older commands.
+For further cluster administration (etcd snapshots, control-plane HA, upgrades, node drain), continue with the **current node maintenance, etcd, upgrade and HA exercises further down this README**, and consult the current upstream references listed in section 20.
 <!-- MODERN_LAB_END -->
 
 
@@ -601,7 +601,7 @@ vagrant destroy -f
 | Vagrant box unavailable | Confirm VirtualBox version and pinned `bento/ubuntu-24.04` box availability/provider/CPU architecture; choose an equivalent Ubuntu 24.04 box if required |
 | kubeadm packages unavailable | Use the `pkgs.k8s.io` versioned sources in `SETUP-2026.md`; **never** the old `apt.kubernetes.io` repo |
 
-Historical M2 DOCX/ZIP/author scripts remain available **for comparison**, but following this guide plus the linked SETUP-2026.md is the supported 1.37 path. The two Helm/CNI stacks (kind/minikube vs kubeadm/Calico) are different environments and should not be mixed.
+Historical M2 DOCX/ZIP/author scripts remain available **for comparison**, but following this integrated README (sections 0–8 for setup) is the supported Kubernetes 1.37 path. The two Helm/CNI stacks (kind/minikube vs kubeadm/Calico) are different environments and should not be mixed.
 <!-- MODERN_LAB_END -->
 
 

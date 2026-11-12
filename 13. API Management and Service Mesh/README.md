@@ -6,6 +6,8 @@
 
 **Нашата адаптация:** собствен **ASP.NET Core 10/C# Travelz пример** с три service роли (Travel Agency v1, v2 и Travel Portal), локален демонстрационен API Management gateway за два партньора, routing/resilience simulator, а също **реални namespace-scoped OpenShift/Istio manifests** за 80/20 canary, mTLS и policy. Историческият 3scale WASM plugin **не се използва**, защото не е поддържан в Service Mesh 3.
 
+**Execution profiles:** [OpenShift L/S/P guide](../docs/OPENSHIFT-LAB-PROFILES.md) and read-only `scripts/check-openshift-profile.sh m13-mesh`. 13-C is a local simulator; actual Envoy sidecars, STRICT mTLS and identity policy require an operator-enabled 13-E environment.
+
 ## 1. Учебни цели
 
 След Module 13 ще можеш да:

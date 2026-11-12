@@ -1,102 +1,154 @@
-# Lab 10-C — PostgreSQL в OpenShift: template, Secret, SQL initialization и Service DNS
+# Lab 10-C — PostgreSQL в OpenShift: независим Deployment, Secret, SQL и Service DNS
 
-**Цел:** инстанцирай database в собствения OpenShift Project и я направи достъпна **само за вътрешни услуги**. Това следва [Red Hat — Deploy a database to OpenShift](https://developers.redhat.com/learning/learn:openshift:how-deploy-full-stack-javascript-applications-openshift/resource/resources:deploy-database-openshift), но използва **генерирана случайна парола вместо фиксираната демонстрационна парола от оригинала**.
+**Цел:** да подготвиш истинска PostgreSQL база в собствения OpenShift Project, достъпна **само чрез вътрешния Service**. Учебният път е самостоятелен дори ако Red Hat platform template \`postgresql-ephemeral\` липсва. Оригиналното упражнение с template остава като **опция C**, когато е достъпно.
 
-## 1. Предпоставки
+**Резултат:** \`m10-postgres:5432\`, таблица \`short_links\`, Secret \`m10-db-url\` с \`DATABASE_URL\` за 10-D/10-E. Базата няма Route. **Тук не се използват външните исторически учебни images от Modules 01–07.**
 
-- `oc` CLI с login към собствен OpenShift Sandbox/Project; read access до template `postgresql-ephemeral` в namespace `openshift`.
-- Namespace-scoped права за resource-ите, генерирани от template (обикновено DeploymentConfig, Service и евентуално Secret).
-- Python >=3.10, Bash и файловете [sql/init.sql](../sql/init.sql), [tools/init_env.py](../tools/init_env.py), [tools/prepare_oc.py](../tools/prepare_oc.py).
-- Работна директория **коренът на Module 10**. Не е нужно да си изпълнил Lab 10-A или 10-B. Не се изисква локален PostgreSQL/Node.js.
-- Template е **условна platform prerequisite**: не всички версии/инсталации на OpenShift предлагат `postgresql-ephemeral`. Ако липсва, **не** търси случаен чужд image или cluster-admin privileges. Изпълни напълно функционалния Docker Compose Lab 10-A, а OpenShift пътя маркирай като инфраструктурно недостъпен.
+## 1. Предпоставки и варианти
 
-## 2. Preflight — установи дали template действително е наличен
+- Активен разрешен OpenShift Project и \`oc\` login, Bash, Python 3.10+, \`git\`. Работна директория: **коренът на Module 10**.
+- Права за \`Deployment\`, \`Service\`, \`Secret\` и за избрания вариант също \`PVC\`. Няма нужда от \`cluster-admin\`, инсталиране на оператори или Docker build.
+- Достъп на cluster node-овете до \`quay.io/sclorg/postgresql-16-c9s:20250214\`, image на [SCL.org за OpenShift](https://github.com/sclorg/postgresql-container). Ако image pull е забранен от платформата, не заобикаляй политиките.
+- Собствените [postgres-ephemeral.yaml](../openshift/postgres-ephemeral.yaml) и [postgres-pvc.yaml](../openshift/postgres-pvc.yaml) манифести, [sql/init.sql](../sql/init.sql), \`tools/init_env.py\` и \`tools/prepare_oc.py\` са в репото.
 
-```bash
+| Вариант | Изискване | Съхранение | Подходящ за |
+|---|---|---|---|
+| **A — Deployment + PVC (препоръчан)** | Разрешен PVC и работещ default StorageClass или динамично provision-ване | 1Gi PVC, данните могат да преживеят Pod recreate | Постоянни връзки между Labs 10-C–E |
+| **B — Deployment + emptyDir** | Само обичайни namespace права; не изисква PVC | Ефимерни данни; при Pod recreate се губят | Sandbox без StorageClass |
+| **C — Red Hat template (оригиналният път)** | Наличен \`postgresql-ephemeral\` template и права за генерираните resources | Ефимерно | Упражняване на OpenShift Templates |
+
+Не променяй режима в средата на упражнението върху съществуваща база — това може да изтрие данните или да остави несъвместими ресурси. **A или B е пълноценен OpenShift lab**, не заместител с локален Compose.
+
+## 2. Preflight — права, имена, storage и template
+
+От корена на Module 10:
+
+\`\`\`bash
 oc whoami
 oc project
-oc get template -n openshift postgresql-ephemeral
-oc describe template -n openshift postgresql-ephemeral
-oc auth can-i create deploymentconfigs.apps.openshift.io
+oc auth can-i create deployments.apps
 oc auth can-i create services
-oc get dc/m10-postgres svc/m10-postgres 2>/dev/null || true
-```
+oc auth can-i create secrets
+oc auth can-i create persistentvolumeclaims
+oc get deployment/m10-postgres service/m10-postgres pvc/m10-postgres-data \
+  secret/m10-postgres-auth secret/m10-db-url 2>/dev/null || true
+oc get dc/m10-postgres 2>/dev/null || true
+oc get storageclass 2>/dev/null || true
+oc get template postgresql-ephemeral -n openshift 2>/dev/null || true
+\`\`\`
 
-**Очаквано:** template е наличен и избраният Project е твой. Използвай `oc process -n openshift postgresql-ephemeral --parameters`, за да видиш точния списък параметри, валиден в твоя cluster. Ако `can-i` е `no`, lab-ът е блокиран по RBAC и не трябва да заобикаляш политиките.
+**Очаквано:** Deployment/Service/Secret permissions = \`yes\`, избраният Project е твой и няма предварително съществуващи чужди \`m10-*\` ресурси. Ако PVC е разрешен и има работещ default StorageClass, избери A; иначе B. Случаен StorageClass не е гарантиран и \`oc get storageclass\` може да върне \`Forbidden\`; това **не блокира B**. Само за C трябва да е наличен template. Ако имената съществуват и не са от твой предишен lab — **спри**.
 
-**Какво е template?** Това е параметризирана конфигурация на OpenShift, която генерира Kubernetes/OpenShift resources. Нито template, нито Project сами по себе си гарантират постоянна база. `postgresql-ephemeral` има **ефимерно хранилище** — при пресъздаване на Pod данните могат да се загубят. Не използвай такъв deployment за production.
+## 3. Подготви credentials без пароли в Git или shell history
 
-## 3. Генерирай credentials, без да ги commit-ваш
-
-```bash
+\`\`\`bash
 python3 tools/init_env.py
 python3 tools/prepare_oc.py
-ls -l .env .runtime/postgres.params .runtime/database.env
-```
+test -s .runtime/database.env
+test -s .runtime/postgres.params
+test -s .runtime/postgres-auth.env
+stat -c '%a %n' .env .runtime/postgres.params .runtime/database.env .runtime/postgres-auth.env
+\`\`\`
 
-**Очаквано:** файловете са с разрешения `0600`. `.runtime/postgres.params` съдържа `DATABASE_SERVICE_NAME=m10-postgres`, `POSTGRESQL_USER=shorties`, `POSTGRESQL_DATABASE=shorties` и случайно генериран password; `.runtime/database.env` съдържа вътрешния `DATABASE_URL`. Паролите **не се отпечатват** и файловете са Git-ignored.
+**Очаквано:** \`0600\` за всички файлове. \`postgres-auth.env\` има \`POSTGRESQL_USER\`, \`POSTGRESQL_DATABASE\`, \`POSTGRESQL_PASSWORD\`; \`database.env\` има \`DATABASE_URL=postgresql://shorties:...@m10-postgres:5432/shorties\`. Паролата не се отпечатва. \`.runtime/\` и \`.env\` са Git-ignored.
 
-Внимавай: в предишни Red Hat примери паролата се показва директно в командния ред. Тук умишлено използваме env/param file и `Secret`, за да не остава в shell history.
+## 4. Създай PostgreSQL — избери САМО ЕДИН път
 
-## 4. Създай базата от реалния template
+### A — Namespace Deployment + PVC
 
-```bash
+\`\`\`bash
+oc create secret generic m10-postgres-auth --from-env-file=.runtime/postgres-auth.env
+oc apply -f openshift/postgres-pvc.yaml
+oc get pvc/m10-postgres-data
+oc wait --for=jsonpath='{.status.phase}'=Bound pvc/m10-postgres-data --timeout=180s
+oc rollout status deployment/m10-postgres --timeout=300s
+oc get service/m10-postgres deployment/m10-postgres pvc/m10-postgres-data
+\`\`\`
+
+Ако PVC остава Pending, \`oc describe pvc/m10-postgres-data\` ще покаже storage quota, липсващ provisioner или StorageClass. **Не** сменяй на B чрез \`oc apply\` върху същия Deployment/PVC. Първо изтрий **само собствените** ресурси на lab-а (виж раздел 8), тогава стартирай B върху чиста среда. Recreate strategy е умишлена: не стартираме две PostgreSQL инстанции върху една data директория.
+
+### B — Namespace Deployment + emptyDir
+
+\`\`\`bash
+oc create secret generic m10-postgres-auth --from-env-file=.runtime/postgres-auth.env
+oc apply -f openshift/postgres-ephemeral.yaml
+oc rollout status deployment/m10-postgres --timeout=300s
+oc get service/m10-postgres deployment/m10-postgres
+\`\`\`
+
+**Очаквано:** един Ready PostgreSQL Pod и вътрешен Service на порт 5432. При нов Pod \`emptyDir\` се губи и таблицата трябва да се създаде повторно. Това е същото съзнателно ограничение като стария template.
+
+### C — Оригинален OpenShift \`postgresql-ephemeral\` template
+
+\`\`\`bash
+oc get template postgresql-ephemeral -n openshift
+oc process -n openshift postgresql-ephemeral --parameters
 oc process -n openshift postgresql-ephemeral \
   --param-file=.runtime/postgres.params -o name
 oc process -n openshift postgresql-ephemeral \
   --param-file=.runtime/postgres.params | oc apply -f -
-oc get svc/m10-postgres dc/m10-postgres
-oc rollout status dc/m10-postgres --timeout=300s
-```
+oc get service/m10-postgres
+\`\`\`
 
-**Очаквано:** Service `m10-postgres` на PostgreSQL порт 5432 и Ready database Pod от `DeploymentConfig`. Ако template генерира `Deployment` вместо `DeploymentConfig` в твоя cluster, виж resource types от `oc process ... -o name` и използвай реалния kind; не гадай името/спецификата на платформата.
+Прегледай действителния \`oc process ... -o name\` output и проследи създадения workload:
 
-**Service discovery:** backend може да използва `m10-postgres:5432` без host IP и без публичен Route. В Kubernetes DNS името се резолвира в ClusterIP endpoint. **Не излагай PostgreSQL чрез Route или публичен LoadBalancer**.
+\`\`\`bash
+oc get dc/m10-postgres 2>/dev/null || oc get deployment/m10-postgres
+oc rollout status dc/m10-postgres --timeout=300s 2>/dev/null || \
+  oc rollout status deployment/m10-postgres --timeout=300s
+\`\`\`
 
-## 5. Създай таблицата от предоставения SQL file
+Template параметрите и ресурсните kind-ове зависят от инсталацията — следвай **реалния** \`oc process\` изход. Ако template липсва, избери A или B; няма нужда да прекъсваш OpenShift учебната последователност.
 
-Установи действителния Pod; template обикновено използва label `name=m10-postgres`, но провери с `oc get pods --show-labels`:
+## 5. Инициализирай SQL и провери действителната база
 
-```bash
+И трите пътя използват един и същ Service и следващите команди:
+
+\`\`\`bash
 oc get pods --show-labels
 M10_DB_POD="$(oc get pods -l name=m10-postgres -o jsonpath='{.items[0].metadata.name}')"
-test -n "$M10_DB_POD" || { echo 'Cannot find database Pod; inspect labels'; false; }
+test -n "$M10_DB_POD" || { echo 'Cannot find m10-postgres Pod — inspect labels'; false; }
 oc exec -i "$M10_DB_POD" -- psql -U shorties -d shorties < sql/init.sql
 oc exec "$M10_DB_POD" -- psql -U shorties -d shorties -c '\dt'
-```
+oc get endpoints m10-postgres
+\`\`\`
 
-**Очаквано:** таблица `short_links`, PK `code`, `target_url` и `created_at`. SQL е **идемпотентен** чрез `CREATE TABLE IF NOT EXISTS`. Ако `psql` липсва в контейнера, template image не отговаря на описаната конфигурация — не продължавай към backend, докато DB не е подготвена.
+Ако C template използва друг label, избери собственото DB Pod име от \`oc get pods --show-labels\` и задай \`M10_DB_POD\` ръчно; не копирай чуждо Pod име. **Очаквано:** таблица \`short_links\` с \`code\`, \`target_url\`, \`created_at\`, endpoint на 5432. SQL е идемпотентен. Наличен Deployment сам по себе си не доказва успешна SQL инициализация.
 
-## 6. Създай собствен Secret за приложенията
+## 6. Secret за backend/redirector
 
-```bash
+\`\`\`bash
 oc create secret generic m10-db-url --from-env-file=.runtime/database.env
 oc get secret/m10-db-url
-```
+\`\`\`
 
-**Очаквано:** Secret с ключ `DATABASE_URL`. В следващите Labs 10-D и 10-E го добавяме към Deployment-ите чрез `oc set env ... --from=secret/m10-db-url`; не поставяме connection string в Docker image, README или Git.
+Този Secret съдържа \`DATABASE_URL\`; Labs **10-D и 10-E** го подават с \`oc set env --from=secret/m10-db-url\`. Не излагай PostgreSQL чрез Route/NodePort и не печатай encoded Secret-а.
 
 ## 7. Troubleshooting
 
 | Симптом | Проверка | Решение |
 |---|---|---|
-| Template NotFound | `oc get templates -n openshift` | Не е наличен — използвай локалния Compose път |
-| `oc process` отхвърля параметър | `oc process ... --parameters` | Съобрази имената с реалния template |
-| Forbidden | `oc auth can-i ...` | Нямаш права; не изисквай cluster-admin за demo |
-| DB Pod не е Ready | `oc describe pod` / logs | ImagePull, quota, resources |
-| Таблица липсва | `oc exec ... psql ... '\dt'` | Подай `sql/init.sql` |
-| Няма m10-postgres Service | `oc get svc` | Провери template параметъра DATABASE_SERVICE_NAME |
-| `Secret already exists` | `oc get secret m10-db-url` | Не презаписвай чужд Secret |
+| Template NotFound | \`oc get template -n openshift postgresql-ephemeral\` | Използвай manifest A/B |
+| PVC Pending | \`oc describe pvc m10-postgres-data\` | StorageClass/quota/permissions; след пълен cleanup избери B |
+| Pod ImagePullBackOff | \`oc describe pod -l app=m10-postgres\` | Достъп до позволения публичен PostgreSQL registry; без заобикаляне на policy |
+| CrashLoopBackOff | \`oc logs deploy/m10-postgres --previous\` | Secret ключове, image, writable volume и OpenShift SCC |
+| Service без Endpoints | \`oc get pods -l app=m10-postgres; oc get endpoints m10-postgres\` | Провери Ready Pod и \`app=m10-postgres\` selector |
+| Няма таблица | \`oc exec "$M10_DB_POD" -- psql -U shorties -d shorties -c '\dt'\` | Пусни \`sql/init.sql\` |
+| \`m10-db-url\` exists | \`oc get secret m10-db-url\` | Не презаписвай чужди secrets |
+| След restart няма данни | \`oc get pvc; oc describe pod\` | При B/C е очаквано; за A провери Bound PVC и дали е същият |
 
 ## 8. Cleanup и приемане
 
-Ако продължаваш към 10-D и 10-E, **остави** PostgreSQL и Secret работещи. За самостоятелен lab:
+**Ако продължаваш към 10-D/10-E, НЕ изпълнявай cleanup тук.** За самостоятелния lab след потвърждение, че учебните данни не са необходими:
 
-```bash
-oc delete secret/m10-db-url --ignore-not-found
-oc delete dc/m10-postgres svc/m10-postgres --ignore-not-found
-```
+\`\`\`bash
+oc delete deployment/m10-postgres service/m10-postgres --ignore-not-found
+oc delete pvc/m10-postgres-data --ignore-not-found  # Изтрива persistent lab data при Delete reclaim!
+oc delete secret/m10-postgres-auth secret/m10-db-url --ignore-not-found
+# Само ако е създаден от template вариант C:
+oc get dc/m10-postgres >/dev/null 2>&1 && oc delete dc/m10-postgres
+\`\`\`
 
-Ако template е създал други objects, виж точния списък от `oc process ... -o name` и премахни **само своите** ресурси. Ефимерните DB данни могат да изчезнат след изтриване; не използвай production информация.
+При вариант C може да има и други ресурси; сравни със запазения \`oc process ... -o name\` и изтрий **само собствените**. Не изтривай Project или чужди resources. Провери \`oc get deployment,dc,svc,pvc,secret\` и не трий други ресурси. Изтрий \`.runtime\` само ако съдържа единствено твоите лабораторни временни файлове.
 
-**Приемане:** PostgreSQL е стартирана от template, SQL таблицата съществува, има вътрешен Service и Secret, и никакъв database endpoint не е публичен.
+**Приемане:** \`Service/m10-postgres\` на 5432, Ready PostgreSQL Pod, SQL \`short_links\` таблица, \`m10-db-url\` Secret, без публичен Route. При A имаш \`Bound\` PVC; при B е ясно, че данните са ефимерни. OpenShift упражнението се изпълнява **без задължителен platform template**.

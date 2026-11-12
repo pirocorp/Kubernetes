@@ -4,6 +4,8 @@
 
 **Важно разграничение:** самостоятелният **реален end-to-end CDC** lab е 15-B–D чрез Docker Compose, без cluster permissions. OpenShift вариантът е **условен live-cluster lab**: не може да измислим Kafka/Postgres DNS, сертификати, operator licenses или RBAC. Тук има конкретен code/build/deployment път, който се изпълнява **само след изпълнените явни prerequisites**.
 
+**Platform profile P is mandatory:** follow [15-E managed CDC prerequisites](../../docs/OPENSHIFT-LAB-PROFILES.md#module-15-e--external-managed-cdc), then run `bash scripts/check-openshift-profile.sh m15-cdc` from repository root. The script checks API/RBAC; a platform owner must separately verify the actual Debezium connector, two PostgreSQL databases, Kafka topics and Elasticsearch. No automatic Operator or production-slot changes.
+
 ## 1. Необходими предпоставки
 
 - Developer Sandbox/разрешен OpenShift Project с `oc` CLI login и права за namespaced `BuildConfig`, `Build`, `ImageStream`, `Deployment`, `ServiceAccount`, `Service` и `Secret`.

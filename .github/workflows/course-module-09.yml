@@ -1,0 +1,38 @@
+name: Module 09 pinned frontend dependencies
+
+on:
+  pull_request:
+    paths:
+      - '09. OpenShift/**'
+      - '.github/workflows/course-module-09.yml'
+  push:
+    branches: [main, 'fix/self-contained-course-2026-no-external-image-changes']
+    paths:
+      - '09. OpenShift/**'
+      - '.github/workflows/course-module-09.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-react-ssr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: '09. OpenShift/labs/examples/quotes-stack/frontend/package-lock.json'
+      - name: Reproducible installation (must not regenerate lock)
+        working-directory: 09. OpenShift/labs/examples/quotes-stack/frontend
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build
+          npm ls --depth=0
+          git diff --exit-code -- package-lock.json
+      - name: Verify checked-in OpenShift exercise source paths
+        run: |
+          test -s '09. OpenShift/labs/examples/quotes-stack/frontend/package-lock.json'
+          test -s '09. OpenShift/labs/examples/quotes-stack/frontend/server.js'
+          test -s '09. OpenShift/labs/examples/quotes-stack/database.yaml'

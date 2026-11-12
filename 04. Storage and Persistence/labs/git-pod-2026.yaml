@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-git
+  labels:
+    app: notes
+spec:
+  initContainers:
+  - name: clone-repository
+    image: alpine:3.22
+    command: ["/bin/sh", "-ec"]
+    args:
+    - |
+      apk add --no-cache git
+      git clone --depth 1 --branch main https://github.com/shekeriev/k8s-notes.git /work
+    volumeMounts:
+    - name: git-volume
+      mountPath: /work
+  containers:
+  - name: container-git
+    image: php:8.4-apache
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: git-volume
+      mountPath: /var/www/html
+  volumes:
+  - name: git-volume
+    emptyDir: {}

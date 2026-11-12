@@ -4,6 +4,8 @@
 
 **Източници от оригинала:** [Introduction](https://www.solutionpatterns.io/solution-pattern-modernization-cdc/solution-pattern-modernization-cdc/index.html) · [Architecture, anti-patterns, scenarios](https://www.solutionpatterns.io/solution-pattern-modernization-cdc/solution-pattern-modernization-cdc/02-architecture.html) · [Original walkthrough](https://www.solutionpatterns.io/solution-pattern-modernization-cdc/solution-pattern-modernization-cdc/03-demo.html) · [Developer resources](https://www.solutionpatterns.io/solution-pattern-modernization-cdc/solution-pattern-modernization-cdc/04-devresources.html).
 
+**Execution profiles:** [OpenShift L/S/P guide](../docs/OPENSHIFT-LAB-PROFILES.md). Labs 15-B–D prove real self-hosted Debezium CDC via Docker Compose. Lab 15-E is a separate managed-data deployment needing already provisioned PostgreSQL, Debezium, Kafka and Elasticsearch; check namespace prerequisites with `scripts/check-openshift-profile.sh m15-cdc`.
+
 ## 1. Каква е бизнес задачата?
 
 Фиктивната търговска фирма има 15+ годишно **legacy** решение за стоки, клиенти, продажби и наличности, чийто код не е достъпен за промяна. Системата работи непрекъснато и спирането ѝ вреди на бизнеса. Трябват две нови функции:

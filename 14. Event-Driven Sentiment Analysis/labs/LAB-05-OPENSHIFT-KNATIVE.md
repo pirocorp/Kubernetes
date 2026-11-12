@@ -4,6 +4,8 @@
 
 **Не изпълнявай историческия Red Hat Ansible installer автоматично:** оригиналният walkthrough е тестван с **OpenShift 4.13, cluster-admin** и инсталира множество оператори/проекти. Не е безопасен универсален вариант за Developer Sandbox или служебна платформа.
 
+**Platform profile P is mandatory:** follow [14-E provisioning profile](../../docs/OPENSHIFT-LAB-PROFILES.md#module-14-e--knative-eventing-and-kafkasource). Run `bash scripts/check-openshift-profile.sh m14-knative` at repository root; PASS confirms CRD/RBAC only, not Broker readiness, implementation or Kafka connectivity. Keep 14-C real local Kafka separate from live Knative acceptance.
+
 ## 1. Задължителни prerequisites
 
 - Преминати Kubernetes Modules 00–08 и познаваш [Module 09 — OpenShift](../../09.%20OpenShift/README.md).
