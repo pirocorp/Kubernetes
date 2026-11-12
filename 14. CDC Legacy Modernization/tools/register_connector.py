@@ -50,7 +50,7 @@ for attempt in range(60):
         response_code, connectors = request("/connectors")
         if response_code == 200:
             break
-    except (urllib.error.URLError, TimeoutError, ValueError):
+    except (OSError, TimeoutError, ValueError):
         pass
     time.sleep(2)
 else:
