@@ -21,7 +21,12 @@ public sealed class CdcWorker(
             GroupId = cfg["KAFKA_GROUP_ID"] ?? "m14-projections",
             AutoOffsetReset = AutoOffsetReset.Earliest,
             EnableAutoCommit = false,
-            AllowAutoCreateTopics = false
+            AllowAutoCreateTopics = false,
+            // Newly published CDC topics (or recovery after a connector restart)
+            // should be discovered promptly, instead of waiting for the default
+            // periodic metadata refresh.
+            MetadataMaxAgeMs = 10000,
+            TopicMetadataRefreshIntervalMs = 10000
         }).Build();
         consumer.Subscribe(
         [
