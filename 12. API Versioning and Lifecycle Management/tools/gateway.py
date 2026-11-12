@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 POLICY = ROOT / ".runtime" / "lifecycle.json"
 API_KEY = os.getenv("API_KEY", "")
 ADMIN_KEY = os.getenv("ADMIN_KEY", "")
-UPSTREAM = os.getenv("M11_API_URL", "http://127.0.0.1:8080").rstrip("/")
+UPSTREAM = os.getenv("M12_API_URL", "http://127.0.0.1:8080").rstrip("/")
 if min(len(API_KEY), len(ADMIN_KEY)) < 16:
     raise SystemExit("Set API_KEY and ADMIN_KEY with at least 16 characters")
 stats = Counter()

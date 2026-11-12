@@ -1,4 +1,4 @@
-# Module 11 — API Versioning & Lifecycle Management
+# Module 12 — API Versioning & Lifecycle Management
 
 **API versioning** е процесът на въвеждане и поддържане на промени в публичен интерфейс, без неочаквано да прекъснем съществуващите му потребители. Това изисква повече от нов `/v2` endpoint: versioned contracts, промени в backend, управление на gateway, миграция на clients, документация, наблюдение на потреблението, deprecation и retirement.
 
@@ -8,7 +8,7 @@
 
 ## 1. Какво трябва да знаеш
 
-**Предварителни знания:** основни HTTP, JSON, REST, Docker/Kubernetes и [Module 10 — API-First Development](../10.%20API-First%20Development%20and%20API%20Management/README.md). За optional OpenShift lab е полезен и [Module 09 — OpenShift](../09.%20OpenShift/README.md). Не е нужен опит с Quarkus, 3scale или Apicurio.
+**Предварителни знания:** основни HTTP, JSON, REST, Docker/Kubernetes и [Module 11 — API-First Development](../11.%20API-First%20Development%20and%20API%20Management/README.md). За optional OpenShift lab е полезен и [Module 09 — OpenShift](../09.%20OpenShift/README.md). Не е нужен опит с Quarkus, 3scale или Apicurio.
 
 **В края на модула ще можеш:**
 - Да класифицираш промяна като compatible или breaking **от гледната точка на API consumer**.
@@ -84,7 +84,7 @@ flowchart TD
 - **Minor** `1.1.0`: обратно съвместима нова възможност.
 - **Patch** `1.0.1`: съвместимо поправяне на проблем.
 
-**`/v1` и `/v2` са major compatibility lines**, не пълните SemVer стойности. URL versioning е изборът на този Red Hat pattern; header versioning и отделен API Product са реални алтернативи, обсъдени в [Lab 11-A](./labs/LAB-01-CONTRACTS-SEMVER.md).
+**`/v1` и `/v2` са major compatibility lines**, не пълните SemVer стойности. URL versioning е изборът на този Red Hat pattern; header versioning и отделен API Product са реални алтернативи, обсъдени в [Lab 12-A](./labs/LAB-01-CONTRACTS-SEMVER.md).
 
 ## 5. Предсказуем lifecycle: не смесвай deprecation и retirement
 
@@ -109,11 +109,11 @@ flowchart LR
 
 | Последователност | Упражнение | Проверим резултат |
 |---|---|---|
-| **11-A** | [Contracts, SemVer и compatibility](./labs/LAB-01-CONTRACTS-SEMVER.md) | 1.0→1.1 compatible; 1.1→2.0 breaking, exit code 2 |
-| **11-B** | [ASP.NET Core API и три клиента](./labs/LAB-02-ASPNET-CONSUMERS.md) | `dotnet build`, 201 на v1/v2, 400 при несъвместим body |
-| **11-C** | [Gateway, provider analytics, 3scale concepts](./labs/LAB-03-GATEWAY-ANALYTICS.md) | Local gateway и `v1_201`/`v2_201` counters |
-| **11-D** | [Deprecation, Sunset, migration, rollback](./labs/LAB-04-DEPRECATION-SUNSET.md) | v1: 201 → предупреждение → 410 → 201; v2 непрекъснато работи |
-| **11-E** | [OpenShift dual backends/Routes](./labs/LAB-05-OPENSHIFT-VERSIONING.md) | 2 Deployments, 2 Services, 2 path-based HTTPS Routes в един host |
+| **12-A** | [Contracts, SemVer и compatibility](./labs/LAB-01-CONTRACTS-SEMVER.md) | 1.0→1.1 compatible; 1.1→2.0 breaking, exit code 2 |
+| **12-B** | [ASP.NET Core API и три клиента](./labs/LAB-02-ASPNET-CONSUMERS.md) | `dotnet build`, 201 на v1/v2, 400 при несъвместим body |
+| **12-C** | [Gateway, provider analytics, 3scale concepts](./labs/LAB-03-GATEWAY-ANALYTICS.md) | Local gateway и `v1_201`/`v2_201` counters |
+| **12-D** | [Deprecation, Sunset, migration, rollback](./labs/LAB-04-DEPRECATION-SUNSET.md) | v1: 201 → предупреждение → 410 → 201; v2 непрекъснато работи |
+| **12-E** | [OpenShift dual backends/Routes](./labs/LAB-05-OPENSHIFT-VERSIONING.md) | 2 Deployments, 2 Services, 2 path-based HTTPS Routes в един host |
 
 **Учебният ред е A → B → C → D → E.** A–D могат да работят локално без OpenShift. E изисква действителни Project/Build/Routing възможности на средата. Следвай всяко упражнение до cleanup, преди да го считаш за завършено.
 
@@ -123,17 +123,17 @@ flowchart LR
 
 ```bash
 git clone https://github.com/pirocorp/Kubernetes.git
-cd "Kubernetes/11. API Versioning and Lifecycle Management"
+cd "Kubernetes/12. API Versioning and Lifecycle Management"
 python3 --version
 python3 -m json.tool contracts/orderplacement-1.0.0.openapi.json >/dev/null
-dotnet --version  # нужно само за 11-B/C/D
+dotnet --version  # нужно само за 12-B/C/D
 ```
 
 **Очаквано:** файловете са налични, JSON се парсва, а `dotnet --version` започва с `10.` за упражненията, които използват C#.
 
 ### Независима крайна проверка на локалния път
 
-От корена на Module 11 изпълни:
+От корена на Module 12 изпълни:
 
 ```bash
 bash scripts/verify-local.sh
@@ -146,7 +146,7 @@ bash scripts/verify-local.sh
 ## 8. Структура на проекта
 
 ```text
-11. API Versioning and Lifecycle Management/
+12. API Versioning and Lifecycle Management/
 ├── README.md
 ├── contracts/orderplacement-{1.0.0,1.1.0,2.0.0}.openapi.json
 ├── src/OrderPlacementApi/OrderPlacementApi.csproj

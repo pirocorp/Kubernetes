@@ -3,15 +3,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: m11-order-v1
-  labels: {app: m11-order-v1, training: module11}
+  name: m12-order-v1
+  labels: {app: m12-order-v1, training: module12}
 spec:
   replicas: 1
   selector:
-    matchLabels: {app: m11-order-v1}
+    matchLabels: {app: m12-order-v1}
   template:
     metadata:
-      labels: {app: m11-order-v1}
+      labels: {app: m12-order-v1}
     spec:
       containers:
         - name: order-api
@@ -24,7 +24,7 @@ spec:
             - {name: V1_LIFECYCLE, value: "active"}
             - name: API_KEY
               valueFrom:
-                secretKeyRef: {name: m11-order-key, key: API_KEY}
+                secretKeyRef: {name: m12-order-key, key: API_KEY}
           readinessProbe:
             httpGet: {path: /healthz, port: http}
             initialDelaySeconds: 3
@@ -41,10 +41,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: m11-order-v1
-  labels: {training: module11}
+  name: m12-order-v1
+  labels: {training: module12}
 spec:
-  selector: {app: m11-order-v1}
+  selector: {app: m12-order-v1}
   type: ClusterIP
   ports:
     - {name: http, port: 8080, targetPort: http}
@@ -52,15 +52,15 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: m11-order-v2
-  labels: {app: m11-order-v2, training: module11}
+  name: m12-order-v2
+  labels: {app: m12-order-v2, training: module12}
 spec:
   replicas: 1
   selector:
-    matchLabels: {app: m11-order-v2}
+    matchLabels: {app: m12-order-v2}
   template:
     metadata:
-      labels: {app: m11-order-v2}
+      labels: {app: m12-order-v2}
     spec:
       containers:
         - name: order-api
@@ -72,7 +72,7 @@ spec:
             - {name: ALLOWED_MAJOR, value: "v2"}
             - name: API_KEY
               valueFrom:
-                secretKeyRef: {name: m11-order-key, key: API_KEY}
+                secretKeyRef: {name: m12-order-key, key: API_KEY}
           readinessProbe:
             httpGet: {path: /healthz, port: http}
             initialDelaySeconds: 3
@@ -89,10 +89,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: m11-order-v2
-  labels: {training: module11}
+  name: m12-order-v2
+  labels: {training: module12}
 spec:
-  selector: {app: m11-order-v2}
+  selector: {app: m12-order-v2}
   type: ClusterIP
   ports:
     - {name: http, port: 8080, targetPort: http}

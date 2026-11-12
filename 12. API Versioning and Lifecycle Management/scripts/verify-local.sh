@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Module 11 local acceptance suite. Requires .NET 10, Python 3.10+, ports 8080/8081.
+# Module 12 local acceptance suite. Requires .NET 10, Python 3.10+, ports 8080/8081.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -99,4 +99,4 @@ for k in ("v1_201", "v2_201", "v1_410", "v1_401", "v2_400"):
 assert doc["v1Policy"]=="active", doc
 print("PASS: version-specific analytics + rollback")
 PY
-echo "PASS: Module 11 local acceptance suite"
+echo "PASS: Module 12 local acceptance suite"
