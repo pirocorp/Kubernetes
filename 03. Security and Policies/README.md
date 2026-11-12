@@ -56,8 +56,6 @@ We can see that there are several notable sections – clusters, contexts, curre
 ## Additional Cluster Users
 
 Utilizing the option for using X.509 client certificates for cluster authentication.
-
-Create the **pirocorp** OS user
 <!-- PRESERVED_THEORY_END -->
 
 
