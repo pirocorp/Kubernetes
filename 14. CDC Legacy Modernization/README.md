@@ -104,7 +104,7 @@ bash scripts/verify-cdc.sh
 docker compose down
 ```
 
-**Полно изтриване на трите учебни named volumes, САМО ако искаш празна среда:**
+**Полно изтриване на четирите учебни named volumes (legacy DB, cashback DB, Elasticsearch и Kafka log), САМО ако искаш празна среда:**
 
 ```bash
 docker compose down -v
