@@ -1,24 +1,16 @@
 #!/usr/bin/env python3
-"""Static fidelity and navigation audit for the integrated Kubernetes 1.37 modules.
-
-Compares integrated README files against the source Markdown at the last
-pre-integration main commit. The historical lecture must be preserved exactly
-and the complete modern lab text must be present (headings may be demoted by
-one level for integration). This is not a substitute for real cluster tests.
-"""
+"""Check topic-first Modules 01-08 against the modern labs and original theory."""
 from __future__ import annotations
-
 import posixpath
 import re
 import subprocess
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_COMMIT = "fcdbdecbc21edd51a64257bdc7760926b73a2598"
 ROOT_LEGACY_SOURCE_COMMIT = "063ef92b3f09b3dc6f97a908db52390fec08ba65"
 ROOT_LEGACY_MARKER = "<!-- ORIGINAL_ROOT_README_PRESERVED_START -->\n"
-MARKER = "<!-- ORIGINAL_MODULE_README_PRESERVED_START -->\n"
 MODULES = {
     "01. Core Concepts": ("Readme.md", ["CORE-2026.md"]),
     "02. Cluster Setup and Management": ("README.md", ["SETUP-2026.md", "HOMEWORK-2026.md"]),
@@ -29,38 +21,57 @@ MODULES = {
     "07. Templating Tools and Package Management": ("README.md", ["LAB-2026.md"]),
     "08. Exam Preparation": ("README.md", ["EXAM-2026.md"]),
 }
+MODERN = re.compile(r"<!-- MODERN_LAB_BEGIN ([A-Za-z0-9.-]+\.md) (\d+) -->\n(.*?)\n<!-- MODERN_LAB_END -->", re.DOTALL)
+THEORY = re.compile(r"<!-- PRESERVED_THEORY_BEGIN -->\n(.*?)\n<!-- PRESERVED_THEORY_END -->", re.DOTALL)
+FENCE = re.compile(r"^\s*(?:" + chr(96) * 3 + r"|~~~)")
 
 
 def source(path: str, commit: str = SOURCE_COMMIT) -> str:
-    result = subprocess.run(
-        ["git", "show", f"{commit}:{path}"],
-        cwd=ROOT, check=True, capture_output=True,
-    )
-    return result.stdout.decode("utf-8")
+    result = subprocess.run(["git", "show", f"{commit}:{path}"], cwd=ROOT, check=True, capture_output=True)
+    return result.stdout.decode("utf-8").replace("\r\n", "\n")
 
 
 def current(path: str) -> str:
-    return (ROOT / path).read_bytes().decode("utf-8")
+    return (ROOT / path).read_bytes().decode("utf-8").replace("\r\n", "\n")
 
 
-def bump_headings(text: str) -> str:
-    """Exactly the one-level Markdown demotion used by the integration."""
+def change_headings(text: str, delta: int) -> str:
     fenced = False
     result = []
     for line in text.split("\n"):
-        if re.match(r"^\s*(\x60{3}|~~~)", line):
+        if FENCE.match(line):
             fenced = not fenced
             result.append(line)
             continue
-        match = None if fenced else re.match(r"^(#{1,5}) (.*)$", line)
-        result.append("#" * (len(match[1]) + 1) + " " + match[2] if match else line)
+        match = None if fenced else re.match(r"^(#{1,6}) (.*)$", line)
+        if match:
+            length = len(match[1]) + delta
+            result.append("#" * length + " " + match[2] if 1 <= length <= 6 else line)
+        else:
+            result.append(line)
     return "\n".join(result)
+
+
+def split_guide(text: str) -> list[str]:
+    text = text.replace("\r\n", "\n")
+    lines = text.split("\n")
+    cuts = [0]
+    offset = 0
+    fenced = False
+    for line in lines:
+        if not fenced and line.startswith("## ") and offset > 0:
+            cuts.append(offset)
+        if FENCE.match(line):
+            fenced = not fenced
+        offset += len(line) + 1
+    cuts.append(len(text))
+    return [text[a:b] for a, b in zip(cuts, cuts[1:])]
 
 
 def markdown_links(content: str):
     fenced = False
     for line in content.splitlines():
-        if re.match(r"^\s*(\x60{3}|~~~)", line):
+        if FENCE.match(line):
             fenced = not fenced
             continue
         if fenced:
@@ -86,69 +97,81 @@ def check_links(path: str, content: str) -> list[str]:
 def run() -> int:
     failures = []
     link_count = 0
+    modern_parts = 0
+    theory_parts = 0
     for directory, (readme_name, guides) in MODULES.items():
         path = f"{directory}/{readme_name}"
-        text = current(path)
-        if text.count(MARKER) != 1:
-            failures.append(f"{path}: missing or repeated original-lecture marker")
-            continue
-        modern, historical = text.split(MARKER, 1)
-        if historical != source(path):
-            failures.append(f"{path}: original 2021 lecture was modified or truncated")
+        content = current(path)
+        if "## Kubernetes 1.37 integrated labs" not in content:
+            failures.append(f"{path}: missing integrated lab anchor")
+        if "<!-- ORIGINAL_MODULE_README_PRESERVED_START -->" in content:
+            failures.append(f"{path}: old duplicate lecture still appended")
+        matches = list(MODERN.finditer(content))
+        keys = [(m[1], int(m[2])) for m in matches]
+        if len(keys) != len(set(keys)):
+            failures.append(f"{path}: repeated modern lab sections")
         for guide in guides:
             guide_path = f"{directory}/{guide}"
-            expected = bump_headings(source(guide_path)).rstrip()
-            if expected not in modern:
-                failures.append(f"{path}: not all original 2026 content from {guide} is integrated")
+            expected = split_guide(source(guide_path))
+            for i, segment in enumerate(expected):
+                found = [m[3] for m in matches if m[1] == guide and int(m[2]) == i]
+                if len(found) != 1 or found[0].strip() != change_headings(segment, +1).strip():
+                    failures.append(f"{path}: modern {guide} section {i} missing or changed")
+                else:
+                    modern_parts += 1
             stub = current(guide_path)
             if f"./{readme_name}#" not in stub:
-                failures.append(f"{guide_path}: compatibility pointer absent")
-            links = list(markdown_links(stub))
-            link_count += len(links)
+                failures.append(f"{guide_path}: compatibility pointer incorrect")
+            link_count += len(list(markdown_links(stub)))
             failures.extend(check_links(guide_path, stub))
-        if "## Kubernetes 1.37 integrated labs" not in modern:
-            failures.append(f"{path}: canonical integrated lab heading missing")
-        links = list(markdown_links(modern))
-        link_count += len(links)
-        failures.extend(check_links(path, modern))
-    # The root README is now the only course guide.
+        if set(guide for guide, index in keys) != set(guides):
+            failures.append(f"{path}: missing or unexpected lab guide markers")
+        source_text = source(path)
+        chunks = list(THEORY.finditer(content))
+        if not chunks:
+            failures.append(f"{path}: no original theory preserved")
+        for match in chunks:
+            original = change_headings(match[1].strip(), -1).strip()
+            if not original or original not in source_text:
+                failures.append(f"{path}: a theoretical fragment differs from the source lecture")
+            else:
+                theory_parts += 1
+        link_count += len(list(markdown_links(content)))
+        failures.extend(check_links(path, content))
+
     root = current("README.md")
     original_root = source("README.md", ROOT_LEGACY_SOURCE_COMMIT)
-    root_headings = list(re.finditer(r"(?m)^# Kubernetes$", original_root))
-    if len(root_headings) != 1:
-        failures.append("historical root source lacks a unique level-one Kubernetes heading")
-    elif root.count(ROOT_LEGACY_MARKER) != 1 or root.split(ROOT_LEGACY_MARKER, 1)[1] != original_root[root_headings[0].start():]:
-        failures.append("original root README lecture was not preserved verbatim in the root README")
-    if (ROOT / "README-LEGACY-FOUNDATIONS.md").exists():
-        failures.append("separate README-LEGACY-FOUNDATIONS.md still exists; keep the lecture in root README instead")
-    if (ROOT / "COURSE-2026.md").exists():
-        failures.append("COURSE-2026.md still exists: the root README should be the single course guide")
+    headings = list(re.finditer(r"(?m)^# Kubernetes$", original_root))
+    if len(headings) != 1 or root.count(ROOT_LEGACY_MARKER) != 1:
+        failures.append("root original lecture marker/source heading missing")
+    elif root.split(ROOT_LEGACY_MARKER, 1)[1] != original_root[headings[0].start():]:
+        failures.append("root original lecture not preserved exactly")
+    if (ROOT / "COURSE-2026.md").exists() or (ROOT / "README-LEGACY-FOUNDATIONS.md").exists():
+        failures.append("duplicate top-level course guide or lecture file")
     modules = re.findall(r"^\| (\d\d) — ", root, flags=re.MULTILINE)
     if modules != [f"{i:02d}" for i in range(16)]:
-        failures.append(f"course README must link Modules 00–15 in order; found {modules!r}")
+        failures.append(f"root README does not list 00–15 in order: {modules!r}")
     for path_obj in ROOT.rglob("*.md"):
         if ".git" in path_obj.parts:
             continue
         if "COURSE-2026.md" in path_obj.read_text(encoding="utf-8"):
-            failures.append(f"{path_obj.relative_to(ROOT)}: stale reference to deleted COURSE-2026.md")
+            failures.append(f"{path_obj.relative_to(ROOT)}: stale removed course link")
     for path in ("README.md", "00. Resources/README.md"):
-        text = current(path)
-        links = list(markdown_links(text))
-        link_count += len(links)
-        # The current course hub includes its fully preserved original lecture.
-        failures.extend(check_links(path, text))
-    print(f"Integrated chapters audited: {len(MODULES)}")
-    print("Original 2021 lecture and full 2026 guides compared against", SOURCE_COMMIT[:12])
-    print("Course hub: 16 module links and no stale COURSE-2026.md references")
-    print("Original foundational lecture: preserved in root README against", ROOT_LEGACY_SOURCE_COMMIT[:12])
-    print(f"Local Markdown links checked in supported material: {link_count}")
+        content = current(path)
+        link_count += len(list(markdown_links(content)))
+        failures.extend(check_links(path, content))
+    print(f"Modules audited: {len(MODULES)}")
+    print(f"Modern lab sections verified against original guides: {modern_parts}")
+    print(f"Original theory passages verified: {theory_parts}")
+    print(f"Local Markdown links checked: {link_count}")
+    print("Root course: 16 modules and verbatim original foundational lecture")
     if failures:
         for failure in failures:
             print("FAIL:", failure)
-        print(f"FAIL: {len(failures)} audit issue(s)")
+        print(f"FAIL: {len(failures)} issue(s)")
         return 1
-    print("PASS: original lessons preserved, full modern labs integrated, links resolve")
-    print("NOTE: no Kubernetes cluster/runtime tests were performed here")
+    print("PASS: complete modern labs, grounded original theory, valid links")
+    print("NOTE: static audit only; no live Kubernetes cluster testing")
     return 0
 
 
