@@ -1,30 +1,24 @@
 # Module 06 — Observability and Troubleshooting
 
-> **Integrated edition · Kubernetes 1.37 (2026).** The modern exercises are now inside the original module's README, with the original lesson retained **verbatim** after the labs. Keep historical documentation for concepts and comparisons; use the modern text for actual commands, versions and validations.
+> **Learning edition (Kubernetes 1.37).** Liveness, readiness and startup-probe concepts are immediately followed by the modern intentionally broken scenarios that test them. Audit/logging and troubleshooting explanations remain with the NFS StatefulSet recovery lab. Original broken YAML is **intentionally kept unchanged as input**; corresponding `*-fixed.yaml` files and instructions provide the correct behavior.
 
-## Recommended learning path
+## Learning path and objectives
 
-1. Start from the [2026 course roadmap](../README.md) and check your disposable cluster's prerequisites.
-2. Work through the [integrated modern lab](#kubernetes-137-integrated-labs) in this README, following expected results, failure diagnosis and cleanup.
-3. Return to the [preserved original lecture](#preserved-original-lecture--historical-reference), compare approaches, and reinforce your understanding. Historical artifacts are not a substitute for the 1.37 runbook.
-
-| Concepts and teaching value preserved | Kubernetes 1.37 integration |
-|---|---|
-| Startup, readiness and liveness probes | Intentionally failing exercises and corrected answers |
-| Auditing, logs and service debugging | Describe, events, logs, endpoints and probe behavior |
-| Stateful workloads and NFS troubleshooting | Four-replica NFS StatefulSet with storage validation |
-| Historical CNI recovery scenario | Compare against Calico lab; do not overlay Flannel |
+Learn to distinguish application readiness, liveness and startup failures; use logs, events, resource status and endpoint diagnostics; then investigate a four-replica NFS StatefulSet. Use the existing **Calico** cluster: never install historical Flannel over it. See the [course README](../README.md).
 
 ## Kubernetes 1.37 integrated labs
 
-> **Execution boundary:** the lab below is the documented modern path, not a verified live-cluster run. Keep the practice questions and their solutions separate where the original exercise requires independent work.
 
+<!-- MODERN_LAB_BEGIN LAB-2026.md 0 -->
 ## Module 06 — Observability and Troubleshooting (Kubernetes 1.37)
 
 > **NOTE (2026):** This is the executable guide for **Homework scenarios 2, 3 and 4**. Original DOCX/ZIP materials reproduce deliberate defects and a 2021 Flannel cluster recovery scenario; do not install Flannel over the **Calico** network already configured by [Module 02](../02.%20Cluster%20Setup%20and%20Management/SETUP-2026.md). The broken input files remain untouched so you can practice diagnosing them. Corrected answers are provided in separate `*-fixed.yaml` files.
 >
 > Requires working Kubernetes 1.37 / containerd / Calico cluster, `kubectl`, permission to create Pods, Services, PVs and StatefulSets, and access to pull the images.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN LAB-2026.md 1 -->
 ### 0. Preflight
 
 ```bash
@@ -52,165 +46,15 @@ kubectl get endpointslices
 ```
 
 For failing startup/liveness probes, inspect container restart counts and events; for readiness, inspect readiness state and Service endpoints. When an initial manifest is **invalid**, `kubectl apply` may reject it: that is part of the diagnostic exercise, not evidence that the underlying Kubernetes lab is broken.
+<!-- MODERN_LAB_END -->
 
-### 1. Scenario 2 — readiness and a delayed sidecar
 
-**Input:** `Problem 1/scenario-2.yaml` (intentionally broken). Try to identify the faults before opening the fixed version.
-
-```bash
-kubectl apply --dry-run=client -f "Problem 1/scenario-2.yaml"
-kubectl apply -f "Problem 1/scenario-2.yaml"
-```
-
-Key defects in the historical input:
-- Duplicated YAML `image` key and two `cont-sidecar-postpone` container names; remove the accidental duplicated block.
-- The first truncated `while true; do` block does not have a matching `done`.
-- The web Pod's `readinessProbe` checks `/healthy.html`, so it stays unready until the sidecar creates that file after ~20 seconds. This **delay is expected**.
-- The old Service name `readiness-cmd` is confusing in an HTTP-readiness scenario; our corrected version uses `readiness-http`.
-
-**Reference solution:** `Problem 1/scenario-2-fixed.yaml` (one NGINX container, one Alpine sidecar, shared `emptyDir`, initial index page, delayed readiness).
-
-```bash
-# The deliberately broken input may have created some resources before failing.
-# Remove them first: stale NodePort 30001 and immutable Pod fields can block the fix.
-kubectl delete service readiness-cmd --ignore-not-found
-kubectl delete pod readiness-http --ignore-not-found
-kubectl apply -f "Problem 1/scenario-2-fixed.yaml"
-kubectl wait pod/readiness-http --for=condition=Ready --timeout=180s
-kubectl get pods,svc
-kubectl get endpointslices -l kubernetes.io/service-name=readiness-http
-kubectl logs pod/readiness-http -c cont-sidecar-postpone --tail=30
-```
-
-**Expected:** after the sidecar writes `healthy.html`, the readiness probe succeeds and Service has a ready endpoint. Verify through `http://<reachable-node-ip>:30001/healthy.html`. You may use `kubectl port-forward service/readiness-http 8080:80` and `curl http://localhost:8080/healthy.html` if NodePort is unreachable.
-
-```bash
-kubectl delete -f "Problem 1/scenario-2-fixed.yaml" --ignore-not-found
-```
-
-### 2. Scenario 3 — startup probe threshold vs delayed sidecar
-
-**Input:** `Problem 2/scenario-3.yaml` (intentionally broken). The sidecar waits **20 seconds**, but the original `startupProbe` fails after about **3 × 5 seconds**, so the main container may restart before the health file can exist. A startup probe gates the liveness probe until startup succeeds.
-
-**Reference solution:** `Problem 2/scenario-3-fixed.yaml`. It preserves the delayed sidecar, changes `startupProbe.failureThreshold` to `10` (with `periodSeconds: 5`), and uses explicit container tags. This allows a ~50 second startup budget for a ~20 second delay.
-
-```bash
-kubectl apply --dry-run=client -f "Problem 2/scenario-3.yaml"
-kubectl apply -f "Problem 2/scenario-3-fixed.yaml"
-kubectl wait pod/startup-mixed --for=condition=Ready --timeout=180s
-kubectl get pod startup-mixed
-kubectl describe pod startup-mixed
-kubectl get endpointslices -l kubernetes.io/service-name=startup-mixed
-kubectl port-forward service/startup-mixed 8080:80
-# In a second terminal: curl http://localhost:8080/healthy.html
-```
-
-**Expected:** main container starts without a repeated probe-driven restart, then `/healthy.html` becomes available; ready endpoint exists. Stop port-forward with Ctrl+C.
-
-```bash
-kubectl delete -f "Problem 2/scenario-3-fixed.yaml" --ignore-not-found
-```
-
-### 3. Scenario 4 — NFS-backed StatefulSet with 4 replicas
-
-**Files:** `Problem 3/Step 5 - Apply pvss.yaml` (4 NFS PVs), `Step 6 - Apply ss.yaml` (4-replica StatefulSet), `Step 7 - Apply svcss.yaml` (headless Service), `Step 8 - Apply svcssnp.yaml` (NodePort Service). All use **default namespace**.
-
-#### 3.1 Set up NFS (separate lab NFS machine)
-
-The original screenshot `Step 1` shows only **three** exports; the subsequent `Step 3.1` screenshot shows a **fourth**. For a four-replica StatefulSet you MUST prepare all four exports, especially `/data/nfs/k8spvd`. The screenshots are historical evidence, not a complete NFS installation procedure.
-
-On the NFS server (example Ubuntu 24.04, node-accessible IP `192.168.56.50`):
-
-```bash
-sudo apt-get update && sudo apt-get install -y nfs-kernel-server
-sudo mkdir -p /data/nfs/{k8spva,k8spvb,k8spvc,k8spvd}
-# Disposable lab only; avoid world-writable exports on production NFS servers.
-sudo chmod 0777 /data/nfs/{k8spva,k8spvb,k8spvc,k8spvd}
-# Replace 192.168.56.0/24 with the real Kubernetes node network.
-sudo tee /etc/exports.d/k8s-m06.exports >/dev/null <<'EOF'
-/data/nfs/k8spva 192.168.56.0/24(rw,sync,no_subtree_check)
-/data/nfs/k8spvb 192.168.56.0/24(rw,sync,no_subtree_check)
-/data/nfs/k8spvc 192.168.56.0/24(rw,sync,no_subtree_check)
-/data/nfs/k8spvd 192.168.56.0/24(rw,sync,no_subtree_check)
-EOF
-sudo exportfs -ra
-sudo systemctl enable --now nfs-kernel-server
-sudo exportfs -v
-```
-
-On **all Kubernetes nodes**:
-
-```bash
-sudo apt-get update && sudo apt-get install -y nfs-common
-# Replace the example address unless nfs-server is already resolvable in DNS.
-echo '192.168.56.50 nfs-server' | sudo tee -a /etc/hosts
-getent hosts nfs-server
-sudo mkdir -p /mnt/m06-check
-sudo mount -t nfs -o vers=4.1 nfs-server:/data/nfs/k8spvd /mnt/m06-check
-sudo umount /mnt/m06-check
-```
-
-Expected: all four exports exist, NFSv4.1 test mount works from **every** worker, and TCP 2049 is permitted by node/server firewall. Optional deeper setup: [Module 04 STORAGE-2026.md](../04.%20Storage%20and%20Persistence/STORAGE-2026.md).
-
-#### 3.2 Deploy, verify, troubleshoot
-
-From `06. Observability and Troubleshooting/Homework`:
-
-```bash
-kubectl apply -f "Problem 3/Step 5 - Apply pvss.yaml"
-kubectl apply -f "Problem 3/Step 7 - Apply svcss.yaml"
-kubectl apply -f "Problem 3/Step 6 - Apply ss.yaml"
-kubectl apply -f "Problem 3/Step 8 - Apply svcssnp.yaml"
-
-kubectl rollout status statefulset/facts --timeout=300s
-kubectl get pv,pvc,pods,svc,statefulsets
-kubectl get endpointslices -l kubernetes.io/service-name=factsnp
-kubectl get pods -l app=facts -o wide
-```
-
-**Expected:** PVs `pvssa`–`pvssd` bound to four `facts-data-facts-N` PVCs; Pods `facts-0` to `facts-3` Ready; NodePort `30001` on `factsnp`. The PVs and PVC template use `storageClassName: ""` so they bind statically even when a default StorageClass exists.
-
-If any PVC remains Pending, inspect `kubectl describe pvc facts-data-facts-N`, `kubectl describe pv`, StorageClass matching and NFS reachability. For mount failures, inspect Pod events and NFS exports; `ping` is not sufficient.
-
-#### 3.3 Cleanup and reclaim semantics
-
-```bash
-kubectl delete statefulset facts --ignore-not-found
-kubectl delete svc facts factsnp --ignore-not-found
-kubectl delete pvc facts-data-facts-0 facts-data-facts-1 facts-data-facts-2 facts-data-facts-3 --ignore-not-found
-kubectl get pv
-```
-
-**Expected:** `Retain` preserves NFS files but PVs enter `Released`. They are **not** reused automatically. After verifying/cleaning old lab data on NFS, delete the four Released PV objects and recreate them to rerun the lab:
-
-```bash
-kubectl delete pv pvssa pvssb pvssc pvssd --ignore-not-found
-```
-
-Never delete real-world data just to reset a lab. See [Problem 3 Recycle vs Retain comparison](./Homework/Problem%203/README.md).
-
-### 4. General checks and prerequisites
-
-- Inspect `kubectl describe pod`, `kubectl logs -c`, `kubectl get events`, PV/PVC status and endpoints for evidence before changing YAML.
-- Scenario 2 and scenario 3 contain **deliberate errors**: original source is preserved; `*-fixed.yaml` shows an achievable end state.
-- Use the current lab's **Calico**; Flannel installation in archived M6 DOCX/ZIP belongs to the old Kubernetes 1.21 environment and must not be run on this cluster.
-- Stop/remove prior NodePort `30001` workloads before testing the next scenario.
-- Historical screenshots and original archived ZIP files illustrate the 2021 session; prefer this guide for execution on 1.37.
-
----
-
-## Preserved original lecture — historical reference
-
-> **2021 lecture / exam notes.** The content below is preserved byte-for-byte for educational comparison. Follow the integrated 1.37 lab above instead of reusing retired APIs, network plugins, URLs, or old examination environment assumptions.
-
-<!-- ORIGINAL_MODULE_README_PRESERVED_START -->
-> **Kubernetes 1.37 (2026):** For a self-contained, executable walkthrough of Homework scenarios 2, 3 and 4 (including solution manifests, NFS server setup, expected status and cleanup), start with [LAB-2026.md](./LAB-2026.md). The original DOCX/ZIP examples and screenshots are historical; do not reinstall Flannel on a cluster that already uses Calico.
-
-# Health and Status Checks ([Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/))
+<!-- PRESERVED_THEORY_BEGIN -->
+## Health and Status Checks ([Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/))
 
 Periodic checks executed by the **kubelet** against containers. Those checks are known as **probes**. They can be **liveness**, **readiness**, and **startup** probes. Their status can be either **Success**, **Failure**, or **Unknown**. Used for a better control over the container and pod lifecycle and better integration with other objects.
 
-## Check Methods
+### Check Methods
 
 Each probe type can use either **Exec**, **HTTP**, or **TCP** method
 
@@ -218,7 +62,7 @@ Each probe type can use either **Exec**, **HTTP**, or **TCP** method
 - **HTTP** makes a **GET request** against the pod’s **IP address** on a **specified port** and **path**. It is considered **successful** if the **status code is between 200 and 399**.
 - **TCP** performs a check against the pod’s **IP address** on a **specified port**. It is considered **successful** if the **port is open**.
 
-## [Common Fields](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-probes)
+### [Common Fields](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-probes)
 
 - **initialDelaySeconds** sets the number of seconds to wait before a probe to be initiated. **Defaults** to **0** with **minimal value** of **0**.
 - **periodSeconds** sets how often (in seconds) a probe to be performed. **Defaults** to **10** with **minimal value** of **1**.
@@ -227,7 +71,7 @@ Each probe type can use either **Exec**, **HTTP**, or **TCP** method
 - **failureThreshold** sets the number of times for Kubernetes to try failing probe before giving up (for **liveness – restart**, for **readiness – unready**). Defaults to **3** with **minimal value** of **1**.
 
 
-## Liveness Probes 
+### Liveness Probes 
 
 - Indicate whether a **container is running**.
 - If it fails, then **kubelet** kills the container.
@@ -238,7 +82,7 @@ Each probe type can use either **Exec**, **HTTP**, or **TCP** method
 
 The kubelet uses liveness probes to know when to restart a container. For example, liveness probes could catch a deadlock, where an application is running, but unable to make progress. Restarting a container in such a state can help to make the application more available despite bugs.
 
-### Exec Liveness Probe
+#### Exec Liveness Probe
 
 Exec is used to exec a specified command inside the container. If the return code is 0 is considered successful.
 
@@ -269,7 +113,7 @@ spec:
       periodSeconds: 10
 ```
 
-### HTTP Liveness Probe
+#### HTTP Liveness Probe
 
 HTTP makes a GET request against the pod’s IP address on a specified port and path. It is considered successful if the status code is between 200 and 399
 
@@ -301,8 +145,11 @@ spec:
       initialDelaySeconds: 3
       periodSeconds: 3
 ```
+<!-- PRESERVED_THEORY_END -->
 
-## Readiness Probes
+
+<!-- PRESERVED_THEORY_BEGIN -->
+### Readiness Probes
 
 - Indicate whether a container is **ready to respond to requests**.
 - If it **fails**, then the **endpoints controller removes** the **pod’s IP address** from the **endpoints** of **all services** that match the pod.
@@ -312,7 +159,7 @@ spec:
 
 The kubelet uses readiness probes to know when a container is ready to start accepting traffic. A Pod is considered ready when all of its containers are ready. One use of this signal is to control which Pods are used as backends for Services. When a Pod is not ready, it is removed from Service load balancers.
 
-### Exec Readiness Probe
+#### Exec Readiness Probe
 
 Exec is used to exec a specified command inside the container. If the return code is 0 is considered successful.
 
@@ -398,7 +245,7 @@ spec:
     app: readiness-cmd
 ```
 
-### HTTP Readiness Probe
+#### HTTP Readiness Probe
 
 HTTP makes a GET request against the pod’s IP address on a specified port and path. It is considered successful if the status code is between 200 and 399
 
@@ -474,8 +321,49 @@ spec:
   selector:
     app: readiness-cmd
 ```
+<!-- PRESERVED_THEORY_END -->
 
-## Startup Probes (startupProbe)
+
+<!-- MODERN_LAB_BEGIN LAB-2026.md 2 -->
+### 1. Scenario 2 — readiness and a delayed sidecar
+
+**Input:** `Problem 1/scenario-2.yaml` (intentionally broken). Try to identify the faults before opening the fixed version.
+
+```bash
+kubectl apply --dry-run=client -f "Problem 1/scenario-2.yaml"
+kubectl apply -f "Problem 1/scenario-2.yaml"
+```
+
+Key defects in the historical input:
+- Duplicated YAML `image` key and two `cont-sidecar-postpone` container names; remove the accidental duplicated block.
+- The first truncated `while true; do` block does not have a matching `done`.
+- The web Pod's `readinessProbe` checks `/healthy.html`, so it stays unready until the sidecar creates that file after ~20 seconds. This **delay is expected**.
+- The old Service name `readiness-cmd` is confusing in an HTTP-readiness scenario; our corrected version uses `readiness-http`.
+
+**Reference solution:** `Problem 1/scenario-2-fixed.yaml` (one NGINX container, one Alpine sidecar, shared `emptyDir`, initial index page, delayed readiness).
+
+```bash
+# The deliberately broken input may have created some resources before failing.
+# Remove them first: stale NodePort 30001 and immutable Pod fields can block the fix.
+kubectl delete service readiness-cmd --ignore-not-found
+kubectl delete pod readiness-http --ignore-not-found
+kubectl apply -f "Problem 1/scenario-2-fixed.yaml"
+kubectl wait pod/readiness-http --for=condition=Ready --timeout=180s
+kubectl get pods,svc
+kubectl get endpointslices -l kubernetes.io/service-name=readiness-http
+kubectl logs pod/readiness-http -c cont-sidecar-postpone --tail=30
+```
+
+**Expected:** after the sidecar writes `healthy.html`, the readiness probe succeeds and Service has a ready endpoint. Verify through `http://<reachable-node-ip>:30001/healthy.html`. You may use `kubectl port-forward service/readiness-http 8080:80` and `curl http://localhost:8080/healthy.html` if NodePort is unreachable.
+
+```bash
+kubectl delete -f "Problem 1/scenario-2-fixed.yaml" --ignore-not-found
+```
+<!-- MODERN_LAB_END -->
+
+
+<!-- PRESERVED_THEORY_BEGIN -->
+### Startup Probes (startupProbe)
 
 - Indicate whether the application in the container is **started**.
 - If it fails, then **kubelet** kills the container.
@@ -485,7 +373,7 @@ spec:
 
 The kubelet uses startup probes to know when a container application has started. If such a probe is configured, it disables liveness and readiness checks until it succeeds, making sure those probes don't interfere with the application startup. This can be used to adopt liveness checks on slow starting containers, avoiding them getting killed by the kubelet before they are up and running.
 
-### Exec Startup Probe
+#### Exec Startup Probe
 
 Exec is used to exec a specified command inside the container. If the return code is 0 is considered successful.
 
@@ -520,7 +408,7 @@ spec:
       periodSeconds: 5
 ```
 
-### Mixed Startup Probe
+#### Mixed Startup Probe
 
 HTTP makes a GET request against the pod’s IP address on a specified port and path. It is considered successful if the status code is between 200 and 399
 
@@ -603,8 +491,37 @@ spec:
   selector:
     app: startup-mixed
 ```
+<!-- PRESERVED_THEORY_END -->
 
-# [Auditing](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/)
+
+<!-- MODERN_LAB_BEGIN LAB-2026.md 3 -->
+### 2. Scenario 3 — startup probe threshold vs delayed sidecar
+
+**Input:** `Problem 2/scenario-3.yaml` (intentionally broken). The sidecar waits **20 seconds**, but the original `startupProbe` fails after about **3 × 5 seconds**, so the main container may restart before the health file can exist. A startup probe gates the liveness probe until startup succeeds.
+
+**Reference solution:** `Problem 2/scenario-3-fixed.yaml`. It preserves the delayed sidecar, changes `startupProbe.failureThreshold` to `10` (with `periodSeconds: 5`), and uses explicit container tags. This allows a ~50 second startup budget for a ~20 second delay.
+
+```bash
+kubectl apply --dry-run=client -f "Problem 2/scenario-3.yaml"
+kubectl apply -f "Problem 2/scenario-3-fixed.yaml"
+kubectl wait pod/startup-mixed --for=condition=Ready --timeout=180s
+kubectl get pod startup-mixed
+kubectl describe pod startup-mixed
+kubectl get endpointslices -l kubernetes.io/service-name=startup-mixed
+kubectl port-forward service/startup-mixed 8080:80
+# In a second terminal: curl http://localhost:8080/healthy.html
+```
+
+**Expected:** main container starts without a repeated probe-driven restart, then `/healthy.html` becomes available; ready endpoint exists. Stop port-forward with Ctrl+C.
+
+```bash
+kubectl delete -f "Problem 2/scenario-3-fixed.yaml" --ignore-not-found
+```
+<!-- MODERN_LAB_END -->
+
+
+<!-- PRESERVED_THEORY_BEGIN -->
+## [Auditing](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/)
 
 Actions in the cluster are captured in chronological order. They can be initiated by the users, applications, or control plane. Answers who did what and when on what and what happened. Audit records begin their existence in the **kube-apiserver**. Each request on each stage of its execution generated an event. It is pre-processed according to the policy and send to a backend. Following stages are available **RequestReceived**, **ResponseStarted**, **ResponseComplete**, and **Panic**. Audit logging may increase the memory consumption.
 
@@ -619,7 +536,7 @@ Each request can be recorded with an associated stage. The defined stages are
 - **ResponseComplete** - The response body has been completed and no more bytes will be sent.
 - **Panic** - Events generated when a panic occurred.
 
-## [Audit Policy](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-policy)
+### [Audit Policy](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-policy)
 
 Defines the rules about what events should be captured and what data they should include. During processing, an event is compared against the list of rules in order. First match sets the audit level of the event. The available audit levels are **None**, **Metadata**, **Request**, and **RequestResponse**. A policy to be valid, should have at least one rule.
 
@@ -632,11 +549,11 @@ Audit policy defines rules about what events should be recorded and what data th
 
 You can pass a file with the policy to **kube-apiserver** using the ```--audit-policy-file``` flag. If the flag is omitted, no events are logged. Note that the ```rules``` field must be provided in the audit policy file. A policy with no (0) rules is treated as illegal.
 
-## [Audit backends](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-backends)
+### [Audit backends](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-backends)
 
 Audit backends persist audit events to an external storage. Two backends are supported by default. **Log backend** writes events into the filesystem. Writes audit events to a file in **JSONlines** format. **Webhook backend** sends events to an external HTTP API. Both require kube-apiserver flags to be configured. Log backend requires two volumes and volume mounts too.
 
-## Example:
+### Example:
 
 Samples are either inspired and/or taken directly from [here](https://kubernetes.io/docs/tasks/debug-application-cluster/debug-application-introspection/)
 
@@ -866,7 +783,7 @@ kubectl delete pod logtest2
 Change the configuration (```/etc/kubernetes/manifests/kube-apiserver.yaml```) of the API Server. And remove those blocks that we added earlier. Save and close the file.
 
 
-# [Logging](https://kubernetes.io/docs/concepts/cluster-administration/logging/)
+## [Logging](https://kubernetes.io/docs/concepts/cluster-administration/logging/)
 
 Logs help us understand what is happening in our applications and cluster. They are used for debugging problems and monitoring activity. Most applications use logging either on the **stdout/stderr** or in a **file**. Container engines/runtimes even though providing logging capabilities are usually not enough. We need to access the logs even if and after a container or node crashes. Thus, we need a **cluster-level logging** solution that will store logs elsewhere and they will have different lifecycle compared to the resources or nodes in the cluster.
 
@@ -876,7 +793,7 @@ However, the native functionality provided by a container engine or runtime is u
 
 Cluster-level logging architectures require a separate backend to store, analyze, and query logs. Kubernetes does not provide a native storage solution for log data. Instead, there are many logging solutions that integrate with Kubernetes. 
 
-## Basic Logging
+### Basic Logging
 
 The most basic form of logging is for containers to emit messages on their **stdout/stderr**
 
@@ -941,7 +858,7 @@ Cclean up
 kubectl delete pod counter
 ```
 
-## [Node Level](https://kubernetes.io/docs/concepts/cluster-administration/logging/#logging-at-the-node-level)
+### [Node Level](https://kubernetes.io/docs/concepts/cluster-administration/logging/#logging-at-the-node-level)
 
 ![image](https://user-images.githubusercontent.com/34960418/147955744-6567801a-c8ef-4594-8db8-9cae82cfd4ae.png)
 
@@ -956,7 +873,7 @@ kubectl delete pod counter
   - Container based components use files in /var/log
 
 
-## [Node Logging Agent](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent)
+### [Node Logging Agent](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent)
 
 ![image](https://user-images.githubusercontent.com/34960418/147955944-05d5bf87-6df9-4885-a9e6-2ab3acceff83.png)
 
@@ -966,7 +883,7 @@ kubectl delete pod counter
 - The agent exposes the logs and pushes them to a backend
 
 
-## [Streaming Sidecar and Logging Agent](https://kubernetes.io/docs/concepts/cluster-administration/logging/#streaming-sidecar-container)
+### [Streaming Sidecar and Logging Agent](https://kubernetes.io/docs/concepts/cluster-administration/logging/#streaming-sidecar-container)
 
 ![image](https://user-images.githubusercontent.com/34960418/147954969-32844bf1-7cf7-4459-bcbb-2f463b34da62.png)
 
@@ -1044,7 +961,7 @@ kubectl logs counter -c sidecar-2
 
 In the same manner each sidecar container may stream the logs to an external solution.
 
-### [Sidecar with Logging Agent](https://kubernetes.io/docs/concepts/cluster-administration/logging/#sidecar-container-with-a-logging-agent)
+#### [Sidecar with Logging Agent](https://kubernetes.io/docs/concepts/cluster-administration/logging/#sidecar-container-with-a-logging-agent)
 
 ![image](https://user-images.githubusercontent.com/34960418/147956411-65b12505-f836-4d1b-a9c2-cdf01ff6762f.png)
 
@@ -1054,7 +971,7 @@ In the same manner each sidecar container may stream the logs to an external sol
 - These logs are not consumable by the kubectl log command
 
 
-### [Exposed Directly from the Application](https://kubernetes.io/docs/concepts/cluster-administration/logging/#exposing-logs-directly-from-the-application)
+#### [Exposed Directly from the Application](https://kubernetes.io/docs/concepts/cluster-administration/logging/#exposing-logs-directly-from-the-application)
 
 ![image](https://user-images.githubusercontent.com/34960418/147956664-3a1a9130-43f1-4111-b5bb-c7401984ecc1.png)
 
@@ -1064,18 +981,18 @@ In the same manner each sidecar container may stream the logs to an external sol
 - Simple solution which requires every application to support the common backend which may not always be feasible
 
 
-# [Troubleshooting](https://kubernetes.io/docs/tasks/debug-application-cluster/troubleshooting/)
+## [Troubleshooting](https://kubernetes.io/docs/tasks/debug-application-cluster/troubleshooting/)
 
 Not always everything is going according to plan and things break. The process of troubleshooting in Kubernetes is not that much different from other complex platforms. Here, we have two distinct domains – **cluster** and **application**. We should always check first the release notes for our version. Once we narrowed down the cause, we should start applying the corrective measures one at a time until the issue is resolved.
 
-## Cluster Troubleshooting
+### Cluster Troubleshooting
 
 - Common reasons include node power state, network connectivity, software version misalignment, data loss, bad configuration, etc.
 - First, we should check if all nodes are there and operational
 - Then, we must check the logs of the system components on the control plane and the workers
 - Keep in mind that depending on how a component is deployed (native service or container) the logs may be in different places
 
-## Application Troubleshooting
+### Application Troubleshooting
 
 - First, we should define where exactly is the problem
 - Is it the service
@@ -1085,7 +1002,7 @@ Not always everything is going according to plan and things break. The process o
   - What level and type of object
   - What is its state
 
-## Troubleshooting Pods
+### Troubleshooting Pods
 
 - Start with describing the pod.
 - Check the state of all containers inside the pod.
@@ -1093,7 +1010,7 @@ Not always everything is going according to plan and things break. The process o
 - If it is in **waiting** state, then it is scheduled, but still cannot run. Usually, this is because of a **wrong** or **missing image**.
 - It is in **running** state but doesn’t behave as expected. Usually, this is because of a **manifest error**.
 
-## [Troubleshooting Services](https://kubernetes.io/docs/tasks/debug-application-cluster/debug-service/)
+### [Troubleshooting Services](https://kubernetes.io/docs/tasks/debug-application-cluster/debug-service/)
 
 - Does the service exist
 - Is it defined correctly
@@ -1101,3 +1018,97 @@ Not always everything is going according to plan and things break. The process o
 - Are those pods working
 - Is the service reachable by DNS name and/or IP 
 - Is the kube-proxy working
+<!-- PRESERVED_THEORY_END -->
+
+
+<!-- MODERN_LAB_BEGIN LAB-2026.md 4 -->
+### 3. Scenario 4 — NFS-backed StatefulSet with 4 replicas
+
+**Files:** `Problem 3/Step 5 - Apply pvss.yaml` (4 NFS PVs), `Step 6 - Apply ss.yaml` (4-replica StatefulSet), `Step 7 - Apply svcss.yaml` (headless Service), `Step 8 - Apply svcssnp.yaml` (NodePort Service). All use **default namespace**.
+
+#### 3.1 Set up NFS (separate lab NFS machine)
+
+The original screenshot `Step 1` shows only **three** exports; the subsequent `Step 3.1` screenshot shows a **fourth**. For a four-replica StatefulSet you MUST prepare all four exports, especially `/data/nfs/k8spvd`. The screenshots are historical evidence, not a complete NFS installation procedure.
+
+On the NFS server (example Ubuntu 24.04, node-accessible IP `192.168.56.50`):
+
+```bash
+sudo apt-get update && sudo apt-get install -y nfs-kernel-server
+sudo mkdir -p /data/nfs/{k8spva,k8spvb,k8spvc,k8spvd}
+# Disposable lab only; avoid world-writable exports on production NFS servers.
+sudo chmod 0777 /data/nfs/{k8spva,k8spvb,k8spvc,k8spvd}
+# Replace 192.168.56.0/24 with the real Kubernetes node network.
+sudo tee /etc/exports.d/k8s-m06.exports >/dev/null <<'EOF'
+/data/nfs/k8spva 192.168.56.0/24(rw,sync,no_subtree_check)
+/data/nfs/k8spvb 192.168.56.0/24(rw,sync,no_subtree_check)
+/data/nfs/k8spvc 192.168.56.0/24(rw,sync,no_subtree_check)
+/data/nfs/k8spvd 192.168.56.0/24(rw,sync,no_subtree_check)
+EOF
+sudo exportfs -ra
+sudo systemctl enable --now nfs-kernel-server
+sudo exportfs -v
+```
+
+On **all Kubernetes nodes**:
+
+```bash
+sudo apt-get update && sudo apt-get install -y nfs-common
+# Replace the example address unless nfs-server is already resolvable in DNS.
+echo '192.168.56.50 nfs-server' | sudo tee -a /etc/hosts
+getent hosts nfs-server
+sudo mkdir -p /mnt/m06-check
+sudo mount -t nfs -o vers=4.1 nfs-server:/data/nfs/k8spvd /mnt/m06-check
+sudo umount /mnt/m06-check
+```
+
+Expected: all four exports exist, NFSv4.1 test mount works from **every** worker, and TCP 2049 is permitted by node/server firewall. Optional deeper setup: [Module 04 STORAGE-2026.md](../04.%20Storage%20and%20Persistence/STORAGE-2026.md).
+
+#### 3.2 Deploy, verify, troubleshoot
+
+From `06. Observability and Troubleshooting/Homework`:
+
+```bash
+kubectl apply -f "Problem 3/Step 5 - Apply pvss.yaml"
+kubectl apply -f "Problem 3/Step 7 - Apply svcss.yaml"
+kubectl apply -f "Problem 3/Step 6 - Apply ss.yaml"
+kubectl apply -f "Problem 3/Step 8 - Apply svcssnp.yaml"
+
+kubectl rollout status statefulset/facts --timeout=300s
+kubectl get pv,pvc,pods,svc,statefulsets
+kubectl get endpointslices -l kubernetes.io/service-name=factsnp
+kubectl get pods -l app=facts -o wide
+```
+
+**Expected:** PVs `pvssa`–`pvssd` bound to four `facts-data-facts-N` PVCs; Pods `facts-0` to `facts-3` Ready; NodePort `30001` on `factsnp`. The PVs and PVC template use `storageClassName: ""` so they bind statically even when a default StorageClass exists.
+
+If any PVC remains Pending, inspect `kubectl describe pvc facts-data-facts-N`, `kubectl describe pv`, StorageClass matching and NFS reachability. For mount failures, inspect Pod events and NFS exports; `ping` is not sufficient.
+
+#### 3.3 Cleanup and reclaim semantics
+
+```bash
+kubectl delete statefulset facts --ignore-not-found
+kubectl delete svc facts factsnp --ignore-not-found
+kubectl delete pvc facts-data-facts-0 facts-data-facts-1 facts-data-facts-2 facts-data-facts-3 --ignore-not-found
+kubectl get pv
+```
+
+**Expected:** `Retain` preserves NFS files but PVs enter `Released`. They are **not** reused automatically. After verifying/cleaning old lab data on NFS, delete the four Released PV objects and recreate them to rerun the lab:
+
+```bash
+kubectl delete pv pvssa pvssb pvssc pvssd --ignore-not-found
+```
+
+Never delete real-world data just to reset a lab. See [Problem 3 Recycle vs Retain comparison](./Homework/Problem%203/README.md).
+<!-- MODERN_LAB_END -->
+
+
+<!-- MODERN_LAB_BEGIN LAB-2026.md 5 -->
+### 4. General checks and prerequisites
+
+- Inspect `kubectl describe pod`, `kubectl logs -c`, `kubectl get events`, PV/PVC status and endpoints for evidence before changing YAML.
+- Scenario 2 and scenario 3 contain **deliberate errors**: original source is preserved; `*-fixed.yaml` shows an achievable end state.
+- Use the current lab's **Calico**; Flannel installation in archived M6 DOCX/ZIP belongs to the old Kubernetes 1.21 environment and must not be run on this cluster.
+- Stop/remove prior NodePort `30001` workloads before testing the next scenario.
+- Historical screenshots and original archived ZIP files illustrate the 2021 session; prefer this guide for execution on 1.37.
+<!-- MODERN_LAB_END -->
+
