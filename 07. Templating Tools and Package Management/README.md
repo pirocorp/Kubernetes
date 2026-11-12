@@ -4,7 +4,7 @@
 
 ## Recommended learning path
 
-1. Start from the [2026 course roadmap](../COURSE-2026.md) and check your disposable cluster's prerequisites.
+1. Start from the [2026 course roadmap](../README.md) and check your disposable cluster's prerequisites.
 2. Work through the [integrated modern lab](#kubernetes-137-integrated-labs) in this README, following expected results, failure diagnosis and cleanup.
 3. Return to the [preserved original lecture](#preserved-original-lecture--historical-reference), compare approaches, and reinforce your understanding. Historical artifacts are not a substitute for the 1.37 runbook.
 

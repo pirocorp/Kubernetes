@@ -18,7 +18,7 @@
 - Да добавиш redirector като отделен контейнерен microservice и да провериш HTTP 201 при създаване на URL и **302 Location** при отваряне.
 - Да диагностицираш DNS/Service, погрешни env variables, image pull, PostgreSQL startup, 502/503, RBAC/quota и loss of data при ephemeral storage.
 
-**Предварителни знания:** [Kubernetes 00–08](../COURSE-2026.md) и [Module 09 — OpenShift](../09.%20OpenShift/README.md); не се изисква предварителен JavaScript опит. Използваният Node.js source е малък, а всеки компонент е обяснен.
+**Предварителни знания:** [Kubernetes 00–08](../README.md) и [Module 09 — OpenShift](../09.%20OpenShift/README.md); не се изисква предварителен JavaScript опит. Използваният Node.js source е малък, а всеки компонент е обяснен.
 
 ## 2. Пълна архитектура
 

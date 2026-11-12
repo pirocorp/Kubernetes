@@ -18,7 +18,7 @@
 - Приложиш (при наличен mesh) Istio `DestinationRule`, `VirtualService`, `PeerAuthentication STRICT` и `AuthorizationPolicy`.
 - Разпознаеш опасните/остарели части от стар Red Hat walkthrough и да планираш поддържана enterprise интеграция.
 
-**Предварителни знания:** [Modules 00–08 — Kubernetes](../COURSE-2026.md) (Services, Deployments, RBAC, probes, ConfigMaps/Secrets, ingress), [Module 09 — OpenShift](../09.%20OpenShift/README.md), [Module 11 — API-First](../11.%20API-First%20Development%20and%20API%20Management/README.md), [Module 12 — API Versioning](../12.%20API%20Versioning%20and%20Lifecycle%20Management/README.md). **Първи опит с Istio и 3scale не е необходим.**
+**Предварителни знания:** [Modules 00–08 — Kubernetes](../README.md) (Services, Deployments, RBAC, probes, ConfigMaps/Secrets, ingress), [Module 09 — OpenShift](../09.%20OpenShift/README.md), [Module 11 — API-First](../11.%20API-First%20Development%20and%20API%20Management/README.md), [Module 12 — API Versioning](../12.%20API%20Versioning%20and%20Lifecycle%20Management/README.md). **Първи опит с Istio и 3scale не е необходим.**
 
 ## 2. Историята на Travelz
 
