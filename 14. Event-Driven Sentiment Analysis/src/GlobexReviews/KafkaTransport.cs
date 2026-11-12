@@ -91,8 +91,8 @@ public sealed class KafkaWorkers(
     {
         if (configuration["REVIEWS_MODE"] != "kafka") return Task.CompletedTask;
         return Task.WhenAll(
-            Task.Run(() => Consume("m13-moderation", processor.Moderate, stoppingToken), stoppingToken),
-            Task.Run(() => Consume("m13-sentiment", processor.Analyze, stoppingToken), stoppingToken));
+            Task.Run(() => Consume("m14-moderation", processor.Moderate, stoppingToken), stoppingToken),
+            Task.Run(() => Consume("m14-sentiment", processor.Analyze, stoppingToken), stoppingToken));
     }
 
     private async Task Consume(

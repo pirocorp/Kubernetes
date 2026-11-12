@@ -42,4 +42,4 @@ PY
   sleep 1
 done
 python3 tools/verify.py --base-url http://127.0.0.1:5080
-echo "PASS Module 13 local C# event processing, moderation and sentiment"
+echo "PASS Module 14 local C# event processing, moderation and sentiment"
