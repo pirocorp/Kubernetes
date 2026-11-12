@@ -20,7 +20,7 @@ Sandbox има ограничени права, resource quotas и ограни�
 
 ## Примерни файлове
 
-Всички необходими за упражненията собствени файлове се намират в [examples/](./examples/): Python, React/Node.js, MariaDB и манифести за VM → container cutover. Готовите `image.yaml`, `db.yaml`, `seed.sql` и VM fallback manifests не трябва да се пишат от нулата. В Lab 09-D е описано как да се генерира `package-lock.json` преди Node S2I build (локално или чрез Docker). За образи и пакети от външни registry източници провери реалната им достъпност по време на изпълнение.
+Всички необходими за упражненията собствени файлове се намират в [examples/](./examples/): Python, React/Node.js, MariaDB и манифести за VM → container cutover. Готовите `image.yaml`, `db.yaml`, `seed.sql` и VM fallback manifests не трябва да се пишат от нулата. Lab 09-D използва включен, проверен `frontend/package-lock.json` и `npm ci` преди Node S2I build (локално или чрез Docker). За образи и пакети от външни registry източници провери реалната им достъпност по време на изпълнение.
 
 ## Допълнителни материали
 

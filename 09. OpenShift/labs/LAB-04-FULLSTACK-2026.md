@@ -158,33 +158,37 @@ curl -fsS http://127.0.0.1:18081/quotes/2
 
 Frontend е **React UI**, рендериран на сървъра чрез `react-dom/server` и Express. Чете `http://m09-api:8080/quotes` през вътрешния Kubernetes Service. Така браузърът има само един публичен URL и няма CORS настройки.
 
-### 6.1. Зафиксирaй npm dependency tree за това изпълнение
+### 6.1. Проверка на фиксираните npm зависимости (`npm ci`)
 
-`package.json` фиксира **директните** версии на React, React-DOM и Express, но без `package-lock.json` транзитивните зависимости могат да се изменят. За да не променяш на ръка версии или да търсиш команди, създай lockfile **преди** S2I binary build:
+В `frontend/` вече има **commit-нат `package-lock.json`** с пълното dependency tree за React 19.2.0, React-DOM 19.2.0 и Express 5.1.0. Файлът е генериран с npm 10 на GitHub runner и проверен с `npm ci` и `npm run build`. Не изпълнявай `npm install --package-lock-only`: това ще обнови lockfile при следващи версии, вместо да възпроизведе учебния пример.
 
-**Вариант A — локално инсталирани Node.js 22 и npm 10–11:**
+**Вариант A — локален Node.js 22, npm 10–11:**
 
 ```bash
 node --version
 npm --version
 cd "$M09_STACK/frontend"
-npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-npm run build
 test -s package-lock.json
+npm ci --ignore-scripts --no-audit --no-fund
+npm run build
+# Изчисти само собствените локално инсталирани dependencies,
+# преди да изпратиш source чрез oc start-build --from-dir.
+rm -rf node_modules
 cd - >/dev/null
 ```
 
-**Вариант B — Docker на Linux/WSL, без локална Node инсталация:**
+**Вариант B — Docker на Linux/WSL, без локален Node:**
 
 ```bash
 docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp \
   -v "$M09_STACK/frontend:/app" -w /app \
   registry.access.redhat.com/ubi9/nodejs-22:latest \
-  bash -lc 'npm install --package-lock-only --ignore-scripts --no-audit --no-fund && npm run build'
+  bash -lc 'npm ci --ignore-scripts --no-audit --no-fund && npm run build && rm -rf node_modules'
 test -s "$M09_STACK/frontend/package-lock.json"
 ```
 
-**Избери само един вариант.** Не изпълнявай `npm install` без `--package-lock-only` локално в тази директория: `node_modules` не трябва да се качва със `oc start-build --from-dir`. `package-lock.json` ще бъде включен в binary build source. Неговото съдържание се създава от npm **в момента на упражнението**, а не е еднакво за всички бъдещи изпълнения; запази локалния lockfile, ако повториш същия build по-късно. За production се изисква **commit-нат и проверен lockfile и `npm ci`**. <https://docs.npmjs.com/cli/v11/commands/npm-ci/>
+**Избери само един вариант.** `npm ci` проверява съответствието между `package.json` и `package-lock.json`; при несъответствие прекъсва, вместо да променя dependency tree. S2I binary build трябва да получи source + `package-lock.json`, **без** локална директория `node_modules/`. Ако build-ът прекъсне преди изчистването, изтрий **само генерираната в този frontend** `node_modules` преди `oc start-build --from-dir`. Изисква достъп до npm registry за първоначалното теглене; това не може да се гарантира от репото.
+
 
 ### 6.2. S2I build, Deployment и HTTPS Route
 
@@ -206,7 +210,7 @@ curl -fsS "https://$WEB_HOST/" | grep 'OpenShift Quotes - React SSR'
 curl -fsS "https://$WEB_HOST/" | grep 'Kubernetes is the engine'
 ```
 
-**Очаквано:** генериран локален `package-lock.json`, успешна проверка на `server.js` и HTTPS page с 3 цитата от MariaDB и заглавие `OpenShift Quotes - React SSR`. Ако Route 503, провери Pod readiness, Endpoints и backend. Ако frontend връща 503, виж `oc logs deployment/m09-web`; Node DNS service `m09-api` трябва да е в **същия namespace**. Не използвай `curl -k` като нормален HTTPS тест.
+**Очаквано:** успешен `npm ci` с вече commit-натия `package-lock.json`, проверка на `server.js` и HTTPS page с 3 цитата от MariaDB и заглавие `OpenShift Quotes - React SSR`. Ако Route 503, провери Pod readiness, Endpoints и backend. Ако frontend връща 503, виж `oc logs deployment/m09-web`; Node DNS service `m09-api` трябва да е в **същия namespace**. Не използвай `curl -k` като нормален HTTPS тест.
 
 ## 7. Scaling, update, database self-healing
 
@@ -287,13 +291,13 @@ oc get deploy,svc,route,pvc,bc,is,secret
 
 - [ ] Изтеглени са всички локални **actual source files** и DB manifest от репото.
 - [ ] Secret без plaintext в Git, Bound 1Gi PVC, 3 SQL rows.
-- [ ] Генериран `frontend/package-lock.json` със съответната Node/npm версия и изпълнен `npm run build`.
+- [ ] Commit-натият `frontend/package-lock.json` е проверен чрез `npm ci` и успешно `npm run build`.
 - [ ] Python REST API 200/JSON, отделна `/readyz` с DB connectivity.
 - [ ] React SSR frontend 200 през HTTPS Route с данните от API.
 - [ ] API 1→2 replicas (quota permitting), `v1→v2` rollout и undo.
 - [ ] DB Pod deletion → нов Pod и същите 3 SQL records.
 - [ ] Cleanup всички създадени resources и никакво SCC escalation.
 
-**Забележка:** npm lockfile се генерира при изпълнение на този lab. Това премахва пропуснатата техническа стъпка, но **не е същото като предварително проверен lockfile, committed в main**. Runtime готовността зависи и от quota/registry/package достъпа на конкретния Sandbox.
+**Забележка:** npm lockfile вече е част от source и се валидира в GitHub Actions на Node.js 22. Runtime готовността на OpenShift продължава да зависи от quota, registry, builder и package достъпа на конкретния Sandbox.
 
 **Използвани API:** `apps/v1` Deployments, `v1` PVC/Secret/Service, OpenShift `build.openshift.io/v1` BuildConfig, `route.openshift.io/v1` Route, Kubernetes readiness/liveness probes. **Съвместимост:** за OpenShift Sandbox с указаните API и разрешени Builds; провери действителните права, квоти и наличност на образите в твоя Sandbox. Оригиналният browser-side React се заменя с SSR, за да остане пътят лесен за диагностика; това е изрично отклонение от Red Hat примера.
