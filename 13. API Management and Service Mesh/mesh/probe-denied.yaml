@@ -1,0 +1,30 @@
+# Optional negative authorization test. Delete this Pod in cleanup.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: m13-probe-sa
+  labels: {training: module13}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: m13-probe-denied
+  labels:
+    app: m13-probe-denied
+    training: module13
+    sidecar.istio.io/inject: "true"
+spec:
+  serviceAccountName: m13-probe-sa
+  restartPolicy: Never
+  containers:
+    - name: curl
+      image: curlimages/curl:8.11.1
+      command: ["sleep", "1800"]
+      resources:
+        requests: {cpu: 25m, memory: 64Mi}
+        limits: {cpu: 100m, memory: 128Mi}
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        capabilities: {drop: [ALL]}
+        seccompProfile: {type: RuntimeDefault}

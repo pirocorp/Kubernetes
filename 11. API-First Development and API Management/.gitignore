@@ -1,0 +1,8 @@
+# Module 11 local artifacts
+/.registry/
+**/bin/
+**/obj/
+**/__pycache__/
+*.pyc
+*.log
+.env

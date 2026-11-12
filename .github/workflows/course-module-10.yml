@@ -1,0 +1,58 @@
+name: Module 10 Full-stack JavaScript on OpenShift
+
+on:
+  pull_request:
+    paths:
+      - "10. Full-Stack JavaScript on OpenShift/**"
+      - ".github/workflows/course-module-10.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend-node-smoke:
+    name: Node 22 source checks and standalone frontend HTTP
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify all committed npm dependency locks
+        shell: bash
+        run: |
+          for service in frontend backend redirector; do
+            npm ci --prefix "10. Full-Stack JavaScript on OpenShift/src/$service" --omit=dev --ignore-scripts --no-audit --no-fund
+          done
+          python3 "10. Full-Stack JavaScript on OpenShift/scripts/check-links.py"
+      - name: Run source and frontend smoke suite
+        shell: bash
+        run: bash "10. Full-Stack JavaScript on OpenShift/scripts/verify-node.sh"
+
+  fullstack-postgres:
+    name: Real Node frontend, backend, redirector and PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and test complete stack using Docker Compose
+        shell: bash
+        run: bash "10. Full-Stack JavaScript on OpenShift/scripts/verify-compose.sh"
+      - name: Inspect container logs on failure
+        if: failure()
+        working-directory: "10. Full-Stack JavaScript on OpenShift"
+        run: |
+          docker compose ps || true
+          docker compose logs --tail=120 database backend frontend redirector || true
+      - name: Remove only own CI demo containers/volumes
+        if: always()
+        working-directory: "10. Full-Stack JavaScript on OpenShift"
+        run: docker compose down -v --remove-orphans || true

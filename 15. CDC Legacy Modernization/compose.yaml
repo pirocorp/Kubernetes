@@ -1,0 +1,118 @@
+name: m15-cdc
+services:
+  legacy-db:
+    image: postgres:17.6
+    command: ["postgres","-c","wal_level=logical","-c","max_replication_slots=8","-c","max_wal_senders=8"]
+    environment:
+      POSTGRES_USER: retail
+      POSTGRES_PASSWORD: ${PG_PASSWORD:?Run python3 tools/init_env.py}
+      POSTGRES_DB: retail
+    ports: ["127.0.0.1:5441:5432"]
+    volumes:
+      - legacydata:/var/lib/postgresql/data
+      - ./sql/legacy.sql:/docker-entrypoint-initdb.d/001-legacy.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U retail -d retail"]
+      interval: 5s
+      retries: 25
+    networks: [internal]
+  cashback-db:
+    image: postgres:17.6
+    environment:
+      POSTGRES_USER: cashback
+      POSTGRES_PASSWORD: ${CASHBACK_PASSWORD:?Run python3 tools/init_env.py}
+      POSTGRES_DB: cashback
+    ports: ["127.0.0.1:5442:5432"]
+    volumes:
+      - cashbackdata:/var/lib/postgresql/data
+      - ./sql/cashback.sql:/docker-entrypoint-initdb.d/001-cashback.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U cashback -d cashback"]
+      interval: 5s
+      retries: 25
+    networks: [internal]
+  kafka:
+    image: apache/kafka:4.1.2
+    environment:
+      CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:19093"
+      KAFKA_LISTENERS: "INTERNAL://:19092,CONTROLLER://:19093,EXTERNAL://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka:19092,EXTERNAL://127.0.0.1:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+    ports: ["127.0.0.1:9092:9092"]
+    volumes: [kafkadata:/var/lib/kafka/data]
+    networks: [internal]
+  kafka-init:
+    image: apache/kafka:4.1.2
+    depends_on: [kafka]
+    entrypoint: ["/bin/bash","/usr/local/bin/kafka-init.sh"]
+    volumes:
+      - ./scripts/kafka-init.sh:/usr/local/bin/kafka-init.sh:ro
+    networks: [internal]
+  connect:
+    image: quay.io/debezium/connect:3.3
+    environment:
+      BOOTSTRAP_SERVERS: kafka:19092
+      GROUP_ID: m15-connect
+      CONFIG_STORAGE_TOPIC: m15-connect-configs
+      OFFSET_STORAGE_TOPIC: m15-connect-offsets
+      STATUS_STORAGE_TOPIC: m15-connect-status
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      # PostgreSQL logical replication requires wal_level=logical and a slot.
+    ports: ["127.0.0.1:8083:8083"]
+    depends_on:
+      kafka-init: {condition: service_completed_successfully}
+      legacy-db: {condition: service_healthy}
+    networks: [internal]
+  search:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.10
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      cluster.routing.allocation.disk.threshold_enabled: "false"
+    ports: ["127.0.0.1:9200:9200"]
+    volumes: [searchdata:/usr/share/elasticsearch/data]
+    networks: [internal]
+  legacy:
+    build: .
+    environment:
+      APP_MODE: legacy
+      LEGACY_CONNECTION: "Host=legacy-db;Database=retail;Username=retail;Password=${PG_PASSWORD}"
+    ports: ["127.0.0.1:5084:8080"]
+    depends_on:
+      legacy-db: {condition: service_healthy}
+    networks: [internal]
+  modern:
+    build: .
+    environment:
+      APP_MODE: modern
+      CASHBACK_CONNECTION: "Host=cashback-db;Database=cashback;Username=cashback;Password=${CASHBACK_PASSWORD}"
+      KAFKA_BOOTSTRAP: kafka:19092
+      KAFKA_GROUP_ID: m15-projections
+      SEARCH_URL: http://search:9200
+    ports: ["127.0.0.1:5085:8080"]
+    depends_on:
+      cashback-db: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
+      search: {condition: service_started}
+    networks: [internal]
+networks:
+  internal: {}
+volumes:
+  legacydata: {}
+  cashbackdata: {}
+  searchdata: {}
+  kafkadata: {}

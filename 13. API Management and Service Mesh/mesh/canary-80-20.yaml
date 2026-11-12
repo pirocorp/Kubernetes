@@ -1,0 +1,28 @@
+# Route MESH traffic sent to m13-agency 80% to v1 and 20% to v2.
+# This is a real Istio traffic policy, unlike tools/mesh_sim.py.
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: m13-agency
+  labels:
+    training: module13
+spec:
+  hosts: [m13-agency]
+  gateways: [mesh]
+  http:
+    - timeout: 4s
+      retries:
+        attempts: 1
+        perTryTimeout: 2s
+        retryOn: connect-failure,refused-stream,5xx
+      route:
+        - destination:
+            host: m13-agency
+            subset: v1
+            port: {number: 8080}
+          weight: 80
+        - destination:
+            host: m13-agency
+            subset: v2
+            port: {number: 8080}
+          weight: 20

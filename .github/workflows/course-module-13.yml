@@ -1,9 +1,9 @@
-name: Module 13 event-driven sentiment acceptance
+name: Course module 13 local verification
 
 on:
   pull_request:
     paths:
-      - "13. Event-Driven Sentiment Analysis/**"
+      - "13. API Management and Service Mesh/**"
       - ".github/workflows/course-module-13.yml"
   workflow_dispatch:
 
@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 jobs:
-  dotnet-local:
-    name: .NET 10 local EDA and CloudEvent HTTP behavior
+  travelz-local:
+    name: Module 13 C# Travelz, partner APIM and canary
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -23,46 +23,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Execute local acceptance
+      - name: Run full local acceptance suite
         shell: bash
-        run: bash "13. Event-Driven Sentiment Analysis/scripts/verify-local.sh"
-
-  model-inference:
-    name: Real HTTP model interface against deterministic fixture
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "10.0.x"
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Run HTTP inference boundary and C# end-to-end tests
-        shell: bash
-        run: bash "13. Event-Driven Sentiment Analysis/scripts/verify-model.sh"
-
-  kafka-integration:
-    name: Real Kafka, PostgreSQL and InfluxDB integration
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "10.0.x"
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Run Kafka + database integration against Docker Compose
-        shell: bash
-        run: bash "13. Event-Driven Sentiment Analysis/scripts/verify-kafka.sh"
-      - name: Test Knative-style CloudEvent HTTP callback contract with real Kafka
-        shell: bash
-        run: bash "13. Event-Driven Sentiment Analysis/scripts/verify-knative-callbacks.sh"
-      - name: Clean integration containers and volumes
-        if: always()
-        shell: bash
-        working-directory: "13. Event-Driven Sentiment Analysis"
-        run: docker compose down -v --remove-orphans || true
+        run: bash "13. API Management and Service Mesh/scripts/verify-local.sh"

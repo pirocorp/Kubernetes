@@ -1,0 +1,54 @@
+# Requires already-installed OpenShift Serverless Eventing AND KafkaSource components.
+# The CloudEvents emitted by KafkaSource are typically type dev.knative.kafka.event.
+# Data contains the original Kafka message, a structured CloudEvent review.
+apiVersion: eventing.knative.dev/v1
+kind: Broker
+metadata:
+  name: m14-reviews-broker
+  labels: {training: module14}
+---
+apiVersion: sources.knative.dev/v1
+kind: KafkaSource
+metadata:
+  name: m14-globex-kafka-source
+  labels: {training: module14}
+spec:
+  consumerGroup: m14-knative-source
+  initialOffset: earliest
+  bootstrapServers:
+    - KAFKA_BOOTSTRAP_PLACEHOLDER
+  topics:
+    - globex.reviews
+  sink:
+    ref:
+      apiVersion: eventing.knative.dev/v1
+      kind: Broker
+      name: m14-reviews-broker
+---
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: m14-moderation-trigger
+  labels: {training: module14}
+spec:
+  broker: m14-reviews-broker
+  subscriber:
+    ref:
+      apiVersion: v1
+      kind: Service
+      name: m14-globex-reviews
+    uri: /events/moderation
+---
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: m14-sentiment-trigger
+  labels: {training: module14}
+spec:
+  broker: m14-reviews-broker
+  subscriber:
+    ref:
+      apiVersion: v1
+      kind: Service
+      name: m14-globex-reviews
+    uri: /events/sentiment

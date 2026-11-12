@@ -1,0 +1,98 @@
+# Replace IMAGE_PLACEHOLDER before applying. Select your own Sandbox Project.
+# Two independently scalable/retirable backends using the same learning code.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: m12-order-v1
+  labels: {app: m12-order-v1, training: module12}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: m12-order-v1}
+  template:
+    metadata:
+      labels: {app: m12-order-v1}
+    spec:
+      containers:
+        - name: order-api
+          image: IMAGE_PLACEHOLDER
+          ports:
+            - {name: http, containerPort: 8080}
+          env:
+            - {name: ASPNETCORE_URLS, value: "http://+:8080"}
+            - {name: ALLOWED_MAJOR, value: "v1"}
+            - {name: V1_LIFECYCLE, value: "active"}
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef: {name: m12-order-key, key: API_KEY}
+          readinessProbe:
+            httpGet: {path: /healthz, port: http}
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 512Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            runAsNonRoot: true
+            seccompProfile: {type: RuntimeDefault}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: m12-order-v1
+  labels: {training: module12}
+spec:
+  selector: {app: m12-order-v1}
+  type: ClusterIP
+  ports:
+    - {name: http, port: 8080, targetPort: http}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: m12-order-v2
+  labels: {app: m12-order-v2, training: module12}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: m12-order-v2}
+  template:
+    metadata:
+      labels: {app: m12-order-v2}
+    spec:
+      containers:
+        - name: order-api
+          image: IMAGE_PLACEHOLDER
+          ports:
+            - {name: http, containerPort: 8080}
+          env:
+            - {name: ASPNETCORE_URLS, value: "http://+:8080"}
+            - {name: ALLOWED_MAJOR, value: "v2"}
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef: {name: m12-order-key, key: API_KEY}
+          readinessProbe:
+            httpGet: {path: /healthz, port: http}
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 512Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            runAsNonRoot: true
+            seccompProfile: {type: RuntimeDefault}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: m12-order-v2
+  labels: {training: module12}
+spec:
+  selector: {app: m12-order-v2}
+  type: ClusterIP
+  ports:
+    - {name: http, port: 8080, targetPort: http}

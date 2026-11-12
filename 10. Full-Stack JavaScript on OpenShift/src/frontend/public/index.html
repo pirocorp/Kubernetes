@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shorties — Full-stack OpenShift Workshop</title>
+<link rel="stylesheet" href="/styles.css">
+<script src="/app.js" defer></script>
+</head>
+<body>
+<main>
+<h1>Shorties</h1>
+<p>Full-stack JavaScript URL Shortener — OpenShift workshop</p>
+<form id="form">
+<label for="url">Enter a URL (https://…)</label>
+<input id="url" name="url" type="url" placeholder="https://example.org/articles/123" maxlength="2048" required>
+<button type="submit">Shorten URL</button>
+</form>
+<p id="result" role="status" aria-live="polite"></p>
+<h2>System health</h2><pre id="health">Loading…</pre>
+</main>
+</body>
+</html>

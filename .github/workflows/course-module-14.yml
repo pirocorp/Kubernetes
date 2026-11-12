@@ -1,9 +1,9 @@
-name: Module 14 CDC real integration acceptance
+name: Module 14 event-driven sentiment acceptance
 
 on:
   pull_request:
     paths:
-      - "14. CDC Legacy Modernization/**"
+      - "14. Event-Driven Sentiment Analysis/**"
       - ".github/workflows/course-module-14.yml"
   workflow_dispatch:
 
@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 jobs:
-  csharp-static:
-    name: Compile ASP.NET Core legacy and modern roles
+  dotnet-local:
+    name: .NET 10 local EDA and CloudEvent HTTP behavior
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -23,31 +23,46 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Build and check source
-        run: bash "14. CDC Legacy Modernization/scripts/verify-build.sh"
+      - name: Execute local acceptance
+        shell: bash
+        run: bash "14. Event-Driven Sentiment Analysis/scripts/verify-local.sh"
 
-  real-cdc:
-    name: Real PostgreSQL WAL / Debezium / Kafka / Elasticsearch / cashback
+  model-inference:
+    name: Real HTTP model interface against deterministic fixture
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Build and run complete CDC pipeline
-        run: bash "14. CDC Legacy Modernization/scripts/verify-cdc.sh"
-      - name: Inspect logs on failure
-        if: failure()
-        working-directory: "14. CDC Legacy Modernization"
-        run: |
-          docker compose ps || true
-          docker compose exec -T cashback-db psql -U cashback -d cashback -c "SELECT COUNT(*) AS sales FROM sale_stage" || true
-          docker compose exec -T cashback-db psql -U cashback -d cashback -c "SELECT COUNT(*) AS line_items FROM item_stage" || true
-          docker compose exec -T cashback-db psql -U cashback -d cashback -c "SELECT COUNT(*) AS expenses FROM expenses" || true
-          docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:19092 --describe --group m14-projections || true
-          docker compose logs --tail=75 kafka-init connect modern kafka || true
-      - name: Remove CI demo containers and data
+      - name: Run HTTP inference boundary and C# end-to-end tests
+        shell: bash
+        run: bash "14. Event-Driven Sentiment Analysis/scripts/verify-model.sh"
+
+  kafka-integration:
+    name: Real Kafka, PostgreSQL and InfluxDB integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run Kafka + database integration against Docker Compose
+        shell: bash
+        run: bash "14. Event-Driven Sentiment Analysis/scripts/verify-kafka.sh"
+      - name: Test Knative-style CloudEvent HTTP callback contract with real Kafka
+        shell: bash
+        run: bash "14. Event-Driven Sentiment Analysis/scripts/verify-knative-callbacks.sh"
+      - name: Clean integration containers and volumes
         if: always()
-        working-directory: "14. CDC Legacy Modernization"
+        shell: bash
+        working-directory: "14. Event-Driven Sentiment Analysis"
         run: docker compose down -v --remove-orphans || true

@@ -1,0 +1,67 @@
+# Local integration lab: run only after python3 tools/init_env.py
+# Bound to loopback, NOT a production broker or database deployment.
+name: m14-globex
+
+services:
+  kafka:
+    image: apache/kafka:4.1.2
+    ports:
+      - "127.0.0.1:9092:9092"
+    restart: unless-stopped
+    networks: [backend]
+
+  postgres:
+    image: postgres:17.6
+    environment:
+      POSTGRES_USER: globex
+      POSTGRES_PASSWORD: ${PG_PASSWORD:?Run python3 tools/init_env.py}
+      POSTGRES_DB: globex
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U globex -d globex"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+    networks: [backend]
+
+  influxdb:
+    image: influxdb:2.7
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: student
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_PASSWORD:?Run init_env.py}
+      DOCKER_INFLUXDB_INIT_ORG: globex
+      DOCKER_INFLUXDB_INIT_BUCKET: review_sentiment
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN:?Run init_env.py}
+    ports:
+      - "127.0.0.1:8086:8086"
+    volumes: [influxdata:/var/lib/influxdb2]
+    networks: [backend]
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?Run init_env.py}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      INFLUX_TOKEN: ${INFLUX_TOKEN:?Run init_env.py}
+    ports:
+      - "127.0.0.1:3300:3000"
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on: [influxdb]
+    networks: [backend]
+
+networks:
+  backend: {}
+
+volumes:
+  pgdata: {}
+  influxdata: {}
+  grafanadata: {}

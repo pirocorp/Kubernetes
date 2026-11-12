@@ -1,0 +1,31 @@
+# Apply only after EVERY relevant workload shows an injected Istio proxy.
+# This targets ONLY Travelz agency pods, not the whole namespace.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: m13-agency-strict
+  labels: {training: module13}
+spec:
+  selector:
+    matchLabels: {app: m13-agency}
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: m13-agency-allow-clients
+  labels: {training: module13}
+spec:
+  selector:
+    matchLabels: {app: m13-agency}
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            # No namespace prefix => local namespace, Istio's serviceAccounts syntax.
+            serviceAccounts: [m13-portal-sa, m13-partner-sa]
+      to:
+        - operation:
+            methods: [GET]
+            paths: ["/api/travels/*"]
