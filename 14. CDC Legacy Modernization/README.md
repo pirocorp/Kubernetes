@@ -166,7 +166,7 @@ sequenceDiagram
 │   ├── register_connector.py
 │   ├── verify.py
 │   └── check_infra.py
-├── scripts/verify-build.sh / scripts/verify-cdc.sh
+├── scripts/verify-build.sh / scripts/verify-cdc.sh / scripts/kafka-init.sh
 ├── openshift/workloads.yaml
 └── labs/LAB-01...LAB-05
 ```
