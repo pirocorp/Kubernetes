@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Module 12 local integration verification (no OpenShift/Istio required).
+# Module 13 local integration verification (no OpenShift/Istio required).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -19,4 +19,4 @@ python3 tools/verify.py fallback
 python3 tools/verify.py partner
 python3 tools/partner_metrics.py --base-url http://127.0.0.1:5300
 python3 tools/mesh_sample.py --base-url http://127.0.0.1:5100 --count 20
-echo "PASS: Module 12 local Travelz, gateway, canary, fallback and quota integration"
+echo "PASS: Module 13 local Travelz, gateway, canary, fallback and quota integration"
