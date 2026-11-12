@@ -1,4 +1,4 @@
-# Execute from the root of Module 11: docker build -t m11-orderplacement:dev .
+# Execute from the root of Module 12: docker build -t m12-orderplacement:dev .
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS builder
 WORKDIR /src
 COPY src/OrderPlacementApi/OrderPlacementApi.csproj src/OrderPlacementApi/
