@@ -18,7 +18,7 @@
 - Да използваш реални `KafkaSource`, `Broker` и `Trigger` resources, ако платформата разрешава Knative Eventing.
 - Да диагностицираш грешки, зависимост от инфраструктура, дублирани събития, недостъпни модели, privacy и cleanup.
 
-**Предварителни знания:** [Kubernetes 00–08](../COURSE-2026.md), [Module 09 — OpenShift](../09.%20OpenShift/README.md); препоръчително [Module 11 — API-First](../11.%20API-First%20Development%20and%20API%20Management/README.md), [Module 12 — API Versioning](../12.%20API%20Versioning%20and%20Lifecycle%20Management/README.md) и [Module 13 — API Management & Service Mesh](../13.%20API%20Management%20and%20Service%20Mesh/README.md). Основните Kafka понятия са обяснени в настоящия урок — не се предполага предварителен Kafka опит.
+**Предварителни знания:** [Kubernetes 00–08](../README.md), [Module 09 — OpenShift](../09.%20OpenShift/README.md); препоръчително [Module 11 — API-First](../11.%20API-First%20Development%20and%20API%20Management/README.md), [Module 12 — API Versioning](../12.%20API%20Versioning%20and%20Lifecycle%20Management/README.md) и [Module 13 — API Management & Service Mesh](../13.%20API%20Management%20and%20Service%20Mesh/README.md). Основните Kafka понятия са обяснени в настоящия урок — не се предполага предварителен Kafka опит.
 
 ## 2. Globex: бизнес задача
 
