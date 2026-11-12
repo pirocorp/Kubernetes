@@ -16,7 +16,9 @@ for port in (8080, 8081, 8082):
         sys.exit(f"Port {port} already in use: {error}. Stop the existing service first.")
 print("PASS: ports 8080, 8081, 8082 available")
 PY
-test "$(dotnet --version | cut -d. -f1)" = "10" || {
+# A newer SDK may be selected by default on GitHub runners even though
+# .NET 10 is correctly installed. Check installed SDKs, not the default.
+dotnet --list-sdks | grep -Eq '^10[.]' || {
   echo ".NET 10 SDK required, not merely an installed runtime" >&2; exit 1;
 }
 
