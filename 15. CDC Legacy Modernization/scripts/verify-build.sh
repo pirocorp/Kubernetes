@@ -9,4 +9,4 @@ test "$(dotnet --version | cut -d. -f1)" = "10" || {
 }
 python3 -m compileall -q tools
 dotnet build src/RetailModernization/RetailModernization.csproj -c Release
-echo "PASS Module 14 C# and Python build"
+echo "PASS Module 15 C# and Python build"

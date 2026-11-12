@@ -16,7 +16,7 @@ docker compose up -d --build
 python3 tools/register_connector.py
 python3 tools/verify.py
 python3 tools/check_infra.py
-echo "PASS Module 14 REAL Postgres WAL / Debezium / Kafka / Elasticsearch / cashback integration"
+echo "PASS Module 15 REAL Postgres WAL / Debezium / Kafka / Elasticsearch / cashback integration"
 echo "Services and volumes left running for manual review."
 echo "Cleanup containers: docker compose down"
 echo "Cleanup lab data ONLY when intentionally chosen: docker compose down -v"

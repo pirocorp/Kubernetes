@@ -18,7 +18,7 @@ public sealed class CdcWorker(
         using var consumer = new ConsumerBuilder<string, string>(new ConsumerConfig
         {
             BootstrapServers = cfg["KAFKA_BOOTSTRAP"] ?? "kafka:19092",
-            GroupId = cfg["KAFKA_GROUP_ID"] ?? "m14-projections",
+            GroupId = cfg["KAFKA_GROUP_ID"] ?? "m15-projections",
             AutoOffsetReset = AutoOffsetReset.Earliest,
             EnableAutoCommit = false,
             AllowAutoCreateTopics = false,
