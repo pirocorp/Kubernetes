@@ -4,6 +4,8 @@
 
 **Оригинален източник:** [Red Hat Architecture](https://www.solutionpatterns.io/solution-pattern-apim-servicemesh/comprehensive-service-architecture/02-architecture.html), [Walkthrough](https://www.solutionpatterns.io/solution-pattern-apim-servicemesh/comprehensive-service-architecture/03-demo.html). **Актуализиране:** OpenShift Service Mesh 3.x използва Sail Operator / Istio. Не следвай старите инструкции за OpenShift 4.12 с cluster-admin и Ansible.
 
+**Platform profile P is mandatory:** follow [OpenShift profile 13-E](../../docs/OPENSHIFT-LAB-PROFILES.md#module-13-e--real-istio-service-mesh) and run `bash scripts/check-openshift-profile.sh m13-mesh` from repository root. PASS checks CRD/RBAC only: independently prove healthy control plane and injected `istio-proxy` sidecars before applying STRICT mTLS.
+
 ## 1. Незаменими prerequisites
 
 1. Изпълнен [Lab 13-D](./LAB-04-OPENSHIFT-DEPLOY.md): собствени Ready Deployments `m13-agency-v1`, `m13-agency-v2`, `m13-portal` и `m13-partner` плюс Services/ServiceAccounts в **един Project**. Ако започваш директно оттук, първо изпълни всички команди на 13-D; необходимият код/файлове са в същия Module 13.

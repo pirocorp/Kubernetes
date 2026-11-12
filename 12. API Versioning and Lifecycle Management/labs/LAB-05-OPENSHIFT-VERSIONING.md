@@ -4,6 +4,8 @@
 
 **Оригинален източник:** [Red Hat API Versioning — Implementation Workshop](https://www.solutionpatterns.io/solution-pattern-api-versioning/api-versioning/03-demo.html). В оригинала използват Quarkus, 3scale, Argo CD и оператори с cluster-admin. Тук основният вариант е самостоятелен **ASP.NET Core/.NET 10** OpenShift lab с ограничен Project access и **без инсталация на 3scale**.
 
+**OpenShift environment:** [S profile](../../docs/OPENSHIFT-LAB-PROFILES.md) with Docker-build/ImageStream and Route privileges; optional 3scale/GitOps needs separately provisioned enterprise resources.
+
 ## 1. Предпоставки
 
 - Личен [Red Hat Developer Sandbox](https://developers.redhat.com/developer-sandbox) или друг OpenShift cluster, в който имаш разрешен Project, достатъчна CPU/RAM quota и права за `BuildConfig`, `Build`, `ImageStream`, `Deployment`, `Service`, `Route` и `Secret`.

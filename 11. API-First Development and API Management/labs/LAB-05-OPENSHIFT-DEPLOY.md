@@ -2,6 +2,8 @@
 
 **Цел:** build на контейнерния образ, Deployment, Service и HTTPS Route, без нарушаване на OpenAPI договора. Използваме познатия OpenShift workflow от Module 09, но **Module 11 има собствен код и файлове**.
 
+**OpenShift environment:** [S profile](../../docs/OPENSHIFT-LAB-PROFILES.md) with own Project/namespace-level build and Route rights. Real 3scale remains enterprise-only; the local gateway does not prove that its Operator is installed.
+
 ## Предпоставки
 
 - Преминат локален [Lab 11-C](./LAB-03-ASPNET-IMPLEMENTATION.md), или поне прочетен Source/Contract; действителният API е изцяло включен в Module 11.
