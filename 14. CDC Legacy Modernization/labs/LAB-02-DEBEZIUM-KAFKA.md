@@ -97,7 +97,7 @@ curl -fsS 'http://127.0.0.1:5085/search?q=fern'
 
 | Симптом | Проверка | Корекция |
 |---|---|---|
-| Kafka Connect REST 503/refused | `docker compose logs --tail=100 connect` | Изчакай Connect startup, провери Kafka/hostname |
+| Kafka topic initializer failed | `docker compose logs kafka-init kafka` | Провери 19092 listener; initializer е [scripts/kafka-init.sh](../scripts/kafka-init.sh) и трябва да завърши успешно преди Debezium/modern |\n| Kafka Connect REST 503/refused | `docker compose logs --tail=100 connect` | Изчакай Connect startup, провери Kafka/hostname |
 | Connector FAILED | `curl http://127.0.0.1:8083/connectors/m14-retail-postgres/status` | Проверка DB credentials, logical WAL, slot, permissions |
 | `wal_level != logical` | `SHOW wal_level` | Използвай само собствената Docker Compose база; не променяй production DB |
 | Empty topics | `docker compose logs connect` | Snapshot task RUNNING, таблиците са в publication |
