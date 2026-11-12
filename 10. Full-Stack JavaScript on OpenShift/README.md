@@ -89,6 +89,8 @@ bash scripts/verify-compose.sh
 
 **Очаквано:** \`ALL MODULE 10 REAL FULL-STACK INTEGRATION CHECKS PASSED\`. Тестът използва **реален PostgreSQL 17.6**, а не fake datastore, и проверява, че създаден short link още работи след рестарт на **трите Node услуги**. Можеш да отвориш \`http://127.0.0.1:3110\` и да видиш Shorties UI.
 
+**Възпроизводимост:** трите Node.js проекта включват `package-lock.json`; Dockerfile-ите използват `npm ci` и GitHub Actions проверява истинска npm инсталация. При промяна на dependencies обнови и lockfile. Преди PR #36 да бъде слят, след `git clone` изпълни от корена на репото `git switch feat/module-10-fullstack-openshift-renumber-2026`; след merge в `main` това не е нужно.
+
 Отделен тест на frontend без Docker/DB:
 
 \`\`\`bash
@@ -117,7 +119,7 @@ docker compose down -v
 
 **Deployment конфигурация**: \`oc set env\` променя environment-а на Pod template и предизвиква **rollout**, а не автоматично повторно build-ване на image. **Secret** е namespaced API resource за credentials; не поставяй пароли в source, README, frontend JS, URLs или командния history. **Routes** са за външни приложения; вътрешните database и microservices се достъпват през \`Service\` и DNS.
 
-**Readiness ≠ Liveness**: \`/healthz\` доказва, че HTTP процесът работи; \`/readyz\` изпълнява SQL \`SELECT 1\` и може да върне 503 при недостъпна DB. В production добави readiness probes към Depoyment-ите, resources limits, TLS, credential rotation и monitoring.
+**Readiness ≠ Liveness**: \`/healthz\` доказва, че HTTP процесът работи; \`/readyz\` изпълнява SQL \`SELECT 1\` и може да върне 503 при недостъпна DB. В production добави readiness probes към Deployment-ите, resources limits, TLS, credential rotation и monitoring.
 
 **Ephemeral PostgreSQL**: данните може да изчезнат при Pod recreate — приемливо за временен lab, **не** за production. Локалният Compose демонстрира persistence с Docker named volume, различна конфигурация от OpenShift template.
 
@@ -130,9 +132,9 @@ docker compose down -v
 ├── sql/init.sql
 ├── src/
 │   ├── frontend/
-│   │   ├── Dockerfile, package.json, server.mjs
+│   │   ├── Dockerfile, package.json, package-lock.json, server.mjs
 │   │   └── public/{index.html,app.js,styles.css}
-│   ├── backend/{Dockerfile,package.json,server.mjs}
+│   ├── backend/{Dockerfile,package.json,package-lock.json,server.mjs}
 │   └── redirector/{Dockerfile,package.json,server.mjs}
 ├── openshift/{README.md,frontend-route.yaml}
 ├── tools/{init_env.py,prepare_oc.py,verify.py,verify_cluster.py}

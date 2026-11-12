@@ -23,6 +23,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Verify all committed npm dependency locks
+        shell: bash
+        run: |
+          for service in frontend backend redirector; do
+            npm ci --prefix "10. Full-Stack JavaScript on OpenShift/src/$service" --omit=dev --ignore-scripts --no-audit --no-fund
+          done
+          python3 "10. Full-Stack JavaScript on OpenShift/scripts/check-links.py"
       - name: Run source and frontend smoke suite
         shell: bash
         run: bash "10. Full-Stack JavaScript on OpenShift/scripts/verify-node.sh"
@@ -49,27 +56,3 @@ jobs:
         if: always()
         working-directory: "10. Full-Stack JavaScript on OpenShift"
         run: docker compose down -v --remove-orphans || true
-
-  lockfile-snapshot:
-    name: Generate npm lock metadata for reproducibility audit
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Generate verified npm package-lock content
-        shell: bash
-        run: |
-          set -euo pipefail
-          for service in frontend backend redirector; do
-            (cd "10. Full-Stack JavaScript on OpenShift/src/$service" && npm install --package-lock-only --ignore-scripts --no-audit --no-fund)
-          done
-          python3 - <<'PY'
-          import base64
-          from pathlib import Path
-          for service in ("frontend", "backend", "redirector"):
-              path = Path("10. Full-Stack JavaScript on OpenShift/src") / service / "package-lock.json"
-              print("LOCKFILE_" + service.upper() + "_BASE64=" + base64.b64encode(path.read_bytes()).decode())
-          PY

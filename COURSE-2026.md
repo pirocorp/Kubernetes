@@ -32,9 +32,21 @@
 **Recommended practical order:** 02 setup → 01 → 02 homework/extensions → 03 → 04 → 05 → 06 → 07 → 08 exam. Do not run every lab simultaneously. Modules often re-use namespace `homework`, NodePort **30001**, **31000**, **32000**, **32001** or **32002**. Destroy/clean up the earlier lab before reserving the same ports for the next.
 
 
-## Further modules — separate learning tracks
+## Further modules — sequential OpenShift and application tracks
 
-The Kubernetes **1.37 static audit above covers Modules 00–08 only**. Continue separately with [Module 09 — OpenShift](./09.%20OpenShift/README.md) (Projects, Builds, Routes, Security, Storage and Virtualization) and [Module 11 — API-First Development & API Management](./11.%20API-First%20Development%20and%20API%20Management/README.md) (OpenAPI contract design, registry, mocking, ASP.NET Core implementation, API management and optional OpenShift deployment). Continue with [Module 12 — API Versioning & Lifecycle Management](./12.%20API%20Versioning%20and%20Lifecycle%20Management/README.md) for SemVer, backward compatibility, ASP.NET Core OrderPlacement v1/v2, consumer migration, deprecation, sunset and optional OpenShift dual-route deployment. Continue with [Module 13 — API Management & Service Mesh](./13.%20API%20Management%20and%20Service%20Mesh/README.md) for the Travelz ASP.NET Core microservices, partner API management, canary traffic, Istio mTLS/AuthorizationPolicy and optional OpenShift deployment. Continue with [Module 14 — Event-Driven Sentiment Analysis](./14.%20Event-Driven%20Sentiment%20Analysis/README.md) for Kafka event fan-out, CloudEvents, Globex moderation, PostgreSQL, InfluxDB/Grafana and optional Knative Eventing, with complete ASP.NET Core 10 examples. Continue with [Module 15 — CDC Legacy Modernization](./15.%20CDC%20Legacy%20Modernization/README.md) for PostgreSQL logical WAL, Debezium Kafka Connect, event-driven Elasticsearch search and cashback projections, using a complete ASP.NET Core 10 example and real Docker Compose integration checks. Continue with [Module 10 — Full-stack JavaScript on OpenShift](./10.%20Full-Stack%20JavaScript%20on%20OpenShift/README.md) for a complete Node.js URL Shortener, PostgreSQL, Routes, build-from-source and existing-image delivery path, before API-First and the architectural modules. Each track has its own prerequisites; **none changes** the default kubeadm/Calico lab baseline.
+The Kubernetes **1.37 static audit above covers Modules 00–08 only**. Continue with **Module 09**, followed by **Module 10**, then the API and event-driven modernization modules. Each has standalone prerequisites; **none changes** the default kubeadm/Calico lab baseline.
+
+| Module | Standalone lesson and practical goal |
+|---|---|
+| **09 — OpenShift** | [OpenShift](./09.%20OpenShift/README.md) — Projects, Builds, Routes, security, storage and virtualization |
+| **10 — Full-stack JavaScript on OpenShift** | [URL Shortener](./10.%20Full-Stack%20JavaScript%20on%20OpenShift/README.md) — Node.js frontend/backend/redirector, PostgreSQL, Docker Compose, five labs |
+| **11 — API-First Development & API Management** | [API-First](./11.%20API-First%20Development%20and%20API%20Management/README.md) — OpenAPI contracts, registry, mocking, ASP.NET Core |
+| **12 — API Versioning & Lifecycle Management** | [API Versioning](./12.%20API%20Versioning%20and%20Lifecycle%20Management/README.md) — SemVer, compatibility, OrderPlacement v1/v2, sunset |
+| **13 — API Management & Service Mesh** | [Service Mesh](./13.%20API%20Management%20and%20Service%20Mesh/README.md) — Travelz, partner APIs, canary, Istio mTLS |
+| **14 — Event-Driven Sentiment Analysis** | [Event-driven analytics](./14.%20Event-Driven%20Sentiment%20Analysis/README.md) — Kafka, CloudEvents, Globex, PostgreSQL, InfluxDB/Grafana, Knative |
+| **15 — CDC Legacy Modernization** | [CDC modernization](./15.%20CDC%20Legacy%20Modernization/README.md) — PostgreSQL WAL, Debezium Kafka Connect, search and cashback projections |
+
+**Verification boundary:** Module 10 CI exercises actual PostgreSQL and Node services, whereas live OpenShift acceptance requires a separate authorized cluster and is **not** claimed here.
 
 ## External dependencies that cannot be packaged as static documents
 

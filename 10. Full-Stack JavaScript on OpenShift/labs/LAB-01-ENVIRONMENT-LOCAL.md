@@ -24,7 +24,7 @@ python3 scripts/check-links.py
 bash scripts/verify-node.sh
 ```
 
-**Очаквано:** Node v22+; Python 3.10+; `PASS all 18 required source, test and deployment files`; успешен JavaScript syntax check; frontend HTTP 200 и коректно HTTP 502 при изключен backend. **502 тук е очакван резултат** — frontend не се преструва, че database и backend са ready.
+**Очаквано:** Node v22+; Python 3.10+; `PASS all 23 required files and consistent npm lock manifests`; успешен JavaScript syntax check; frontend HTTP 200 и коректно HTTP 502 при изключен backend. **502 тук е очакван резултат** — frontend не се преструва, че database и backend са ready.
 
 ## 2. Как е построено Shorties?
 
@@ -72,7 +72,22 @@ sequenceDiagram
     F-->>U: HTTP 302 Location
 ```
 
-## 4. Реален локален end-to-end тест
+## 4. Възпроизводими npm зависимости
+
+Във всеки от трите Node.js проекта е включен реално генериран **`package-lock.json`**. Dockerfile-ите използват **`npm ci`** вместо `npm install` за фиксирани транзитивни зависимости и строг контрол за несъответствие между `package.json` и lockfile.
+
+От директорията на Module 10 с Node.js 22+ и достъп до npm registry:
+
+```bash
+for service in frontend backend redirector; do
+  npm ci --prefix "src/$service" --omit=dev --ignore-scripts --no-audit --no-fund
+done
+python3 scripts/check-links.py
+```
+
+**Очаквано:** всяка команда връща exit code 0; това проверява истинско инсталиране на зависимости, а не mock. За offline build зависимостите трябва предварително да са кеширани; Docker Compose integration остава независим acceptance test.
+
+## 5. Реален локален end-to-end тест
 
 **Една команда от чист checkout** изгражда трите Node container images, стартира PostgreSQL и тества HTTP потока:
 

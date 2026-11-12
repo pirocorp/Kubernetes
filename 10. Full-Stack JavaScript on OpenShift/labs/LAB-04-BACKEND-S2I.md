@@ -7,7 +7,7 @@
 - Собствен OpenShift Project с `oc` и достатъчни namespace права за BuildConfig, Build, ImageStream, Deployment, Service, Secret и env modification.
 - **Подготвена PostgreSQL** от [Lab 10-C](./LAB-03-POSTGRESQL.md) с `m10-postgres`, `short_links` table и `m10-db-url` Secret. Ако пропускаш предишните упражнения, изпълни **раздели 2–6 на 10-C**, преди този lab.
 - Frontend от [Lab 10-B](./LAB-02-FRONTEND-CONTAINER.md) е необходим **само за пълната browser проверка** в раздел 5. Ако липсва, можеш да тестваш backend през port-forward.
-- Файлове: [server.mjs](../src/backend/server.mjs), [package.json](../src/backend/package.json), [Dockerfile](../src/backend/Dockerfile).
+- Файлове: [server.mjs](../src/backend/server.mjs), [package.json](../src/backend/package.json), [package-lock.json](../src/backend/package-lock.json), [Dockerfile](../src/backend/Dockerfile).
 - Проверка за **Node.js S2I builder image stream** (актуалният stream/tag зависи от инсталацията); примерът използва `nodejs:22-ubi9` само ако реално е наличен. **Няма задължителен GitHub fork** — build използва binary source upload от настоящия checkout.
 
 ## 2. Preflight
@@ -110,7 +110,7 @@ curl -fsS "https://$M10_ROUTE/api/status"
 | Проблем | Проверка | Действие |
 |---|---|---|
 | S2I builder не съществува | `oc get is -n openshift` | Използвай Docker-strategy от 3.2 |
-| Build fail по npm | `oc logs build/ИМЕ` | Проверка на registry/NuGet? **npm registry**, DNS/proxy |
+| Build fail по npm | `oc logs build/ИМЕ` | Провери npm registry, DNS/proxy и package-lock.json |
 | Pod CrashLoop | `oc logs deploy/m10-backend --previous` | Липсва DATABASE_URL или runtime error |
 | `readyz` връща 503 | Secret + PostgreSQL logs | Преглед на DB credentials и таблицата |
 | Frontend дава 502 | `oc get svc m10-backend` | Вътрешен DNS/Service, BACKEND_URL |
