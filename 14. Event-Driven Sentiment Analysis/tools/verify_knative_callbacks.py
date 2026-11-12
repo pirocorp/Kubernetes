@@ -11,7 +11,7 @@ payload = {"productId": "callback-1", "category": "clothing", "text": "I love th
 def post(path, item):
     req = urllib.request.Request(BASE + path, method="POST", data=json.dumps(item).encode(),
                                  headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req,timeout=10) as response:
+    with urllib.request.urlopen(req,timeout=25) as response:
         return response.status, json.load(response) if path == "/reviews" else None
 
 status, response = post("/reviews", payload)

@@ -18,6 +18,16 @@ export INFLUX_URL=http://127.0.0.1:8086
 export INFLUX_ORG=globex
 export INFLUX_BUCKET=review_sentiment
 export KAFKA_BOOTSTRAP=127.0.0.1:9092
+# Kafka topics are created by Lab 14-C; verify actual broker metadata rather
+# than letting the first HTTP request wait for on-demand topic creation.
+for topic in globex.reviews reviews.moderated reviews.denied reviews.sentiment; do
+  docker compose exec -T kafka /opt/kafka/bin/kafka-topics.sh \
+    --bootstrap-server localhost:9092 --describe --topic "$topic" >/dev/null || {
+      echo "Missing Kafka topic $topic; complete verify-kafka.sh first" >&2
+      exit 1
+    }
+done
+export KAFKA_MANAGE_TOPICS=false
 dotnet build src/GlobexReviews/GlobexReviews.csproj -c Release
 work="$(mktemp -d)"
 pid=""
@@ -39,6 +49,10 @@ PY
   if test "$i" -eq 30; then cat "$work/app.log"; exit 1; fi
   sleep 1
 done
-M14_CALLBACK_BASE_URL=http://127.0.0.1:5081 python3 tools/verify_knative_callbacks.py
+if ! M14_CALLBACK_BASE_URL=http://127.0.0.1:5081 python3 tools/verify_knative_callbacks.py; then
+  echo "Callback verification failed; application diagnostics:" >&2
+  tail -n 120 "$work/app.log" >&2
+  exit 1
+fi
 python3 tools/check_external.py --minimum-approved 3
 echo "PASS Knative-style CloudEvent HTTP callback contract (not live Knative)"

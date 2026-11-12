@@ -118,7 +118,7 @@ curl -sS -i -H 'Content-Type: application/json' \
 python3 tools/verify.py --base-url http://127.0.0.1:5080
 ```
 
-**Очаквано:** `ALL MODULE 13 HTTP ACCEPTANCE CHECKS PASSED`, включително moderation/approval, denied review, положителен/отрицателен/неутрален sentiment и валидни CloudEvents.
+**Очаквано:** `ALL MODULE 14 HTTP ACCEPTANCE CHECKS PASSED`, включително moderation/approval, denied review, положителен/отрицателен/неутрален sentiment и валидни CloudEvents.
 
 ## 5. Проверки за действителни резултати
 

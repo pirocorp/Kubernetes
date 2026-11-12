@@ -101,7 +101,7 @@ def main():
     assert any(e["type"] == "globex.review.sentiment" and
                e["data"]["model"] == args.expect_model for e in events), events
     print("PASS CloudEvents envelope and model source:", args.expect_model)
-    print("ALL MODULE 13 HTTP ACCEPTANCE CHECKS PASSED")
+    print("ALL MODULE 14 HTTP ACCEPTANCE CHECKS PASSED")
 
 
 if __name__ == "__main__":

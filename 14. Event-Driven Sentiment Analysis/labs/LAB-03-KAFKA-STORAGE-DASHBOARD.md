@@ -101,7 +101,7 @@ curl -fsS http://127.0.0.1:5080/healthz
 python3 tools/verify.py --base-url http://127.0.0.1:5080 --timeout 60
 ```
 
-**Очаквано:** четири реално произведени synthetic CloudEvents, moderation/sentiment results, филтриране на denied и `ALL MODULE 13 HTTP ACCEPTANCE CHECKS PASSED`.
+**Очаквано:** четири реално произведени synthetic CloudEvents, moderation/sentiment results, филтриране на denied и `ALL MODULE 14 HTTP ACCEPTANCE CHECKS PASSED`.
 
 ### 4.1. Kafka topics и съобщения
 
