@@ -1,4 +1,4 @@
-"""Real HTTP acceptance checks for Module 13 local, Kafka and Knative modes."""
+"""Real HTTP acceptance checks for Module 14 local, Kafka and Knative modes."""
 import argparse
 import json
 import os

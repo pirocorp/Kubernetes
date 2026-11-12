@@ -19,10 +19,10 @@ def query(path):
 for attempt in range(30):
     try:
         data = query("/api/datasources/uid/globex-sentiment")
-        doc = query("/api/dashboards/uid/m13-globex-sentiment")
+        doc = query("/api/dashboards/uid/m14-globex-sentiment")
         assert data["type"] == "influxdb" and data["uid"] == "globex-sentiment", data
         dash = doc["dashboard"]
-        assert dash["uid"] == "m13-globex-sentiment" and len(dash["panels"]) >= 2, dash
+        assert dash["uid"] == "m14-globex-sentiment" and len(dash["panels"]) >= 2, dash
         print("PASS Grafana real InfluxDB datasource and 2-panel provisioned dashboard")
         break
     except (urllib.error.URLError, KeyError, AssertionError, ValueError) as ex:
