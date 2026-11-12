@@ -91,7 +91,7 @@ curl http://127.0.0.1:30001/   # only after creating a Service with nodePort: 30
 For **Module 05 F5 NGINX Ingress**, install with the same chart used in that module, but explicitly set its NodePorts and `externalTrafficPolicy=Cluster`; otherwise NodePort traffic forwarded to the control-plane container may not reach an Ingress controller Pod running on a worker:
 
 ```bash
-helm upgrade --install nginx-ingress oci://ghcr.io/nginx/charts/nginx-ingress \
+helm --kube-context kind-course-lab upgrade --install nginx-ingress oci://ghcr.io/nginx/charts/nginx-ingress \
   --version 2.8.1 \
   --namespace nginx-ingress --create-namespace \
   --set controller.service.type=NodePort \
@@ -105,7 +105,7 @@ kubectl --context kind-course-lab get svc -n nginx-ingress
 curl -k --resolve 'demo.lab:18443:127.0.0.1' https://demo.lab:18443/service1
 ```
 
-**Host mapping:** Ubuntu `localhost:18080` → NodePort 30080 (HTTP), `localhost:18443` → NodePort 30443 (HTTPS). **Helm uses the current kubeconfig context**: run `kubectl config current-context` and confirm it is `kind-course-lab` first; or pass `--kube-context kind-course-lab` to the Helm command (recommended). The example above uses the latter only if you add that flag yourself. **Do not use this installation command before the original Module 05 exercise**: the profile supplies ports, not the application workload or TLS Secret.
+**Host mapping:** Ubuntu `localhost:18080` → NodePort 30080 (HTTP), `localhost:18443` → NodePort 30443 (HTTPS). **Helm context safety:** the command above explicitly uses `--kube-context kind-course-lab`, so it cannot accidentally install the ingress controller on another Kubernetes cluster. The same practice applies to all cluster-changing commands. **Do not use this installation command before the original Module 05 exercise**: the profile supplies ports, not the application workload or TLS Secret.
 
 If Ubuntu is remote and you work from Windows/another machine, use **SSH forwarding**, not a public listen address, e.g. `ssh -L 18443:127.0.0.1:18443 ubuntu-host` for HTTPS. For remote `kubectl` access, use a properly configured SSH API-server tunnel or run the CLI on Ubuntu; the created API endpoint is intentionally bound to localhost.
 

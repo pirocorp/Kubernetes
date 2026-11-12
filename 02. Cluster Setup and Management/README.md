@@ -2,6 +2,8 @@
 
 > **Learning edition (Kubernetes 1.37).** A cluster is built, operated and recovered as a single progressive lesson. The 2021 Debian 10 / Kubernetes 1.21 installation and upgrade *commands* have been replaced by the fully documented Kubernetes 1.37 procedures. Core original explanations are retained at their relevant topics, while the original DOCX/ZIP remain available as historical artifacts (not executable setup instructions).
 
+**Optional quick-start for application-focused chapters:** the [disposable kind + Calico lab](../lab-environments/kind/README.md) runs three genuine Kubernetes v1.37.0 nodes in Ubuntu Docker containers with `make up` / `make down`. It **does not** replace this Module 02's VM operating-system, manual kubeadm initialization/join, etcd recovery or upgrade objectives. Use this module's original VM-based setup when those are the exercise itself.
+
 ## Learning path and objectives
 
 Build a working 1-control-plane / 2-worker Ubuntu 24.04 cluster with **containerd 2.x and Calico 3.33**, explore alternative learning environments, then learn maintenance, etcd backup/restore, upgrades and highly available architecture. Destructive labs require fresh disposable VMs. See the [course README](../README.md) for shared safety rules.
