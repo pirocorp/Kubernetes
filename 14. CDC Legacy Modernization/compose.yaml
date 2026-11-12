@@ -35,7 +35,7 @@ services:
     image: apache/kafka:4.1.2
     environment:
       CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw"
-      KAFKA_LOG_DIRS: "/tmp/kafka-logs"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
       KAFKA_NODE_ID: "1"
       KAFKA_PROCESS_ROLES: "broker,controller"
       KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:19093"
@@ -49,7 +49,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
     ports: ["127.0.0.1:9092:9092"]
-    volumes: [kafkadata:/tmp/kafka-logs]
+    volumes: [kafkadata:/var/lib/kafka/data]
     networks: [internal]
   kafka-init:
     image: apache/kafka:4.1.2
