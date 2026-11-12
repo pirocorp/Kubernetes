@@ -1,28 +1,24 @@
 # Module 01 — Core Concepts
 
-> **Integrated edition · Kubernetes 1.37 (2026).** This README is now the **single, self-contained teaching entry point**. The modern practical runbooks are embedded in full below; the previous lecture notes, explanations, pictures and code examples are preserved **verbatim** at the end for conceptual study. **Do not run historical 2021 installation/CNI/API commands** on a 1.37 cluster.
+> **Learning edition (Kubernetes 1.37).** Original explanations and illustrated YAML concepts are woven into the lesson, with the modern executable tasks placed directly after the relevant topics. Original teaching examples below are **illustrations**, not a second lab to run. Use the **2026 tasks** for exact commands, files, checks and cleanup.
 
-## Recommended learning path
+## Learning path and objectives
 
-1. Review the topics in the original lecture and identify the underlying concepts; they remain valuable even when an example version is obsolete.
-2. Work through the [Kubernetes 1.37 integrated labs](#kubernetes-137-integrated-labs) and execute their preflight, manifests, validation, troubleshooting and cleanup in order. Follow [the main course README](../README.md) for the shared lab baseline.
-3. Compare the modern behavior with the [preserved original lecture](#preserved-original-lecture--historical-reference) and explain **why** outdated commands/APIs have been replaced.
-
-| Original learning content (preserved below) | Kubernetes 1.37 expansion |
-|---|---|
-| Kubernetes objects, desired state and metadata | Imperative vs declarative configuration; Task 1 |
-| Namespaces, Pods and labels | Namespaces, Pod lifecycle, selectors; Tasks 1–3 |
-| Services and NodePort networking | Service → endpoint → Pod ports; Tasks 1–4 |
-| ReplicaSets and Deployments | Deployment controllers, ReplicaSet ownership and rollout fundamentals |
+Understand Kubernetes desired state, namespaces, Pods, networking and workload controllers; then complete the four updated exercises in sequence. Run only one task at a time. The default cluster and cross-module rules are in the [course README](../README.md).
 
 ## Kubernetes 1.37 integrated labs
 
-> **Execution source of truth:** the procedures immediately below are the supported Kubernetes 1.37 exercises. They replace, rather than silently alter, obsolete commands in the historical examples. A documentation/static audit is not a claim of a live-cluster pass.
+> The course now alternates between concepts and practice. Start with the environment checklist, then find **Task 1–4** next to their corresponding explanations. The [separate guide URL](./CORE-2026.md) remains a compatibility pointer.
 
+
+<!-- MODERN_LAB_BEGIN CORE-2026.md 0 -->
 ## Module 01 — Core Concepts lab (Kubernetes 1.37)
 
 > **NOTE (2026):** Follow this executable walkthrough rather than historical screenshots/command paths in the 2021 DOCX. Run **one task at a time** and clean up before starting the next. The supplied application image `shekeriev/k8s-oracle` is a third-party teaching image and must be pullable when the lab is run. The consistent Service mapping for tasks 1–3 is **Service TCP 5000 → Pod TCP 5000**, exposed on **NodePort 32000**. Old `port: 80` / `targetPort: 5500` mismatches are fixed in the executable YAML.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN CORE-2026.md 1 -->
 ### Prerequisites
 
 - Kubernetes 1.37 with working network (use [Module 02 SETUP-2026.md](../02.%20Cluster%20Setup%20and%20Management/SETUP-2026.md)); Ready nodes, `kubectl`, image-pull connectivity.
@@ -36,139 +32,11 @@ kubectl get nodes -o wide
 ```
 
 Expected: Kubernetes 1.37.x and all nodes Ready.
+<!-- MODERN_LAB_END -->
 
-### Task 1 — imperative Pod, label, annotation and Service
 
-```bash
-kubectl create namespace homework
-kubectl run homework-1 --image=shekeriev/k8s-oracle -n homework --labels=app=hw,tier=gold
-kubectl label pod homework-1 tier- -n homework
-kubectl run homework-2 --image=shekeriev/k8s-oracle -n homework
-kubectl label pod homework-2 app=hw -n homework
-kubectl annotate pods -l app=hw purpose=homework -n homework
-
-kubectl create service nodeport homework-svc --node-port=32000 --tcp=5000:5000 -n homework
-# 'kubectl create service' chooses app=homework-svc initially, not app=hw.
-kubectl set selector service/homework-svc app=hw -n homework
-
-kubectl wait -n homework --for=condition=Ready pod/homework-1 pod/homework-2 --timeout=180s
-kubectl get pods,svc,endpointslices -n homework
-kubectl describe svc homework-svc -n homework
-```
-
-**Expected:** two Ready Pods, both with `app=hw` and `purpose=homework`, one Service with endpoints to both Pods. From the **workstation** test `http://<reachable-node-ip>:32000`. The Service port inside Kubernetes is **5000**, while users connect to the **NodePort 32000**. If the connection fails, check endpoints, image pull, labels and firewall.
-
-```bash
-kubectl delete namespace homework
-```
-
-### Task 2 — declarative separate manifests
-
-Four files are provided in `Homework/Task 2/`. The Namespace must be created before namespace-scoped Pods/Service.
-
-```bash
-kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-namespace.yaml"
-kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-1-pod.yaml"
-kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-2-pod.yaml"
-kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-svc.yaml"
-kubectl wait -n homework --for=condition=Ready pod/homework-1 pod/homework-2 --timeout=180s
-kubectl get pods,svc -n homework
-kubectl get svc homework-svc -n homework -o yaml
-```
-
-**Expected:** same result as Task 1 with NodePort **32000**, Service `5000`, target `5000`, selector `app=hw`. All four files are checked in and executable (no need to invent a missing `hw-ns.yaml`).
-
-```bash
-kubectl delete namespace homework
-```
-
-### Task 3 — two ways of applying multiple objects
-
-**A. Single multi-document YAML** (Namespace is the first document):
-
-```bash
-kubectl apply -f "01. Core Concepts/Homework/Task 3/Task 3A.yaml"
-kubectl get pod,service -n homework
-kubectl delete namespace homework
-```
-
-**B. Directory of files:** create Namespace explicitly first; directory application order must not be assumed.
-
-```bash
-kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-namespace.yaml"
-kubectl apply -f "01. Core Concepts/Homework/Task 2/"
-kubectl get pods,svc -n homework
-kubectl delete namespace homework
-```
-
-Both should end with the **same** objects as Task 2. Task 3A was updated to use target port 5000.
-
-### Task 4 — Docker Compose translation (optional)
-
-The archived `M1-Homework-Core-Concepts (files).zip` contains `docker-compose.yml` with listener and speaker images. The Kubernetes equivalent is present in `Homework/Task 4/Task 4.yml`; it creates two Pods and NodePort Services. Avoid other workloads on **32000/32001**.
-
-```bash
-kubectl apply -f "01. Core Concepts/Homework/Task 4/Task 4.yml"
-kubectl get pods,svc -o wide
-kubectl describe svc listener-svc speaker-svc
-# Probe from workstation using the actual node IP:
-# http://<reachable-node-ip>:32000  (listener)
-# http://<reachable-node-ip>:32001  (speaker)
-kubectl delete -f "01. Core Concepts/Homework/Task 4/Task 4.yml"
-```
-
-**Expected:** both Pods become Ready if the third-party images remain available, and the Services have endpoints selected by `app=listener` and `app=speaker`.
-
-#### Optional: repeat Task 2 on kind with a local NodePort mapping
-
-Requires Docker Engine and `kind` on your workstation. Run in a **separate** clean cluster.
-
-```bash
-cat >kind-m01.yaml <<'EOF'
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-  extraPortMappings:
-  - containerPort: 32000
-    hostPort: 8080
-    listenAddress: "127.0.0.1"
-    protocol: TCP
-- role: worker
-EOF
-kind create cluster --name core-m01 --config kind-m01.yaml
-kubectl config use-context kind-core-m01
-kubectl get nodes
-kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-namespace.yaml"
-kubectl apply -f "01. Core Concepts/Homework/Task 2/"
-kubectl get pods,svc -n homework
-# When ready: http://localhost:8080
-kubectl delete namespace homework
-kind delete cluster --name core-m01
-rm -f kind-m01.yaml
-```
-
-If kind cannot pull the third-party image or the host port is occupied, inspect `kubectl describe pod -n homework` or change the host mapping to an unused port.
-
-### Static validation checklist
-
-- [ ] Apply Namespace first when using separate files
-- [ ] Pods share `app=hw` and are Ready
-- [ ] Service selector matches `app=hw`, endpoints are populated
-- [ ] Service port and targetPort are `5000`; NodePort is `32000`
-- [ ] Use an actual node IP, not Service ClusterIP, to browse from outside
-- [ ] Delete the resources between tasks to avoid name and NodePort conflicts
-
----
-
-## Preserved original lecture — historical reference
-
-> **2021 course snapshot.** The content below is kept byte-for-byte for its educational examples and context. Commands using Debian 10, Kubernetes 1.21, retired APIs, obsolete URLs, old networking plugins or legacy tools are not the 1.37 execution path. Use the integrated practical labs above.
-
-<!-- ORIGINAL_MODULE_README_PRESERVED_START -->
-> **Kubernetes 1.37 lab (2026):** Start with [CORE-2026.md](./CORE-2026.md) for all four Module 01 homework tasks, correct Service/Pod/NodePort mappings, prerequisite checks, step-by-step commands and cleanup. The following conceptual course notes are preserved as background.
-
-# Kubernetes Objects
+<!-- PRESERVED_THEORY_BEGIN -->
+## Kubernetes Objects
 
 - Kubernetes objects are persistent entities.
 - They are used to represent the state of the cluster.
@@ -178,7 +46,7 @@ If kind cannot pull the third-party image or the host port is occupied, inspect 
   - **Status** describes the current state of the object.
 - They include **Pods**, **Services**, **Namespaces**, **Volumes**, etc.
 
-## Required Fields
+### Required Fields
 
 In the ```.yaml``` file for the Kubernetes object you want to create, you'll need to set values for the following fields:
 
@@ -187,9 +55,9 @@ In the ```.yaml``` file for the Kubernetes object you want to create, you'll nee
 - ```metadata``` - Data that helps uniquely identify the object, including a name string, UID, and optional namespace
 - ```spec``` - What state you desire for the object
 
-## Kubernetes Object Management
+### Kubernetes Object Management
 
-### Imperative commands
+#### Imperative commands
 
 When using imperative commands, a user operates directly on live objects in a cluster. The user provides operations to the kubectl command as arguments or flags.
 
@@ -201,7 +69,7 @@ Example:
 kubectl create deployment nginx --image nginx
 ```
 
-### Imperative object configuration
+#### Imperative object configuration
 
 In imperative object configuration, the **kubectl** command specifies the operation (**create**, **replace**, etc.), optional flags and **at least one file name**. The file specified must contain a full definition of the object in YAML or JSON format.
 
@@ -212,7 +80,7 @@ Example:
 kubectl create -f nginx.yaml
 ```
 
-### Declarative object configuration
+#### Declarative object configuration
 
 When using declarative object configuration, a user operates on object configuration files stored locally, however the user does not define the operations to be taken on the files. Create, update, and delete operations are automatically detected per-object by kubectl. This enables working on directories, where different operations might be needed for different objects.
 
@@ -233,8 +101,11 @@ Recursively process directories:
 kubectl diff -R -f configs/
 kubectl apply -R -f configs/
 ```
+<!-- PRESERVED_THEORY_END -->
 
-## Namespaces
+
+<!-- PRESERVED_THEORY_BEGIN -->
+### Namespaces
 
 - Kubernetes supports multiple virtual clusters.
 - These virtual clusters are called **namespaces**.
@@ -246,17 +117,20 @@ kubectl apply -R -f configs/
 - Namespace resources are not themselves (and others such as **nodes**) in a namespace.
 - Deleting a Namespace will clean up everything under it.
 
-### Namespaces and DNS
+#### Namespaces and DNS
 
 When you create a Service, it creates a corresponding DNS entry. This entry is of the form ```<service-name>.<namespace-name>.svc.cluster.local```, which means that if a container only uses ```<service-name>```, it will resolve to the service which is local to a namespace. This is useful for using the same configuration across multiple namespaces such as Development, Staging and Production. If you want to reach across namespaces, you need to use the fully qualified domain name (FQDN).
 
-### Automatic labelling (since 1.21)
+#### Automatic labelling (since 1.21)
 
 The Kubernetes control plane sets an immutable label kubernetes.io/metadata.name on all namespaces. The value of the label is the namespace name.
 
 ![Namespaces vs Clusters vs Data Centers](./Namespaces%20vs%20Clusters%20vs%20Data%20Centers.png)
+<!-- PRESERVED_THEORY_END -->
 
-## Pod
+
+<!-- PRESERVED_THEORY_BEGIN -->
+### Pod
 
 - Smallest **unit of scheduling**.
 - **Scheduled** on nodes.
@@ -268,7 +142,7 @@ The Kubernetes control plane sets an immutable label kubernetes.io/metadata.name
 
 In terms of Docker concepts, a Pod is similar to a group of Docker containers with shared namespaces and shared filesystem volumes.
 
-### Workload resources for managing pods
+#### Workload resources for managing pods
 
 Usually you don't need to create Pods directly, even singleton Pods. Instead, create them using workload resources such as Deployment or Job. If your Pods need to track state, consider the StatefulSet resource.
 
@@ -279,7 +153,7 @@ Pods in a Kubernetes cluster are used in two main ways:
 
 Each Pod is meant to run a single instance of a given application. If you want to scale your application horizontally (to provide more overall resources by running more instances), you should use multiple Pods, one for each instance. In Kubernetes, this is typically referred to as replication. Replicated Pods are usually created and managed as a group by a workload resource and its controller.
 
-### How Pods manage multiple containers
+#### How Pods manage multiple containers
 
 Pods are designed to support multiple cooperating processes (as containers) that form a cohesive unit of service. The containers in a Pod are automatically co-located and co-scheduled on the same physical or virtual machine in the cluster. The containers can share resources and dependencies, communicate with one another, and coordinate when and how they are terminated.
 
@@ -291,13 +165,13 @@ Some Pods have init containers as well as app containers. Init containers run an
 
 Pods natively provide two kinds of shared resources for their constituent containers: networking and storage.
 
-### Working with Pods
+#### Working with Pods
 
 You'll rarely create individual Pods directly in Kubernetes—even singleton Pods. This is because Pods are designed as relatively ephemeral, disposable entities. When a Pod gets created (directly by you, or indirectly by a controller), the new Pod is scheduled to run on a Node in your cluster. The Pod remains on that node until the Pod finishes execution, the Pod object is deleted, the Pod is evicted for lack of resources, or the node fails.
 
 Note: Restarting a container in a Pod should not be confused with restarting a Pod. A Pod is not a process, but an environment for running container(s). A Pod persists until it is deleted.
 
-### Pod Lifecycle
+#### Pod Lifecycle
 
 Pods follow a defined lifecycle, starting in the ```Pending``` phase, moving through ```Running``` if at least one of its primary containers starts OK, and then through either the ```Succeeded``` or ```Failed``` phases depending on whether any container in the Pod terminated in failure.
 
@@ -305,13 +179,13 @@ Whilst a Pod is running, the kubelet is able to restart containers to handle som
 
 Pods are only scheduled once in their lifetime. Once a Pod is scheduled (assigned) to a Node, the Pod runs on that Node until it stops or is terminated.
 
-### Pod lifetime
+#### Pod lifetime
 
 Like individual application containers, Pods are considered to be relatively ephemeral (rather than durable) entities. Pods do not, by themselves, self-heal. Kubernetes uses a higher-level abstraction, called a controller, that handles the work of managing the relatively disposable Pod instances. A given Pod (as defined by a UID) is never "rescheduled" to a different node; instead, that Pod can be replaced by a new, near-identical Pod, with even the same name if desired, but with a different UID.
 
 When something is said to have the same lifetime as a Pod, such as a volume, that means that the thing exists as long as that specific Pod (with that exact UID) exists. If that Pod is deleted for any reason, and even if an identical replacement is created, the related thing (a volume, in this example) is also destroyed and created anew.
 
-### Pod phase
+#### Pod phase
 
 
 
@@ -323,19 +197,19 @@ When something is said to have the same lifetime as a Pod, such as a volume, tha
 | Failed    | All containers in the Pod have terminated, and at least one container has terminated in failure. That is, the container either exited with non-zero status or was terminated by the system.                                                                        |
 | Unknown   | For some reason the state of the Pod could not be obtained. This phase typically occurs due to an error in communicating with the node where the Pod should be running.                                                                                            |
 
-### Container states
+#### Container states
 
 Once the scheduler assigns a Pod to a Node, the kubelet starts creating containers for that Pod using a container runtime. There are three possible container states: ```Waiting```, ```Running```, and ```Terminated```.
 
-#### Waiting
+##### Waiting
 
 If a container is not in either the ```Running``` or ```Terminated``` state, it is ```Waiting```. A container in the ```Waiting``` state is still running the operations it requires in order to complete start up: for example, pulling the container image from a container image registry, or applying Secret data. When you use ```kubectl``` to query a Pod with a container that is ```Waiting```, you also see a Reason field to summarize why the container is in that state.
 
-#### Running
+##### Running
 
 The ```Running``` status indicates that a container is executing without issues. If there was a ```postStart``` hook configured, it has already executed and finished. When you use ```kubectl``` to query a Pod with a container that is ```Running```, you also see information about when the container entered the ```Running``` state.
 
-#### Terminated
+##### Terminated
 
 A container in the ```Terminated``` state began execution and then either ran to completion or failed for some reason. When you use ```kubectl``` to query a Pod with a container that is ```Terminated```, you see a reason, an exit code, and the start and finish time for that container's period of execution.
 
@@ -354,7 +228,7 @@ Labels and Annotations
   - Key-value pairs attached to objects
   - Used to store additional information (metadata) like description, creator, etc.
 
-### Example Pod manifest
+#### Example Pod manifest
 
 ```yaml
 # Service information (Kubernetes Api version)
@@ -383,8 +257,11 @@ spec:
 ```
 
 ![Pod Comunication](./Pod%20Comunication.png)
+<!-- PRESERVED_THEORY_END -->
 
-## Service
+
+<!-- PRESERVED_THEORY_BEGIN -->
+### Service
 
 An abstract way to expose an application running on a set of Pods as a network service.
 With Kubernetes you don't need to modify your application to use an unfamiliar service discovery mechanism. Kubernetes gives Pods their own IP addresses and a single DNS name for a set of Pods, and can load-balance across them.
@@ -399,25 +276,25 @@ An abstraction which defines a logical set of Pods and a policy by which to acce
 - Use end point object to track pods
 - Use label selectors to do their magic
 
-### Service Types
+#### Service Types
 
-#### ClusterIP
+##### ClusterIP
 
 Exposes the Service on a **cluster-internal IP**. This way the Service will be only reachable from within the cluster. **This is the default**.
 
-#### NodePort
+##### NodePort
 
 Exposes the Service on each Node's IP at a static port specified by the NodePort. A ClusterIP Service, to which the NodePort Service routes, is automatically created. We can contact the NodePort Service, from outside the cluster, by requesting ```<NodeIP>:<NodePort>```. Default range is between **30000** and **32767**.
 
-#### LoadBalancer
+##### LoadBalancer
 
 Exposes the Service externally using a cloud provider's load balancer. NodePort and ClusterIP Services, to which the external load balancer routes, are automatically created.
 
-#### ExternalName
+##### ExternalName
   
 Maps the Service to the contents of the **externalName** field (e.g. foo.bar.example.com), by returning a **CNAME** record with its value. No proxying of any kind is set up.
 
-### Example Service manifest
+#### Example Service manifest
 
 Note: A Service can map any incoming port to a targetPort. By default and for convenience, the targetPort is set to the same value as the port field.
   
@@ -448,8 +325,88 @@ spec:
 ```
 
 ![Service Comunication](./Services.png)
-  
-## Replication Controller 
+<!-- PRESERVED_THEORY_END -->
+
+### Practice — from Pods and Services to the working application
+
+
+<!-- MODERN_LAB_BEGIN CORE-2026.md 2 -->
+### Task 1 — imperative Pod, label, annotation and Service
+
+```bash
+kubectl create namespace homework
+kubectl run homework-1 --image=shekeriev/k8s-oracle -n homework --labels=app=hw,tier=gold
+kubectl label pod homework-1 tier- -n homework
+kubectl run homework-2 --image=shekeriev/k8s-oracle -n homework
+kubectl label pod homework-2 app=hw -n homework
+kubectl annotate pods -l app=hw purpose=homework -n homework
+
+kubectl create service nodeport homework-svc --node-port=32000 --tcp=5000:5000 -n homework
+# 'kubectl create service' chooses app=homework-svc initially, not app=hw.
+kubectl set selector service/homework-svc app=hw -n homework
+
+kubectl wait -n homework --for=condition=Ready pod/homework-1 pod/homework-2 --timeout=180s
+kubectl get pods,svc,endpointslices -n homework
+kubectl describe svc homework-svc -n homework
+```
+
+**Expected:** two Ready Pods, both with `app=hw` and `purpose=homework`, one Service with endpoints to both Pods. From the **workstation** test `http://<reachable-node-ip>:32000`. The Service port inside Kubernetes is **5000**, while users connect to the **NodePort 32000**. If the connection fails, check endpoints, image pull, labels and firewall.
+
+```bash
+kubectl delete namespace homework
+```
+<!-- MODERN_LAB_END -->
+
+
+<!-- MODERN_LAB_BEGIN CORE-2026.md 3 -->
+### Task 2 — declarative separate manifests
+
+Four files are provided in `Homework/Task 2/`. The Namespace must be created before namespace-scoped Pods/Service.
+
+```bash
+kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-namespace.yaml"
+kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-1-pod.yaml"
+kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-2-pod.yaml"
+kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-svc.yaml"
+kubectl wait -n homework --for=condition=Ready pod/homework-1 pod/homework-2 --timeout=180s
+kubectl get pods,svc -n homework
+kubectl get svc homework-svc -n homework -o yaml
+```
+
+**Expected:** same result as Task 1 with NodePort **32000**, Service `5000`, target `5000`, selector `app=hw`. All four files are checked in and executable (no need to invent a missing `hw-ns.yaml`).
+
+```bash
+kubectl delete namespace homework
+```
+<!-- MODERN_LAB_END -->
+
+
+<!-- MODERN_LAB_BEGIN CORE-2026.md 4 -->
+### Task 3 — two ways of applying multiple objects
+
+**A. Single multi-document YAML** (Namespace is the first document):
+
+```bash
+kubectl apply -f "01. Core Concepts/Homework/Task 3/Task 3A.yaml"
+kubectl get pod,service -n homework
+kubectl delete namespace homework
+```
+
+**B. Directory of files:** create Namespace explicitly first; directory application order must not be assumed.
+
+```bash
+kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-namespace.yaml"
+kubectl apply -f "01. Core Concepts/Homework/Task 2/"
+kubectl get pods,svc -n homework
+kubectl delete namespace homework
+```
+
+Both should end with the **same** objects as Task 2. Task 3A was updated to use target port 5000.
+<!-- MODERN_LAB_END -->
+
+
+<!-- PRESERVED_THEORY_BEGIN -->
+### Replication Controller 
 
 - **Higher** level workload.
 - Looks after **pod** or **set of pods**.
@@ -459,7 +416,7 @@ spec:
 
 A ReplicationController ensures that a specified number of pod replicas are running at any one time. In other words, a ReplicationController makes sure that a pod or a homogeneous set of pods is always up and available.
 
-### Example Replication Controller Manifest
+#### Example Replication Controller Manifest
 
 ```yaml
 apiVersion: v1
@@ -489,7 +446,7 @@ spec:
 
 ![Replication Controllers](./Replication%20Controllers.png)
   
-## Replica Set
+### Replica Set
 
 - **Higher** level workload.
 - Looks after **pod** or **set of pods**.
@@ -508,7 +465,7 @@ A ReplicaSet is linked to its Pods via the Pods' metadata.ownerReferences field,
 
 A ReplicaSet identifies new Pods to acquire by using its selector. If there is a Pod that has no OwnerReference or the OwnerReference is not a Controller and it matches a ReplicaSet's selector, it will be immediately acquired by said ReplicaSet.
 
-### Example Replica Set Manifest
+#### Example Replica Set Manifest
 
 ```yaml
 apiVersion: apps/v1
@@ -541,7 +498,7 @@ spec:
 ![Replica Set](./Replica%20Set.png)
   
   
-## Deployment
+### Deployment
 
 - **Even higher-level** workload.
 - Simplifies **updates** and **rollbacks**.
@@ -555,7 +512,7 @@ A Deployment provides declarative updates for Pods and ReplicaSets.
 
 You describe a desired state in a Deployment, and the Deployment Controller changes the actual state to the desired state at a controlled rate. You can define Deployments to create new ReplicaSets, or to remove existing Deployments and adopt all their resources with new Deployments.
 
-### Example Deployment Manifest (YAML)
+#### Example Deployment Manifest (YAML)
   
 ```yaml
 apiVersion: apps/v1
@@ -606,3 +563,69 @@ ver: v1```). However, more sophisticated selection rules are possible, as long a
   - Create one container and name it ```appa-container``` using the ```.spec.template.spec.containers[0].name``` field.
 
 ![Deployment](./Deployment.png)
+<!-- PRESERVED_THEORY_END -->
+
+### Practice — putting the concepts together
+
+
+<!-- MODERN_LAB_BEGIN CORE-2026.md 5 -->
+### Task 4 — Docker Compose translation (optional)
+
+The archived `M1-Homework-Core-Concepts (files).zip` contains `docker-compose.yml` with listener and speaker images. The Kubernetes equivalent is present in `Homework/Task 4/Task 4.yml`; it creates two Pods and NodePort Services. Avoid other workloads on **32000/32001**.
+
+```bash
+kubectl apply -f "01. Core Concepts/Homework/Task 4/Task 4.yml"
+kubectl get pods,svc -o wide
+kubectl describe svc listener-svc speaker-svc
+# Probe from workstation using the actual node IP:
+# http://<reachable-node-ip>:32000  (listener)
+# http://<reachable-node-ip>:32001  (speaker)
+kubectl delete -f "01. Core Concepts/Homework/Task 4/Task 4.yml"
+```
+
+**Expected:** both Pods become Ready if the third-party images remain available, and the Services have endpoints selected by `app=listener` and `app=speaker`.
+
+#### Optional: repeat Task 2 on kind with a local NodePort mapping
+
+Requires Docker Engine and `kind` on your workstation. Run in a **separate** clean cluster.
+
+```bash
+cat >kind-m01.yaml <<'EOF'
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 32000
+    hostPort: 8080
+    listenAddress: "127.0.0.1"
+    protocol: TCP
+- role: worker
+EOF
+kind create cluster --name core-m01 --config kind-m01.yaml
+kubectl config use-context kind-core-m01
+kubectl get nodes
+kubectl apply -f "01. Core Concepts/Homework/Task 2/homework-namespace.yaml"
+kubectl apply -f "01. Core Concepts/Homework/Task 2/"
+kubectl get pods,svc -n homework
+# When ready: http://localhost:8080
+kubectl delete namespace homework
+kind delete cluster --name core-m01
+rm -f kind-m01.yaml
+```
+
+If kind cannot pull the third-party image or the host port is occupied, inspect `kubectl describe pod -n homework` or change the host mapping to an unused port.
+<!-- MODERN_LAB_END -->
+
+
+<!-- MODERN_LAB_BEGIN CORE-2026.md 6 -->
+### Static validation checklist
+
+- [ ] Apply Namespace first when using separate files
+- [ ] Pods share `app=hw` and are Ready
+- [ ] Service selector matches `app=hw`, endpoints are populated
+- [ ] Service port and targetPort are `5000`; NodePort is `32000`
+- [ ] Use an actual node IP, not Service ClusterIP, to browse from outside
+- [ ] Delete the resources between tasks to avoid name and NodePort conflicts
+<!-- MODERN_LAB_END -->
+

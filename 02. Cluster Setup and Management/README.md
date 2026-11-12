@@ -1,31 +1,33 @@
 # Module 02 — Cluster Setup and Management
 
-> **Integrated edition · Kubernetes 1.37 (2026).** This README is now the **single, self-contained teaching entry point**. The modern practical runbooks are embedded in full below; the previous lecture notes, explanations, pictures and code examples are preserved **verbatim** at the end for conceptual study. **Do not run historical 2021 installation/CNI/API commands** on a 1.37 cluster.
+> **Learning edition (Kubernetes 1.37).** A cluster is built, operated and recovered as a single progressive lesson. The 2021 Debian 10 / Kubernetes 1.21 installation and upgrade *commands* have been replaced by the fully documented Kubernetes 1.37 procedures. Core original explanations are retained at their relevant topics, while the original DOCX/ZIP remain available as historical artifacts (not executable setup instructions).
 
-## Recommended learning path
+## Learning path and objectives
 
-1. Review the topics in the original lecture and identify the underlying concepts; they remain valuable even when an example version is obsolete.
-2. Work through the [Kubernetes 1.37 integrated labs](#kubernetes-137-integrated-labs) and execute their preflight, manifests, validation, troubleshooting and cleanup in order. Follow [the main course README](../README.md) for the shared lab baseline.
-3. Compare the modern behavior with the [preserved original lecture](#preserved-original-lecture--historical-reference) and explain **why** outdated commands/APIs have been replaced.
-
-| Original learning content (preserved below) | Kubernetes 1.37 expansion |
-|---|---|
-| Cluster architecture and runtime | Ubuntu 24.04, Kubernetes 1.37, containerd 2.x, Calico 3.33 |
-| kubeadm and control-plane lifecycle | Create, join, validate, kubeconfig, Headlamp |
-| Node maintenance, etcd, upgrades | Cordon/drain, etcd snapshot/restore, 1.36→1.37 upgrade |
-| Highly available control plane | HAProxy, stacked etcd, failure drill |
-| Minikube, kind and Vagrant homework | Alternative isolated topologies; 2026 homework guide |
+Build a working 1-control-plane / 2-worker Ubuntu 24.04 cluster with **containerd 2.x and Calico 3.33**, explore alternative learning environments, then learn maintenance, etcd backup/restore, upgrades and highly available architecture. Destructive labs require fresh disposable VMs. See the [course README](../README.md) for shared safety rules.
 
 ## Kubernetes 1.37 integrated labs
 
-> **Execution source of truth:** the procedures immediately below are the supported Kubernetes 1.37 exercises. They replace, rather than silently alter, obsolete commands in the historical examples. A documentation/static audit is not a claim of a live-cluster pass.
+> Follow this chapter in order. Tasks are grouped with their concepts; legacy installation procedures are not duplicated later in the chapter.
 
+
+<!-- PRESERVED_THEORY_BEGIN -->
+## Cluster creation
+
+Creation of simple yet working Kubernetes cluster. Small cluster with three nodes. One will be part of the control plane and the rest will handle any work.
+<!-- PRESERVED_THEORY_END -->
+
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 0 -->
 ## Kubernetes 1.37 — modern kubeadm cluster setup (2026)
 
 > **Scope:** New Linux lab clusters only. This is a companion to the original [Cluster Setup and Management notes](./README.md), which document the original Debian 10 / Kubernetes 1.21–1.22 exercises. Do **not** use those historical commands to install a new cluster.
 >
 > **Reference date:** 11 November 2026. **Status:** Documentation reviewed against upstream installation references; not executed against a live cluster.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 1 -->
 ### Target architecture
 
 This guide modernizes the historical course with **Kubernetes 1.37**, **containerd 2.x**, **Calico 3.33**, VXLAN encapsulation, BGP disabled and NetworkPolicy support. Flannel is a **separate fresh-lab alternative**, never installed on the Calico cluster.
@@ -100,7 +102,10 @@ Allow DNS, NTP, HTTPS image pulls and exercise-specific NodePorts as applicable.
 5. **Upgrade (section 13)** starts from an independent **1.36.x** cluster, not from an already installed 1.37 cluster.
 6. **Lab B:** use freshly prepared VMs for 3 control planes + 3 workers + HAProxy, applying common sections 0–3 and then section 14.
 7. **Flannel (section 17):** use a different fresh cluster. Never install it on top of Calico.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 2 -->
 ### 0. Preflight (all Kubernetes nodes)
 
 Check that the OS, subnet, routing, DNS, NTP, SSH, disk and RAM are ready, and that all nodes have unique names, VM IPs and machine IDs.
@@ -134,7 +139,10 @@ grep -v '^#' /etc/fstab
 ~~~
 
 After any reboot check **swapon --show** again. Do not apply these swap changes to a shared production host.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 3 -->
 ### 1. Configure kernel networking (all nodes)
 
 ~~~bash
@@ -157,7 +165,10 @@ sysctl net.ipv4.ip_forward
 ~~~
 
 These are conventional bridge-networking settings for a lab; your CNI and host network setup may have additional requirements.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 4 -->
 ### 2. Install and configure containerd 2.x (all Kubernetes nodes)
 
 The historical course used Docker Engine and its former built-in runtime integration. Kubernetes now uses **CRI-compatible runtimes**; install **containerd 2.x**, *not* Docker Engine. This procedure is for **fresh Ubuntu Server 24.04 LTS VMs** and adds Docker's **signed APT repository solely to install containerd.io** (without Docker Engine). For Debian, replace the repository with Docker's Debian repository after verifying distribution support.
@@ -206,7 +217,10 @@ sudo ctr plugins ls | grep -i cri
 ~~~
 
 **Expected:** service status is **active**, with no CRI plugin errors. Kubernetes uses the socket **unix:///run/containerd/containerd.sock**. A separate **cri-dockerd** adapter would be needed if choosing Docker Engine instead; we do not use it.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 5 -->
 ### 3. Install kubeadm, kubelet and kubectl (all nodes)
 
 Kubernetes has a **different APT repository for each minor release**. The legacy apt.kubernetes.io repository is frozen and must not be used for v1.37.
@@ -238,6 +252,10 @@ The APT commands above are for **new** nodes. When upgrading an existing cluster
 
 
 **Expected:** kubeadm and kubectl identify as v1.37.x. At the reference date, the upstream patch release is **1.37.1**; use the package that your verified repository offers and record the full version string (including the package suffix) for installing that *same version* on other nodes. Refresh it deliberately when upgrading — never allow unplanned version drift.
+<!-- MODERN_LAB_END -->
+
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 6 -->
 ### 4. Initialize the control plane (control-plane node only)
 
 This example uses **192.168.56.11** (Lab A's cp1). Replace it with your actual control-plane IP if different.
@@ -263,7 +281,10 @@ kubectl get nodes -o wide
 ~~~
 
 At this stage, a **NotReady** node can be expected until a CNI plugin is installed. **Do not commit admin.conf, kubeconfig private keys, or bootstrap tokens to Git.**
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 7 -->
 ### 5. Install Calico v3.33.0 — VXLAN / BGP disabled (control-plane node only)
 
 Our standard and HA labs both use **Calico Open Source v3.33.0 with VXLAN encapsulation**, with **BGP explicitly disabled**. Calico provides CNI connectivity and enforcement of standard Kubernetes NetworkPolicy, which is required by module 03 of the original course.
@@ -329,7 +350,10 @@ kubectl get pods -A -o wide
 If the selected VM subnet overlaps 10.244.0.0/16, choose another non-overlapping Pod CIDR and update **both** kubeadm and the Installation resource *before creating the cluster*.
 
 **Why changed from Flannel?** The original module 02 used Flannel as a simpler overlay. Calico's built-in NetworkPolicy support lets the same cluster complete module 03 without replacing the CNI. The optional Flannel-only install is in section 17.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 8 -->
 ### 6. Join worker nodes
 
 On the control-plane node, generate a fresh join command:
@@ -341,7 +365,10 @@ sudo kubeadm token create --print-join-command
 Run the generated **kubeadm join** command on each prepared worker node with sudo. If multiple runtimes are installed, supply the appropriate **--cri-socket**.
 
 Treat the bootstrap join token as a short-lived credential. Do not paste a real join command into this repository.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 9 -->
 ### 7. Verification
 
 ~~~bash
@@ -359,7 +386,10 @@ Check:
 5. Cluster-admin access is limited to trusted administrators.
 
 For further cluster administration (etcd snapshots, control-plane HA, upgrades, node drain), treat the [historical course notes](./README.md) as learning material and consult the current linked upstream instructions instead of copying their older commands.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 10 -->
 ### 8. Use kubectl from your workstation
 
 **Goal:** control the cluster without logging into cp1 for every command.
@@ -413,7 +443,169 @@ rm -f "$HOME/admin.conf"
 If the API endpoint in the transferred config is **127.0.0.1**, a private name unknown to the workstation, or unreachable, update **only the workstation copy** to the correct endpoint using kubectl config set-cluster (inspect kubectl config view --minify first). For the HA lab use lb.k8s.lab:6443. Do not change security settings or ignore TLS verification to make an invalid endpoint work.
 
 **Expected:** kubectl get nodes on the workstation shows the same nodes as on cp1. Keep kubeconfig out of Git and never send it to an untrusted machine.
+<!-- MODERN_LAB_END -->
 
+
+## Alternative local clusters and Vagrant homework
+
+> After the default kubeadm cluster is working, compare Minikube, kind and Vagrant on **separate** disposable environments. The exercises here are independent of the HA/etcd recovery drills below.
+
+
+<!-- MODERN_LAB_BEGIN HOMEWORK-2026.md 0 -->
+## Module 02 homework — Kubernetes 1.37 (Minikube, kind, Vagrant/vanilla)
+
+> **NOTE (2026):** The original `M2-Practice` DOCX and author Vagrant scripts are **Kubernetes 1.21–1.22 / Debian 10** historical artifacts. Do **not** execute them on a fresh 1.37 lab. This guide completes all three optional homework tasks on 1.37 using actual, versioned images/tools, with validation and cleanup. The full vanilla cluster procedure is [SETUP-2026.md](./SETUP-2026.md).
+<!-- MODERN_LAB_END -->
+
+
+<!-- MODERN_LAB_BEGIN HOMEWORK-2026.md 1 -->
+### Before starting
+
+1. Install `kubectl` and verify its 1.36–1.38 compatible client version; have Docker Engine available for the first two tasks, with enough CPU/RAM (at least 8 GiB free memory for the multi-node local clusters). Follow the official [minikube installation](https://minikube.sigs.k8s.io/docs/start/) and [kind quick start](https://kind.sigs.k8s.io/docs/user/quick-start/) for your host OS.
+2. Use an isolated cluster for **each** task. The homework image `shekeriev/k8s-oracle` is third-party; the sample app requires image pull availability. Both examples reuse the multi-document [Module 01 Task 3A.yaml](../01.%20Core%20Concepts/Homework/Task%203/Task%203A.yaml) with Namespace, Pods and Service.
+3. The application uses **NodePort 32000**, Service/Pod port **5000**, selector `app=hw`. Clear any pre-existing workload using that NodePort on the chosen cluster.
+4. Always run `kubectl config current-context` before applying resources so you do not modify the wrong cluster. NodePort exposure differs by driver; follow the methods below.
+
+From repository root:
+
+```bash
+kubectl version --client
+docker version
+```
+<!-- MODERN_LAB_END -->
+
+
+<!-- MODERN_LAB_BEGIN HOMEWORK-2026.md 2 -->
+### Task 1 — 2-node Minikube cluster
+
+Requires Minikube **1.39.0+** (supports Kubernetes 1.37), Docker driver, access to node-image registries.
+
+```bash
+minikube start -p m02 --driver=docker --nodes=2 --kubernetes-version=v1.37.0 --container-runtime=containerd
+minikube -p m02 status
+kubectl config use-context m02
+kubectl get nodes -o wide
+kubectl version
+kubectl apply -f "01. Core Concepts/Homework/Task 3/Task 3A.yaml"
+kubectl wait -n homework --for=condition=Ready pod/homework-1 pod/homework-2 --timeout=180s
+kubectl get pods,svc -n homework -o wide
+minikube service homework-svc -n homework -p m02 --url
+```
+
+**Expected:** 2 Ready nodes, two Ready app Pods, a NodePort Service **32000**. Open the **actual URL printed by `minikube service --url`** (it may use a tunnel, particularly with the Docker driver on macOS/Windows; keep that command running while testing). Check HTTP response from the app.
+
+```bash
+kubectl delete namespace homework
+minikube delete -p m02
+```
+<!-- MODERN_LAB_END -->
+
+
+<!-- MODERN_LAB_BEGIN HOMEWORK-2026.md 3 -->
+### Task 2 — 3-node kind cluster
+
+Requires `kind` version **0.33.0+**, and Docker Engine. Official kind v0.33.0 node image is pinned to Kubernetes 1.37.0.
+
+Create `kind-m02.yaml` from the repository root:
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 32000
+    hostPort: 8080
+    listenAddress: "127.0.0.1"
+    protocol: TCP
+- role: worker
+- role: worker
+```
+
+```bash
+kind create cluster --name m02 --config kind-m02.yaml \
+  --image kindest/node:v1.37.0@sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5
+kubectl config use-context kind-m02
+kubectl get nodes -o wide
+kubectl version
+kubectl apply -f "01. Core Concepts/Homework/Task 3/Task 3A.yaml"
+kubectl wait -n homework --for=condition=Ready pod/homework-1 pod/homework-2 --timeout=180s
+kubectl get pods,svc -n homework -o wide
+curl -fsS http://localhost:8080/
+```
+
+**Expected:** 3 Ready nodes, Service `homework-svc` NodePort **32000** forwarded to localhost **8080**, and an HTTP reply. The `kind` NodePort mapping is valid only if `containerPort` equals the Service's `nodePort`. Ensure host TCP **8080** is free. If the image cannot be pulled, inspect `kubectl describe pod -n homework`.
+
+```bash
+kubectl delete namespace homework
+kind delete cluster --name m02
+rm -f kind-m02.yaml
+```
+<!-- MODERN_LAB_END -->
+
+
+<!-- MODERN_LAB_BEGIN HOMEWORK-2026.md 4 -->
+### Task 3 — three-node vanilla cluster with Vagrant-managed VMs
+
+Unlike the **historical Vagrantfile** embedded in `Exercise/Author Solution/README.md`, the new [Vagrant-2026/Vagrantfile](./Exercise/Vagrant-2026/Vagrantfile) uses **Ubuntu 24.04** (Bento box, pinned version) and prepares three machines' hostnames, host-only IPs, swap and kernel networking settings.
+
+Prerequisites: current Vagrant, VirtualBox, hardware virtualization, at least **9 GiB RAM + headroom**, enough disk, and internet for box + Kubernetes packages/images. **Replace** the sample private IPs in the Vagrantfile if your host-only network differs. The example IPs correspond to the **standard Lab A topology** of SETUP-2026.md.
+
+```bash
+cd "02. Cluster Setup and Management/Exercise/Vagrant-2026"
+vagrant up --provider=virtualbox
+vagrant status
+vagrant ssh cp1
+# Inside cp1: hostname; ip -brief addr; getent hosts wk1.k8s.lab
+# exit to host; repeat e.g. vagrant ssh wk1 / wk2
+```
+
+Next, follow the **executable** [SETUP-2026.md](./SETUP-2026.md) **in order** (not the old Debian 10 README): common OS / containerd / Kubernetes package preparation **sections 0–3** on cp1, wk1, wk2; `kubeadm init` **section 4** on cp1; Calico Operator **section 5** once on cp1, with **VXLAN** and **BGP disabled**, Pod CIDR `10.244.0.0/16`; join workers **section 6**; verify **section 7**; workstation kubectl access **section 8**. Vagrant performs **VM provisioning**, while the documented `kubeadm` steps complete Kubernetes provisioning. Do not install Flannel on top of Calico.
+
+**Expected:** one Ready control-plane and two Ready workers; containerd active; Calico status healthy; CoreDNS Ready.
+
+On your kubectl-equipped workstation, now from the **repository root**:
+
+```bash
+kubectl config current-context
+kubectl get nodes -o wide
+kubectl get tigerastatus
+kubectl apply -f "01. Core Concepts/Homework/Task 3/Task 3A.yaml"
+kubectl wait -n homework --for=condition=Ready pod/homework-1 pod/homework-2 --timeout=180s
+kubectl get pods,svc -n homework
+# Replace <reachable-node-ip> with a real worker/control-plane node address.
+curl http://<reachable-node-ip>:32000/
+kubectl delete namespace homework
+```
+
+Make sure firewall permits **NodePort 32000/TCP** from the workstation. If it does not, validate with `kubectl port-forward -n homework svc/homework-svc 8080:5000` and curl localhost:8080 from another terminal.
+
+**Cleanup** (irreversibly deletes the three disposable VMs):
+
+```bash
+cd "02. Cluster Setup and Management/Exercise/Vagrant-2026"
+vagrant destroy -f
+```
+<!-- MODERN_LAB_END -->
+
+
+<!-- MODERN_LAB_BEGIN HOMEWORK-2026.md 5 -->
+### Troubleshooting and scope
+
+| Symptom | Static checks / next action |
+|---|---|
+| Wrong cluster/context | `kubectl config current-context`; switch to `m02` or `kind-m02` as needed |
+| Nodes not Ready | `kubectl describe node`; inspect `kube-system`, CNI and containerd |
+| Pods not Ready | `kubectl describe pod -n homework`; investigate third-party image pull and node resources |
+| NodePort not reachable | `kubectl get svc -n homework`, endpoints, host port mapping/firewall; Minikube `service --url`; try port-forward |
+| Vagrant box unavailable | Confirm VirtualBox version and pinned `bento/ubuntu-24.04` box availability/provider/CPU architecture; choose an equivalent Ubuntu 24.04 box if required |
+| kubeadm packages unavailable | Use the `pkgs.k8s.io` versioned sources in `SETUP-2026.md`; **never** the old `apt.kubernetes.io` repo |
+
+Historical M2 DOCX/ZIP/author scripts remain available **for comparison**, but following this guide plus the linked SETUP-2026.md is the supported 1.37 path. The two Helm/CNI stacks (kind/minikube vs kubeadm/Calico) are different environments and should not be mixed.
+<!-- MODERN_LAB_END -->
+
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 11 -->
 ### 9. Web UI lab — Headlamp (replaces the archived Dashboard)
 
 The original notes used Kubernetes Dashboard v2.4.0. **Kubernetes Dashboard is archived/unmaintained**; this lab uses [Headlamp](https://headlamp.dev/docs/latest/installation/in-cluster/) instead. Headlamp is a UI replacement, not the same implementation.
@@ -478,7 +670,23 @@ kubectl delete namespace ui-lab
 helm uninstall headlamp -n headlamp
 kubectl delete namespace headlamp
 ~~~
+<!-- MODERN_LAB_END -->
 
+
+<!-- PRESERVED_THEORY_BEGIN -->
+## Nodes Maintenance
+
+- Make the node unavailable for new work (**cordon**)
+- Initiate workload migration (**drain**)
+- All pods are **evicted** and recreated on other nodes 
+- Node is ready for maintenance
+- Declare the node ready for accepting work (**uncordon**)
+
+The gallant, way to remove a node from the cluster for maintenance. We can first mark the node as not schedulable, so it won't receive any new work.
+<!-- PRESERVED_THEORY_END -->
+
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 12 -->
 ### 10. Node maintenance exercises
 
 Start only when all nodes show Ready and workloads can be rescheduled.
@@ -517,7 +725,19 @@ kubectl delete namespace ops-lab
 ~~~
 
 **Expected:** drained node becomes SchedulingDisabled and eligible controller-managed Pods are rescheduled to other nodes. Draining does **not** imply that every workload can be moved (PVC constraints, resource availability, affinity, disruption budgets). Use describe/events to investigate if drain cannot finish.
+<!-- MODERN_LAB_END -->
 
+
+<!-- PRESERVED_THEORY_BEGIN -->
+## Etcd backup
+
+- **etcd** is the default database for storing the cluster state.
+- It runs on the control plane node(s).
+- Use the **etcdctl** command to control it.
+<!-- PRESERVED_THEORY_END -->
+
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 13 -->
 ### 11. etcd backup — hands-on lab
 
 **Scope:** the first example uses a single control-plane kubeadm node with local stacked etcd. etcd snapshots contain **sensitive cluster state**; do not store them in Git or in a public location.
@@ -586,7 +806,10 @@ sudo etcdutl snapshot status /var/backups/kubernetes/etcd-snapshot.db -w table
 ~~~
 
 **Expected:** etcdutl reports the version extracted from the live etcd image, and snapshot status displays revision, key count and size. If the image tag does not match an official release archive, inspect the image version and use a matching compatible etcdutl release. Verify downloaded release artifacts/checksums as appropriate for your environment. Keep the snapshot on secure storage; it contains cluster state and secrets.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 14 -->
 ### 12. etcd restore — isolated recovery exercise
 
 **Destructive operation.** Restore overwrites cluster state, invalidates newer writes and can require clients/informers to reconnect. This procedure is **only for a disposable, single-control-plane kubeadm lab with local etcd** and a verified snapshot. Never use these single-node instructions on a 3-member stacked etcd cluster; multi-member restore requires a coordinated recovery process for **all members**. See [upstream recovery guidance](https://etcd.io/docs/v3.7/op-guide/recovery/).
@@ -674,7 +897,10 @@ kubectl -n kube-system get cm kubeadm-config -o yaml
 ~~~
 
 For real disaster recovery, follow upstream guidance on **revision bump / mark compacted** and restart relevant control-plane components so cached watches do not retain stale state. This instructional exercise does not claim to cover production restoration. Clean up local temporary files and recovery directories only after verifying success.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 15 -->
 ### 13. Kubernetes upgrade lab — v1.36.x → v1.37.x
 
 **This is a separate lab with an existing healthy v1.36.x cluster.** You cannot upgrade a v1.37 cluster *to the same minor version* and call that a v1.36→v1.37 exercise. Kubernetes does not support skipping minor versions.
@@ -854,7 +1080,22 @@ kubectl version
 ~~~
 
 **Expected:** all control planes and workers Ready on 1.37.x, with healthy Calico and CoreDNS. Review any deprecated APIs and changed defaults from the [1.37 upgrade guidance](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/). Keep an etcd backup and a documented recovery path before upgrading any non-lab cluster.
+<!-- MODERN_LAB_END -->
 
+
+<!-- PRESERVED_THEORY_BEGIN -->
+## Highly-available Cluster
+
+Need three virtual machines for control plane nodes and one or more (in this case 3) for nodes members of the cluster. In addition, we will need a machine to act as a load balancer. The following sources are used:
+
+- [Highly Available Control Plane](https://kubernetes.io/docs/tasks/administer-cluster/highly-available-control-plane/)
+- [High Availability](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/)
+- [HA Topology](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/)
+- [HA Considerations](https://github.com/kubernetes/kubeadm/blob/main/docs/ha-considerations.md)
+<!-- PRESERVED_THEORY_END -->
+
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 16 -->
 ### 14. High-availability lab — fresh cluster with stacked etcd
 
 **This is an independent cluster build**, not the continuation of the 1 CP + 2 workers lab.
@@ -996,7 +1237,10 @@ kubectl -n kube-system get pods -l component=etcd -o wide
 **Expected:** the API remains reachable through HAProxy and etcd retains a majority of 2/3 members. Restore the failed control plane and confirm the cluster returns to healthy 3-member state. This does not prove that HAProxy itself survives failure; that is a separate exercise.
 
 **Do not** use the single-node etcd restore procedure from section 12 against this HA cluster. Plan coordinated snapshots and cluster-wide recovery using the [official HA](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/) and [etcd recovery](https://etcd.io/docs/v3.7/op-guide/recovery/) references.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 17 -->
 ### 15. Validate NetworkPolicy (Calico)
 
 This exercise intentionally proves why the default course CNI is Calico rather than basic Flannel.
@@ -1047,7 +1291,10 @@ kubectl -n policy-lab exec blocked -- wget -qO- -T 3 http://web
 ~~~bash
 kubectl delete namespace policy-lab
 ~~~
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 18 -->
 ### 16. Troubleshooting reference
 
 | Symptom | First commands | Investigate |
@@ -1072,7 +1319,10 @@ sudo systemctl status kubelet containerd --no-pager
 sudo journalctl -u kubelet -n 100 --no-pager
 sudo crictl --runtime-endpoint unix:///run/containerd/containerd.sock ps -a
 ~~~
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 19 -->
 ### 17. Optional alternative: Flannel v0.28.10 on a fresh cluster
 
 This appendix preserves the course's original CNI option. **Do not run it on Calico nodes.** Install Flannel **instead of** section 5 on an entirely new disposable lab.
@@ -1165,7 +1415,10 @@ helm get values flannel -n kube-flannel
 **Expected:** a NetworkPolicy-related additional container/controller is present. You may now try the **section 15** NetworkPolicy lab on this independent Flannel cluster. To test Flannel *without* policy support, omit this optional subsection.
 
 **Comparison:** Calico remains the main course recommendation because it has integrated policy enforcement and richer networking controls. Flannel is the simpler historical alternative with an optional extra controller. Neither is to be installed into a cluster already managed by the other CNI.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 20 -->
 ### 18. Course parity checklist
 
 | Historical 2021–22 lab topic | Modern counterpart |
@@ -1183,8 +1436,10 @@ helm get values flannel -n kube-flannel
 | Security / NetworkPolicy follow-on | Step 15 and original module 03 |
 
 This is a **documentation procedure** aligned with upstream references, not a record of a completed end-to-end test. Some destructive/upgrade exercises require **fresh separate VMs** and are intentionally not run one after another on the same cluster.
+<!-- MODERN_LAB_END -->
 
 
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 21 -->
 ### 19. Operational follow-ups
 
 - **Upgrades:** review release notes, take backups, then upgrade kubeadm/control-plane and worker nodes in the documented sequence. Do not skip minor versions.
@@ -1192,7 +1447,10 @@ This is a **documentation procedure** aligned with upstream references, not a re
 - **Dashboard:** avoid the old v2.4.0 Dashboard + permanent cluster-admin setup from the historical course. Choose a currently supported UI and grant least-privilege access.
 - **Hardening:** implement appropriate RBAC, Pod Security Admission, NetworkPolicies, audit logging, image version pinning and a secure supply chain.
 - **Automation:** a future repo improvement can add lab provisioning and CI validation, but neither is a prerequisite for the documentation update.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN SETUP-2026.md 22 -->
 ### 20. Official references
 
 - [Kubernetes release branches](https://kubernetes.io/releases/)
@@ -1203,1070 +1461,5 @@ This is a **documentation procedure** aligned with upstream references, not a re
 - [Operating etcd clusters](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/)
 - [Calico on-premises installation](https://docs.tigera.io/calico/latest/getting-started/kubernetes/self-managed-onprem/onpremises)
 - [Calico compatibility requirements](https://docs.tigera.io/calico/latest/getting-started/kubernetes/requirements)
+<!-- MODERN_LAB_END -->
 
-
-
-## Homework 2026 exercises
-
-## Module 02 homework — Kubernetes 1.37 (Minikube, kind, Vagrant/vanilla)
-
-> **NOTE (2026):** The original `M2-Practice` DOCX and author Vagrant scripts are **Kubernetes 1.21–1.22 / Debian 10** historical artifacts. Do **not** execute them on a fresh 1.37 lab. This guide completes all three optional homework tasks on 1.37 using actual, versioned images/tools, with validation and cleanup. The full vanilla cluster procedure is [SETUP-2026.md](./SETUP-2026.md).
-
-### Before starting
-
-1. Install `kubectl` and verify its 1.36–1.38 compatible client version; have Docker Engine available for the first two tasks, with enough CPU/RAM (at least 8 GiB free memory for the multi-node local clusters). Follow the official [minikube installation](https://minikube.sigs.k8s.io/docs/start/) and [kind quick start](https://kind.sigs.k8s.io/docs/user/quick-start/) for your host OS.
-2. Use an isolated cluster for **each** task. The homework image `shekeriev/k8s-oracle` is third-party; the sample app requires image pull availability. Both examples reuse the multi-document [Module 01 Task 3A.yaml](../01.%20Core%20Concepts/Homework/Task%203/Task%203A.yaml) with Namespace, Pods and Service.
-3. The application uses **NodePort 32000**, Service/Pod port **5000**, selector `app=hw`. Clear any pre-existing workload using that NodePort on the chosen cluster.
-4. Always run `kubectl config current-context` before applying resources so you do not modify the wrong cluster. NodePort exposure differs by driver; follow the methods below.
-
-From repository root:
-
-```bash
-kubectl version --client
-docker version
-```
-
-### Task 1 — 2-node Minikube cluster
-
-Requires Minikube **1.39.0+** (supports Kubernetes 1.37), Docker driver, access to node-image registries.
-
-```bash
-minikube start -p m02 --driver=docker --nodes=2 --kubernetes-version=v1.37.0 --container-runtime=containerd
-minikube -p m02 status
-kubectl config use-context m02
-kubectl get nodes -o wide
-kubectl version
-kubectl apply -f "01. Core Concepts/Homework/Task 3/Task 3A.yaml"
-kubectl wait -n homework --for=condition=Ready pod/homework-1 pod/homework-2 --timeout=180s
-kubectl get pods,svc -n homework -o wide
-minikube service homework-svc -n homework -p m02 --url
-```
-
-**Expected:** 2 Ready nodes, two Ready app Pods, a NodePort Service **32000**. Open the **actual URL printed by `minikube service --url`** (it may use a tunnel, particularly with the Docker driver on macOS/Windows; keep that command running while testing). Check HTTP response from the app.
-
-```bash
-kubectl delete namespace homework
-minikube delete -p m02
-```
-
-### Task 2 — 3-node kind cluster
-
-Requires `kind` version **0.33.0+**, and Docker Engine. Official kind v0.33.0 node image is pinned to Kubernetes 1.37.0.
-
-Create `kind-m02.yaml` from the repository root:
-
-```yaml
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-  extraPortMappings:
-  - containerPort: 32000
-    hostPort: 8080
-    listenAddress: "127.0.0.1"
-    protocol: TCP
-- role: worker
-- role: worker
-```
-
-```bash
-kind create cluster --name m02 --config kind-m02.yaml \
-  --image kindest/node:v1.37.0@sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5
-kubectl config use-context kind-m02
-kubectl get nodes -o wide
-kubectl version
-kubectl apply -f "01. Core Concepts/Homework/Task 3/Task 3A.yaml"
-kubectl wait -n homework --for=condition=Ready pod/homework-1 pod/homework-2 --timeout=180s
-kubectl get pods,svc -n homework -o wide
-curl -fsS http://localhost:8080/
-```
-
-**Expected:** 3 Ready nodes, Service `homework-svc` NodePort **32000** forwarded to localhost **8080**, and an HTTP reply. The `kind` NodePort mapping is valid only if `containerPort` equals the Service's `nodePort`. Ensure host TCP **8080** is free. If the image cannot be pulled, inspect `kubectl describe pod -n homework`.
-
-```bash
-kubectl delete namespace homework
-kind delete cluster --name m02
-rm -f kind-m02.yaml
-```
-
-### Task 3 — three-node vanilla cluster with Vagrant-managed VMs
-
-Unlike the **historical Vagrantfile** embedded in `Exercise/Author Solution/README.md`, the new [Vagrant-2026/Vagrantfile](./Exercise/Vagrant-2026/Vagrantfile) uses **Ubuntu 24.04** (Bento box, pinned version) and prepares three machines' hostnames, host-only IPs, swap and kernel networking settings.
-
-Prerequisites: current Vagrant, VirtualBox, hardware virtualization, at least **9 GiB RAM + headroom**, enough disk, and internet for box + Kubernetes packages/images. **Replace** the sample private IPs in the Vagrantfile if your host-only network differs. The example IPs correspond to the **standard Lab A topology** of SETUP-2026.md.
-
-```bash
-cd "02. Cluster Setup and Management/Exercise/Vagrant-2026"
-vagrant up --provider=virtualbox
-vagrant status
-vagrant ssh cp1
-# Inside cp1: hostname; ip -brief addr; getent hosts wk1.k8s.lab
-# exit to host; repeat e.g. vagrant ssh wk1 / wk2
-```
-
-Next, follow the **executable** [SETUP-2026.md](./SETUP-2026.md) **in order** (not the old Debian 10 README): common OS / containerd / Kubernetes package preparation **sections 0–3** on cp1, wk1, wk2; `kubeadm init` **section 4** on cp1; Calico Operator **section 5** once on cp1, with **VXLAN** and **BGP disabled**, Pod CIDR `10.244.0.0/16`; join workers **section 6**; verify **section 7**; workstation kubectl access **section 8**. Vagrant performs **VM provisioning**, while the documented `kubeadm` steps complete Kubernetes provisioning. Do not install Flannel on top of Calico.
-
-**Expected:** one Ready control-plane and two Ready workers; containerd active; Calico status healthy; CoreDNS Ready.
-
-On your kubectl-equipped workstation, now from the **repository root**:
-
-```bash
-kubectl config current-context
-kubectl get nodes -o wide
-kubectl get tigerastatus
-kubectl apply -f "01. Core Concepts/Homework/Task 3/Task 3A.yaml"
-kubectl wait -n homework --for=condition=Ready pod/homework-1 pod/homework-2 --timeout=180s
-kubectl get pods,svc -n homework
-# Replace <reachable-node-ip> with a real worker/control-plane node address.
-curl http://<reachable-node-ip>:32000/
-kubectl delete namespace homework
-```
-
-Make sure firewall permits **NodePort 32000/TCP** from the workstation. If it does not, validate with `kubectl port-forward -n homework svc/homework-svc 8080:5000` and curl localhost:8080 from another terminal.
-
-**Cleanup** (irreversibly deletes the three disposable VMs):
-
-```bash
-cd "02. Cluster Setup and Management/Exercise/Vagrant-2026"
-vagrant destroy -f
-```
-
-### Troubleshooting and scope
-
-| Symptom | Static checks / next action |
-|---|---|
-| Wrong cluster/context | `kubectl config current-context`; switch to `m02` or `kind-m02` as needed |
-| Nodes not Ready | `kubectl describe node`; inspect `kube-system`, CNI and containerd |
-| Pods not Ready | `kubectl describe pod -n homework`; investigate third-party image pull and node resources |
-| NodePort not reachable | `kubectl get svc -n homework`, endpoints, host port mapping/firewall; Minikube `service --url`; try port-forward |
-| Vagrant box unavailable | Confirm VirtualBox version and pinned `bento/ubuntu-24.04` box availability/provider/CPU architecture; choose an equivalent Ubuntu 24.04 box if required |
-| kubeadm packages unavailable | Use the `pkgs.k8s.io` versioned sources in `SETUP-2026.md`; **never** the old `apt.kubernetes.io` repo |
-
-Historical M2 DOCX/ZIP/author scripts remain available **for comparison**, but following this guide plus the linked SETUP-2026.md is the supported 1.37 path. The two Helm/CNI stacks (kind/minikube vs kubeadm/Calico) are different environments and should not be mixed.
-
----
-
-## Preserved original lecture — historical reference
-
-> **2021 course snapshot.** The content below is kept byte-for-byte for its educational examples and context. Commands using Debian 10, Kubernetes 1.21, retired APIs, obsolete URLs, old networking plugins or legacy tools are not the 1.37 execution path. Use the integrated practical labs above.
-
-<!-- ORIGINAL_MODULE_README_PRESERVED_START -->
-> **Kubernetes 1.37 homework (2026):** Use [HOMEWORK-2026.md](./HOMEWORK-2026.md) to complete **all three** homework tasks (two-node Minikube, three-node kind, and three-node vanilla/Vagrant). It links the canonical [SETUP-2026.md](./SETUP-2026.md) for kubeadm/Calico. Older commands below are a **Kubernetes 1.21–1.22 historical record**.
-
-# Basic Cluster Operations
-
-> **Historical course material (Kubernetes 1.21–1.22, Debian 10).** The original lab commands below are retained unchanged for reference, but are not an up-to-date installation procedure. For a new Kubernetes v1.37 lab cluster, use [SETUP-2026.md](./SETUP-2026.md) instead.
-
-[Requirements](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#before-you-begin)
-
-# Debian 10 Based Kubernetes Template
-
-Let’s assume that we have a virtual machine with **Debian 10** installed (basic / minimal). We will use it to prepare our golden image, that will be used for the creation of the cluster. Log on to the machine (we will assume that we are working with the **root** user)
-
-Check if the **br_netfilter** module is loaded
-
-```bash
-lsmod | grep br_netfilter
-```
-
-If not, try to load it
-
-```bash
-modprobe br_netfilter
-```
-
-Then prepare a configuration file to load it on boot
-
-```bash
-cat << EOF | tee /etc/modules-load.d/k8s.conf
-br_netfilter
-EOF
-```
-
-Adjust a few more network-related settings
-
-```bash
-cat << EOF | tee /etc/sysctl.d/k8s.conf
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-net.ipv4.ip_forward = 1
-EOF
-```
-
-And then apply them
-
-```bash
-sysctl --system
-```
-
-Check which variant of **iptables** is in use
-
-```bash
-update-alternatives --query iptables
-```
-
-And switch it to the legacy version
-
-```bash
-update-alternatives --set iptables /usr/sbin/iptables-legacy
-```
-As a final general step, turn off the SWAP both for the session and in general
-
-```bash
-swapoff -a
-sed -i '/swap/ s/^/#/' /etc/fstab
-```
-
-## Container runtime
-
-Will use Docker and will follow the steps from the official [documentation](https://docs.docker.com/engine/install/debian/).
-
-Update the repositories information
-
-```bash
-apt-get update
-```
-
-And install the required packages
-
-```bash
-apt-get install ca-certificates curl gnupg lsb-release
-```
-
-Download and install the key
-
-```bash
-curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-```
-
-Add the repository
-
-```bash
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-```
-
-Install the required packages
-
-```bash
-apt-get update
-apt-get install docker-ce docker-ce-cli containerd.io
-```
-
-## Container runtime configuration
-
-Will refer to this [Container Runtimes](https://kubernetes.io/docs/setup/production-environment/container-runtimes/).
-
-Create the configuration folder if does not exist
-
-```bash
-mkdir /etc/docker
-```
-
-Then create the configuration file with the following content
-
-```bash
-cat <<EOF | tee /etc/docker/daemon.json
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2"
-}
-EOF
-```
-
-Reload and restart the service
-
-```bash
-systemctl enable docker
-systemctl daemon-reload
-systemctl restart docker
-```
-
-## Kubernetes components
-
-Will refer to this [Installing kubeadm kubelet and kubectl](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl). 
-
-Install any packages that may be missing.
-
-```bash
-apt-get update
-apt-get install -y apt-transport-https ca-certificates curl
-```
-
-Download and install the key
-
-```bash
-curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
-```
-
-Add the repository
-
-```bash
-echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
-```
-
-Update repositories information.
-
-```bash
-apt-get update
-```
-
-Check available versions of the packages.
-
-```bash
-apt-cache madison kubelet
-```
-
-Should we want to install the latest version, we may use (skip it for now).
-
-```bash
-apt-get install -y kubelet kubeadm kubectl
-```
-
-For a particular version we should use (execute this one)
-
-```bash
-apt-get install kubelet=1.21.6-00 kubeadm=1.21.6-00 kubectl=1.21.6-00
-```
-
-Then exclude the packages from being updated
-
-```bash
-apt-mark hold kubelet kubeadm kubectl
-```
-
-Turn off the machine
-
-```bash
-shutdown now
-```
-
-Using the virtualization solution techniques create a template of this machine or its virtual disk
-
-# Cluster creation
-
-Creation of simple yet working Kubernetes cluster. Small cluster with three nodes. One will be part of the control plane and the rest will handle any work.
-
-## Virtual infrastructure
-
-Using the virtualization solution techniques create three identical virtual machines each with:
--	2 vCPU
--	2 GB+ RAM
-
-Connect them in a way that will allow for Internet access and easier communication with and between them. External/bridged mode will be the best option
-During the manual, will use 192.168.0.0/24. You should adjust the commands to match your setup.
-
-## Preparation
-
-Start all nodes
-
-Log on the first one and set
--	Its IP address, for example 192.168.0.53/24
--	Ifs FQDN, for example node-1.k8s
--	Its /etc/hosts file:
-
-
-edit /etc/network/interfaces with this values for example
-
-iface eth0 inet static
-        address 192.168.0.53/24
-        gateway 192.168.0.1
-        dns-nameservers 8.8.8.8
-
-```bash
-hostnamectl set-hostname node-1.k8s
-```
-
-```bash
-echo "192.168.0.53  node-1.k8s  node-1" | tee -a /etc/hosts
-echo "192.168.0.54  node-2.k8s  node-2" | tee -a /etc/hosts
-echo "192.168.0.55  node-3.k8s  node-3" | tee -a /etc/hosts
-```
-
-Repeat the above steps on the other two machines.
-
-## Cluster initialization (node-1)
-
-Initialize the cluster with
-
-```bash
-kubeadm init --apiserver-advertise-address=192.168.0.53 --pod-network-cidr 10.244.0.0/16
-```
-
-Installation will finish relatively quickly. Copy somewhere the join command. To start using our cluster, we must execute the following.
-
-```bash
-mkdir -p $HOME/.kube
-cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-chown $(id -u):$(id -g) $HOME/.kube/config
-```
-
-Let's check our cluster nodes (just one so far)
-
-```bash
-kubectl get nodes
-```
-
-Note that it appears as **not ready**
-Check the pods as well
-
-```bash
-kubectl get pods -n kube-system
-```
-
-Hm, most of the pods are operational, but there is one pair that is not (CoreDNS)
-Let's check why the node is not ready
-
-```bash
-kubectl describe node node-1
-```
-
-Scroll to top and look for **Ready** and **KubeletNotReady** words.
-It appears that there isn't any (POD) network plugin installed
-
-We can check [Addons](https://kubernetes.io/docs/concepts/cluster-administration/addons/).
-And get further details form [Pod Network](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network).
-Check here for a list of plugins [How to implement the kubernetes networking model](https://kubernetes.io/docs/concepts/cluster-administration/networking/#how-to-implement-the-kubernetes-networking-model).
-
-It appears, that by installing a pod network plugin, we will solve both issues. Let's install a POD network plugin. For this demo, will use the [Flannel](https://github.com/flannel-io/flannel#flannel) plugin.
-
-Install it
-
-```bash
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-```
-
-Watch the progress with
-
-```bash
-kubectl get pods --all-namespaces -w
-```
-
-After a while both Flannel and CoreDNS will be fully operational
-Press Ctrl + C to stop the monitoring
-Check again the status of the node
-
-```bash
-kubectl get nodes
-```
-
-It should be operational and ready as well.
-
-## Join nodes (node-2 and node-3)
-
-Log on to node-2
-Remember the join command that we copied earlier, now it is the time to use it
-It should have the following structure: 
-
-```bash
-kubeadm join [IP]:6443 --token [TOKEN] --discovery-token-ca-cert-hash sha256:[HASH]
-```
-
-Join the node to the cluster (yours may be different).
-
-```bash
-kubeadm join 192.168.0.53:6443 --token 8qu2va.le6ndhtt9mdpbmow \
-        --discovery-token-ca-cert-hash sha256:9d2642aeda7a1c210b26db639bbf0272e4bfa59b895904162b948c055cb39402
-```
-
-Repeat the same on node-3
-
-Return on node-1
-And check nodes
-
-```bash
-kubectl get nodes
-```
-
-Show cluster information
-
-```bash
-kubectl cluster-info
-```
-
-## Control our new cluster from our host.
-
-- Close the session to node-1.
-- Navigate to our home folder (on our host) and then to the **.kube** folder
-- Copy the configuration file (use your actual master/node-1 IP address here)
-
-```bash
-scp root@192.168.0.53:/etc/kubernetes/admin.conf .
-```
-
-Backup the existing configuration if any
-
-```bash
-mv ~\.kube\config ~\.kube\config.bak
-```
-
-Make the copied file the active configuration
-
-```bash
-mv .\admin.conf ~\.kube\config
-```
-
-Ask for cluster information but this time from the host
-
-```bash
-kubectl cluster-info
-```
-
-Check version of our **kubectl**
-
-```bash
-kubectl version --client
-```
-
-And compare it with the one of the cluster
-
-```bash
-kubectl version
-```
-
-Note: +/-1 minor version is acceptable
-
-# Dashboard Installation
-
-Check the latest version and any installation instructions [Dashboard](https://github.com/kubernetes/dashboard)
-
-Deploy the **Dashboard**
-
-```bash
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.4.0/aio/deploy/recommended.yaml
-```
-Check the pods
-
-```bash
-kubectl get pods --all-namespaces
-```
-
-Try to access the Dashboard
-
-```bash
-kubectl proxy
-```
-Use this [URL](http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/) ```http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/```
-
-We cannot log in as we do not have any valid way of doing it. Stop the Dashboard proxy with Ctrl + C. Create a file dashboard-admin-user.yml with the following content.
-
-Create a file ```dashboard-admin-user.yml``` with the following content
-
-```yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: admin-user
-  namespace: kubernetes-dashboard
-```
-
-Create one more file ```dashboard-admin-role.yml``` with the following content
-
-```yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: admin-user
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- kind: ServiceAccount
-  name: admin-user
-  namespace: kubernetes-dashboard
-```
-
-Apply both files
-
-```bash
-kubectl apply -f dashboard-admin-user.yml
-kubectl apply -f dashboard-admin-role.yml
-```
-
-Now, we can list the available secrets
-
-```bash
-kubectl -n kubernetes-dashboard get secret 
-```
-
-Identify the one with name ```admin-user-token-xxxxx``` and ask for its details
-
-```bash
-kubectl -n kubernetes-dashboard describe secret admin-user-token-wtpbm 
-```
-
-Copy the token field data. Start the proxy again with.
-
-```bash
-kubectl proxy
-```
-Navigate to the same [URL](http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/) ```http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/```
-
-Use the token from earlier. Explore the Dashboard. Once done, close the browser tab and stop the proxy with Ctrl + C.
-
-# Nodes Maintenance
-
-- Make the node unavailable for new work (**cordon**)
-- Initiate workload migration (**drain**)
-- All pods are **evicted** and recreated on other nodes 
-- Node is ready for maintenance
-- Declare the node ready for accepting work (**uncordon**)
-
-The gallant, way to remove a node from the cluster for maintenance. We can first mark the node as not schedulable, so it won't receive any new work.
-
-```bash
-kubectl cordon node-3.k8s
-```
-
-Check nodes
-
-```bash
-kubectl get nodes
-```
-
-Then check how the pods are distributed
-
-```bash
-kubectl get pods -o wide
-```
-
-As the cordon action is included in the drain action, we may **continue** or uncordon it first.
-
-```bash
-kubectl uncordon node-3.k8s
-```
-
-Next, we can drain the node. This will remove all work from it
-
-```bash
-kubectl drain node-3.k8s --ignore-errors --ignore-daemonsets --delete-local-data –force
-```
-
-And check what happened
-
-```bash
-kubectl get nodes
-kubectl get pods -o wide
-```
-
-Now, we can safely do our maintenance tasks and once done, and the node is up and running, we can inform the cluster.
-
-```bash
-kubectl uncordon node-3.k8s
-```
-
-And again, check what is going on
-
-```bash
-kubectl get nodes
-kubectl get pods -o wide
-```
-
-Hm, it seems that the workload is unbalanced. We will accept it for now, but will come back to it in a later module.
-
-# Etcd backup
-
-- **etcd** is the default database for storing the cluster state.
-- It runs on the control plane node(s).
-- Use the **etcdctl** command to control it.
-
-Let's create a snapshot of the etcd database. Log on to the control plane node. Execute the following to create a snapshot.
-
-```bash
-ETCDCTL_API=3 etcdctl snapshot save /tmp/etcd-snapshot.db
-```
-
-If the **etcdctl** binary appears to be missing, then install it. *For example, on **Debian/Ubuntu**, we can use the following*
-
-```bash
-apt-get update
-apt-get install etcd-client
-```
-
-Then repeat the backup try.
-
-```bash
-ETCDCTL_API=3 etcdctl snapshot save /tmp/etcd-snapshot.db
-```
-
-If we receive an error again and if reads **"Error:  rpc error: code = Unavailable desc = transport is closing"** then we must authenticate first. For this, we must change the above command to. 
-
-```bash
-ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
-  --cacert=<trusted-ca-file> --cert=<cert-file> --key=<key-file> \
-  snapshot save /tmp/etcd-snapshot.db
-```
-Where **trusted-ca-file**, **cert-file** and **key-file** can be obtained from the description of the **etcd** pod. We can get them from.
-
-```bash
-cat /etc/kubernetes/manifests/etcd.yaml
-```
-
-They are:
-- ```--trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt```
-- ```--cert-file=/etc/kubernetes/pki/etcd/server.crt```
-- ```--key-file=/etc/kubernetes/pki/etcd/server.key```
-
-Then, the final backup command becomes:
-
-```bash
-ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
-  --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key \
-  snapshot save /tmp/etcd-snapshot.db
-```
-
-Now, everything should work as expected. Check the snapshot.
-
-```bash
-ls -al /tmp/etcd*
-```
-
-**Etcd** holds the state of the cluster. If a change occurs, can bring everything back as it was at the time of the snapshot.
-
-# Etcd restore
-
-Restore the database using the snapshot made earlier.
-
-```bash
-ETCDCTL_API=3 etcdctl snapshot restore /tmp/etcd-snapshot.db --data-dir /var/lib/etcd-restore
-```
-
-Next, we must instruct the **etcd** to use the restored data.
-
-Edit the **/etc/kubernetes/manifests/etcd.yaml** file and change the **etcd-data** volume to point to the new place (**/var/lib/etcd-restore**).
-
-Save and close the file. Wait a while for the changes to take place.
-
-Check again the pods.
-
-```bash
-kubectl get pods
-```
-
-The pods should be like they was in saved state.
-
-# Upgrade a cluster
-
-- Control plane nodes (one by one)
-  - kubeadm
-  - Upgrade the node
-  - Drain the node
-  - Upgrade the other components
-  - Uncordon the node
-- Nodes (one by one)
-  - Same approach as with the control plane nodes
-
-
-We will refer to these sources:
-
-- [Cluster Upgrade](https://kubernetes.io/docs/tasks/administer-cluster/cluster-upgrade/)
-- [Kubeadm Upgrade](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)
-
-## Upgrade Control Plane nodes 
-
-Will do one node at a time. Check the latest version.
-
-```bash
-apt update
-apt-cache madison kubeadm
-```
-
-Have only one control plane node, so don’t have to choose. At the moment, the latest version is 1.22.3-00 so let’s use it.
-
-```bash
-apt-get update && \
-apt-get install -y --allow-change-held-packages kubeadm=1.22.3-00
-```
-
-Check that the new version is here
-
-```bash
-kubeadm version
-```
-
-Ask for the upgrade plan
-
-```bash
-kubeadm upgrade plan
-```
-
-Should we see any errors (**not in production**), we may use the following
-
-```bash
-kubeadm upgrade plan --ignore-preflight-errors=true
-```
-
-Then initiate the actual upgrade
-
-```bash
-kubeadm upgrade apply v1.22.3
-```
-
-When asked for confirmation, do it
-
-Nay need to upgrade CNI provider plugin (not in this case), so must consult with its documentation
-**If had other control plane nodes, then must execute the following command on each one of them:**
-
-```bash
-kubeadm upgrade node
-```
-
-Drain the node
-
-```bash
-kubectl drain node-1.k8s --ignore-daemonsets
-```
-
-Or if we see any errors that the process cannot be finished, execute this
-
-```bash
-kubectl drain node-1.k8s --ignore-errors --ignore-daemonsets --delete-local-data --force
-```
-
-Upgrade the **kubelet** and **kubectl**. As at the moment, the latest version is 1.22.3-00, will execute this.
-
-```bash
-apt-get update && \
-apt-get install -y --allow-change-held-packages kubelet=1.22.3-00 kubectl=1.22.3-00
-```
-
-Restart the **kubelet** service
-
-```bash
-systemctl daemon-reload
-systemctl restart kubelet
-```
-
-Uncordon the node
-
-```bash
-kubectl uncordon node-1.k8s
-```
-
-Check the cluster status
-
-```bash
-kubectl get nodes
-```
-
-## Upgrade worker nodes
-
-Will do one node at a time.
-
-As at the moment, the latest version is **1.22.3-00**, we will execute.
-
-```bash
-apt-get update && \
-apt-get install -y --allow-change-held-packages kubeadm=1.22.3-00
-```
-
-Then the upgrade
-
-```bash
-kubeadm upgrade node
-```
-
-Drain the node (from the control plane node)
-
-```bash
-kubectl drain node-2.k8s --ignore-daemonsets
-```
-
-Or if we see an error, execute
-
-```bash
-kubectl drain node-2.k8s --ignore-errors --ignore-daemonsets --delete-local-data --force
-```
-
-Return on the node. Upgrade the **kubelet** and **kubectl**.
-
-```bash
-apt-get update && \
-apt-get install -y --allow-change-held-packages kubelet=1.22.3-00 kubectl=1.22.3-00
-```
-
-Then, restart the **kubelet** service.
-
-```bash
-systemctl daemon-reload
-systemctl restart kubelet
-```
-
-And uncordon the node (from the control plane node).
-
-```bash
-kubectl uncordon node-2.k8s
-```
-
-While still on the control plane node, check the cluster status.
-
-```bash
-kubectl get nodes
-```
-
-Repeat the procedure on the other node(s). Cluster is upgraded 😊.
-
-# Highly-available Cluster
-
-Need three virtual machines for control plane nodes and one or more (in this case 3) for nodes members of the cluster. In addition, we will need a machine to act as a load balancer. The following sources are used:
-
-- [Highly Available Control Plane](https://kubernetes.io/docs/tasks/administer-cluster/highly-available-control-plane/)
-- [High Availability](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/)
-- [HA Topology](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/)
-- [HA Considerations](https://github.com/kubernetes/kubeadm/blob/main/docs/ha-considerations.md)
-
-## Load Balancer
-
-This is an intentionally over-simplified HAProxy setup which will act as a load balancer for the **Control Plane**.
-
-Install the required package
-
-```bash
-apt-get update
-apt-get install haproxy
-```
-
-Then, edit the **/etc/haproxy/haproxy.cfg** file and add the following to the end 
-
-```
-frontend kubernetes
-    bind 192.168.0.220:6443
-    option tcplog
-    mode tcp
-    default_backend kubernetes-cp
-
-backend kubernetes-cp
-    option httpchk GET /healthz
-    http-check expect status 200
-    mode tcp
-    option ssl-hello-chk
-    balance roundrobin
-    server node-1 192.168.0.221:6443 check fall 3 rise 2
-    server node-2 192.168.0.222:6443 check fall 3 rise 2
-    server node-3 192.168.0.223:6443 check fall 3 rise 2
-
-frontend stats
-    bind 192.168.0.220:8080
-    mode http
-    stats enable
-    stats uri /
-    stats realm HAProxy\ Statistics
-    stats auth admin:haproxy
-```
-
-Save and close the file. Note: *you should adjust it to match your setup (names, ip addresses, etc.)*.
-
-Restart the service
-
-```bash
-systemctl restart haproxy
-```
-
-## Control Plane
-
-Before continuing make sure that all six machines have their **/etc/hosts** file adjusted.
-
-```bash
-echo "192.168.0.221  node-1.k8s  node-1" | tee -a /etc/hosts
-echo "192.168.0.222  node-2.k8s  node-2" | tee -a /etc/hosts
-echo "192.168.0.223  node-3.k8s  node-3" | tee -a /etc/hosts
-echo "192.168.0.224  node-4.k8s  node-4" | tee -a /etc/hosts
-echo "192.168.0.225  node-5.k8s  node-5" | tee -a /etc/hosts
-echo "192.168.0.226  node-6.k8s  node-6" | tee -a /etc/hosts
-```
-
-Initialize the cluster (on the first control plane node).
-
-```bash
-kubeadm init --control-plane-endpoint "192.168.0.220:6443" --upload-certs --pod-network-cidr 10.244.0.0/16
-```
-
-Installation will finish relatively quickly. Copy somewhere the join command(s). To start using our cluster, we must execute the following.
-
-```bash
-mkdir -p $HOME/.kube
-cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-chown $(id -u):$(id -g) $HOME/.kube/config
-```
-
-Let's check our cluster nodes (just one so far).
-
-```bash
-kubectl get nodes
-```
-
-Note that it appears as not ready. We know already what is causing this - the missing POD network plugin. Let's install a POD network plugin. For this demo, we will use the [Flannel plugin](https://github.com/flannel-io/flannel#flannel). Install it.
-
-```bash
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-```
-
-We can watch the progress with:
-
-```bash
-kubectl get pods --all-namespaces -w
-```
-
-After a while both Flannel and CoreDNS will be fully operational. Press Ctrl + C to stop the monitoring. Check again the status of the node.
-
-```bash
-kubectl get nodes
-```
-
-It should be operational and ready as well. Join the rest of the control plane nodes (*adjust and execute the following on all control plane nodes*).
-
-```bash
-kubeadm join 192.168.0.220:6443 --token ozo8xv.c5jz648l6tp50jqp \
-        --discovery-token-ca-cert-hash sha256:f7eff5b82343969492fb8f8f613dc7ff752dc2da06e5d79e69879d425e980121 \
-        --control-plane --certificate-key d6befa0a65edc6659e1bd56a4706de715c7e11499c2aaf0c4c3f5b7100e7f780
-```
-
-Check the state of the control plane with
-
-```bash
-kubectl get nodes
-kubectl get nodes -o wide
-```
-
-## Cluster Workers
-
-Now, join the other nodes using the command shown earlier (*adjust it and execute it on all remaining nodes*).
-
-```bash
-kubeadm join 192.168.0.220:6443 --token ozo8xv.c5jz648l6tp50jqp \
-        --discovery-token-ca-cert-hash sha256:f7eff5b82343969492fb8f8f613dc7ff752dc2da06e5d79e69879d425e980121
-```
-
-Check the state of the control plane with.
-
-```bash
-kubectl get nodes
-```
-
-Now should have a real cluster.
-
-Now, we can do all the usual stuff:
--	copy the configuration locally
--	install the Dashboard
--	spin up some workload
-
-To use NodePort must use the IP address of the nodes and not the load balancer. Can correct this by changing the load balancer configuration **/etc/haproxy/haproxy.cfg**. And adding the following block.
-
-```
-frontend nodeport
-    bind *:30000-32768
-    mode tcp
-    balance roundrobin
-    server node-1 192.168.0.221
-    server node-2 192.168.0.222
-    server node-3 192.168.0.223
-    server node-4 192.168.0.224
-    server node-5 192.168.0.225
-    server node-6 192.168.0.226
-```
-
-Save and close the file. Restart the service. Check again, but this time use the load balancer IP address. You can also check the load balancer’s statistics page: http://192.168.0.220:8080/
