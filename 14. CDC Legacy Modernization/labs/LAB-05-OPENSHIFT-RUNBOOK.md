@@ -71,14 +71,17 @@ chmod 600 .runtime/openshift-legacy.env .runtime/openshift-modern.env
 **Преди следващата команда** замени *всички* `REPLACE` стойности с разрешени актуални данни чрез editor; полетата са инструкции, **не са работещи credentials**. Съхранявай правилните TLS настройки/secret management според реалния environment. Не изпращай тайните в chat/logове.
 
 ```bash
-grep -q 'REPLACE' .runtime/openshift-legacy.env && {
-  echo 'Replace placeholder in legacy secret file' >&2; false;
-} || true
-grep -q 'REPLACE' .runtime/openshift-modern.env && {
-  echo 'Replace placeholder in modern secret file' >&2; false;
-} || true
-oc create secret generic m14-legacy-conn --from-env-file=.runtime/openshift-legacy.env
-oc create secret generic m14-modern-conn --from-env-file=.runtime/openshift-modern.env
+if grep -q 'REPLACE' .runtime/openshift-legacy.env; then
+  echo 'Replace the placeholder values in the legacy secret file' >&2
+else
+  oc create secret generic m14-legacy-conn --from-env-file=.runtime/openshift-legacy.env
+fi
+if grep -q 'REPLACE' .runtime/openshift-modern.env; then
+  echo 'Replace the placeholder values in the modern secret file' >&2
+else
+  oc create secret generic m14-modern-conn --from-env-file=.runtime/openshift-modern.env
+fi
+oc get secret m14-legacy-conn m14-modern-conn
 ```
 
 **Очаквано:** само собствените Secret обекти са създадени; legacy Pod **не получава cashback DB credentials**, modern Pod **не получава legacy DB credentials**. Това дава реална least-privilege граница на configuration ниво, а в production проверявай и DB роли/network policies.
