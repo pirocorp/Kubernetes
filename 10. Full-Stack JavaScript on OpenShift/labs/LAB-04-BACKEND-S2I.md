@@ -5,7 +5,7 @@
 ## 1. Предпоставки и файлове
 
 - Собствен OpenShift Project с `oc` и достатъчни namespace права за BuildConfig, Build, ImageStream, Deployment, Service, Secret и env modification.
-- **Подготвена PostgreSQL** от [Lab 10-C](./LAB-03-POSTGRESQL.md) с `m10-postgres`, `short_links` table и `m10-db-url` Secret. Ако пропускаш предишните упражнения, изпълни **раздели 2–6 на 10-C**, преди този lab.
+- **Подготвена PostgreSQL** от [Lab 10-C](./LAB-03-POSTGRESQL.md) с `m10-postgres`, `short_links` table и `m10-db-url` Secret. Ако пропускаш предишните упражнения, изпълни **раздели 2–6 на 10-C** (избери PVC или emptyDir, template не е задължителен), преди този lab.
 - Frontend от [Lab 10-B](./LAB-02-FRONTEND-CONTAINER.md) е необходим **само за пълната browser проверка** в раздел 5. Ако липсва, можеш да тестваш backend през port-forward.
 - Файлове: [server.mjs](../src/backend/server.mjs), [package.json](../src/backend/package.json), [package-lock.json](../src/backend/package-lock.json), [Dockerfile](../src/backend/Dockerfile).
 - Проверка за **Node.js S2I builder image stream** (актуалният stream/tag зависи от инсталацията); примерът използва `nodejs:22-ubi9` само ако реално е наличен. **Няма задължителен GitHub fork** — build използва binary source upload от настоящия checkout.

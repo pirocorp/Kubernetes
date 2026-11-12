@@ -145,7 +145,7 @@ python3 tools/verify_cluster.py --base-url "https://$M10_ROUTE"
 | \`GET /r/code\` → 502 | Frontend не може да достигне redirector | NetworkPolicy, env, Pod readiness |
 | UI се зарежда, но POST → 502 | Backend не е Ready | \`BACKEND_URL\`, logs, \`/readyz\` |
 | HTTPS Route не работи | \`oc describe route m10-frontend\` | Router/host, edge TLS |
-| След Pod restart няма линкове | Ефимерна PostgreSQL от 10-C | Очаквано ограничение; за durability използвай PVC |
+| След Pod restart няма линкове | 10-C вариант B/C (ефимерна DB) | Очаквано; за PVC persistence избери вариант A още при първоначалното deployment |
 
 ## 8. Cleanup — в правилния ред
 
@@ -165,11 +165,15 @@ oc delete builds -l buildconfig=m10-frontend --ignore-not-found
 oc delete builds -l buildconfig=m10-backend --ignore-not-found
 oc delete builds -l buildconfig=m10-redirector --ignore-not-found
 oc delete secret/m10-db-url --ignore-not-found
-oc delete dc/m10-postgres svc/m10-postgres --ignore-not-found
+oc delete deployment/m10-postgres service/m10-postgres --ignore-not-found
+oc delete pvc/m10-postgres-data --ignore-not-found  # само ако данните вече не трябват
+oc delete secret/m10-postgres-auth --ignore-not-found
+# само ако използва оригиналния template вариант C:
+oc get dc/m10-postgres >/dev/null 2>&1 && oc delete dc/m10-postgres
 oc get deploy,svc,route,bc,is,dc
 unset M10_ROUTE
 \`\`\`
 
-**Ако template създава допълнителни обекти**, следвай изхода от \`oc process -n openshift postgresql-ephemeral ... -o name\` от 10-C и премахни единствено собствените ресурси. Ефимерната база губи данните си при Pod/Deployment lifecycle. Не изтривай Projects, Operators и чужди приложения.
+**Ако template C създава допълнителни обекти**, използвай записания изход от \`oc process -n openshift postgresql-ephemeral ... -o name\` от 10-C, за да изтриеш единствено собствените ресурси. При вариант A PVC има отделен data lifecycle; при B/C данните са ефимерни. Не изтривай Projects, Operators или чужди приложения.
 
 **Критерий:** нов microservice от build image, конфигурация чрез Secret/Service DNS, цялостен browser → frontend → backend/redirector → PostgreSQL поток и успешен HTTPS 201→302 тест.
