@@ -4,16 +4,16 @@
 apiVersion: eventing.knative.dev/v1
 kind: Broker
 metadata:
-  name: m13-reviews-broker
-  labels: {training: module13}
+  name: m14-reviews-broker
+  labels: {training: module14}
 ---
 apiVersion: sources.knative.dev/v1
 kind: KafkaSource
 metadata:
-  name: m13-globex-kafka-source
-  labels: {training: module13}
+  name: m14-globex-kafka-source
+  labels: {training: module14}
 spec:
-  consumerGroup: m13-knative-source
+  consumerGroup: m14-knative-source
   initialOffset: earliest
   bootstrapServers:
     - KAFKA_BOOTSTRAP_PLACEHOLDER
@@ -23,32 +23,32 @@ spec:
     ref:
       apiVersion: eventing.knative.dev/v1
       kind: Broker
-      name: m13-reviews-broker
+      name: m14-reviews-broker
 ---
 apiVersion: eventing.knative.dev/v1
 kind: Trigger
 metadata:
-  name: m13-moderation-trigger
-  labels: {training: module13}
+  name: m14-moderation-trigger
+  labels: {training: module14}
 spec:
-  broker: m13-reviews-broker
+  broker: m14-reviews-broker
   subscriber:
     ref:
       apiVersion: v1
       kind: Service
-      name: m13-globex-reviews
+      name: m14-globex-reviews
     uri: /events/moderation
 ---
 apiVersion: eventing.knative.dev/v1
 kind: Trigger
 metadata:
-  name: m13-sentiment-trigger
-  labels: {training: module13}
+  name: m14-sentiment-trigger
+  labels: {training: module14}
 spec:
-  broker: m13-reviews-broker
+  broker: m14-reviews-broker
   subscriber:
     ref:
       apiVersion: v1
       kind: Service
-      name: m13-globex-reviews
+      name: m14-globex-reviews
     uri: /events/sentiment

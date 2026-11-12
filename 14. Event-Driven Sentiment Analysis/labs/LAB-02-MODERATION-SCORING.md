@@ -1,10 +1,10 @@
-# Lab 13-B — Moderation, Sentiment Scoring, privacy и безопасно публикуване
+# Lab 14-B — Moderation, Sentiment Scoring, privacy и безопасно публикуване
 
 **Цел:** отдели **moderation decision** от **sentiment score**; провери, че review с забранено съдържание **не се публикува**, независимо от sentiment оценката. Това адаптира двата независими intelligent application consumers от [Red Hat Globex Pattern](https://www.solutionpatterns.io/solution-pattern-sentiment-analysis/solution-pattern-sentiment-analysis/03-demo.html).
 
 ## 1. Предпоставки
 
-.NET SDK 10, Python 3.10+, Bash, Git, порт 5080 и source файловете в Module 13. Няма нужда да си изпълнил Lab 13-A преди това. От корена на Module 13:
+.NET SDK 10, Python 3.10+, Bash, Git, порт 5080 и source файловете в Module 14. Няма нужда да си изпълнил Lab 14-A преди това. От корена на Module 14:
 
 ```bash
 test -f src/GlobexReviews/ReviewProcessor.cs
@@ -59,7 +59,7 @@ curl -fsS http://127.0.0.1:5080/metrics/sentiment
 
 **Очаквано:** всички 30 POST заявки са приети с HTTP 202; `verify.py` изпраща още четири **контролирани** fixtures и доказва approved/denied/positive/negative/neutral. В `/reviews/approved` няма текстове с `spam` (според този учебен blocklist), но те могат да бъдат анализирани от отделния sentiment worker.
 
-**Важно:** оригиналният Red Hat pattern използва Kafka topics `globex.reviews` → `reviews.moderated` / `reviews.denied` и отделен sentiment поток. Локалният in-memory режим демонстрира **семантиката**, а **Kafka topics действително се създават и консумират** в [Lab 13-C](./LAB-03-KAFKA-STORAGE-DASHBOARD.md).
+**Важно:** оригиналният Red Hat pattern използва Kafka topics `globex.reviews` → `reviews.moderated` / `reviews.denied` и отделен sentiment поток. Локалният in-memory режим демонстрира **семантиката**, а **Kafka topics действително се създават и консумират** в [Lab 14-C](./LAB-03-KAFKA-STORAGE-DASHBOARD.md).
 
 ## 4. Защо отрицателен review може да бъде approved?
 
@@ -107,7 +107,7 @@ curl -fsS http://127.0.0.1:5080/events
 | Review остава pending | Локалният process и stderr | `dotnet run` отново; може да има worker exception |
 | Всички са neutral | Текстът съдържа непознати за demo lexicon думи | Използвай английските sample fixtures; това не е multilingual model |
 | Denied се показва публично | `/reviews/approved` и `ReviewRules.Moderate` | Провери логиката и забранените токени, не променяй тестовете |
-| Няма Kafka topics | `REVIEWS_MODE=local` | За реален broker следвай Lab 13-C |
+| Няма Kafka topics | `REVIEWS_MODE=local` | За реален broker следвай Lab 14-C |
 | `Address already in use` | Port 5080 | Спри собственото foreground приложение или стар PID |
 | `NU1301` | NuGet restore | Провери proxy и NuGet достъп |
 

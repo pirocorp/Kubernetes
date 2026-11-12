@@ -59,7 +59,7 @@ printf '%s\n' "$KAFKA_GROUP_LIST"
 for topic in globex.reviews reviews.moderated reviews.denied reviews.sentiment; do
   grep -Fqx "$topic" <<< "$TOPICS" || { echo "Missing Kafka topic $topic" >&2; exit 1; }
 done
-for group in m13-moderation m13-sentiment; do
+for group in m14-moderation m14-sentiment; do
   grep -Fqx "$group" <<< "$KAFKA_GROUP_LIST" || { echo "Missing Kafka consumer group $group" >&2; exit 1; }
 done
 echo "PASS real Kafka fan-out, PostgreSQL, InfluxDB and provisioned Grafana"

@@ -1,4 +1,4 @@
-# Lab 13-D — Inference service, scoring contracts, observability и model governance
+# Lab 14-D — Inference service, scoring contracts, observability и model governance
 
 **Цел:** да разбереш границата между **event-processing app** и **AI/ML inference service**. Ще смениш локалния лексикон с реално HTTP повикване към **учебна inference услуга**, ще провериш договора и ще разбереш как после се включва модел от OpenShift AI. Тази част е напълно локална, без GPU, Hugging Face акаунт или платен inference API.
 
@@ -7,8 +7,8 @@
 ## 1. Предпоставки
 
 - .NET SDK 10, Python 3.10+, Bash, свободни портове **5080** (Globex API) и **8090** (inference fixture).
-- От корена на Module 13 провери наличието на [SentimentScorer.cs](../src/GlobexReviews/SentimentScorer.cs), [tools/mock_model.py](../tools/mock_model.py), [HTTP verification](../tools/verify.py).
-- Ако Lab 13-A/B още работи на 5080, спри собствения процес с Ctrl+C. Ако Kafka Lab 13-C още работи, спри неговия C# процес — не трябва да стартираш две версии на една и съща port.
+- От корена на Module 14 провери наличието на [SentimentScorer.cs](../src/GlobexReviews/SentimentScorer.cs), [tools/mock_model.py](../tools/mock_model.py), [HTTP verification](../tools/verify.py).
+- Ако Lab 14-A/B още работи на 5080, спри собствения процес с Ctrl+C. Ако Kafka Lab 14-C още работи, спри неговия C# процес — не трябва да стартираш две версии на една и съща port.
 - Docker/Postgres/Influx не са нужни за упражнението. Ако искаш да продължиш по Kafka пътя, можеш да използваш `REVIEWS_MODE=kafka` и същите model configuration, но това е отделно deployment.
 
 ## 2. Architecture: model serving interface
@@ -31,7 +31,7 @@ sequenceDiagram
 
 ## 3. Стартирай модела
 
-**Терминал 1** (корен на Module 13):
+**Терминал 1** (корен на Module 14):
 
 ```bash
 python3 tools/mock_model.py

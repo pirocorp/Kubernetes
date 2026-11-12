@@ -1,4 +1,4 @@
-# Lab 13-C — Реален Kafka + PostgreSQL + InfluxDB + Grafana
+# Lab 14-C — Реален Kafka + PostgreSQL + InfluxDB + Grafana
 
 **Учебна цел:** да замениш in-memory каналите с **истински Apache Kafka broker**, два независими consumer groups, event topics, persistence в PostgreSQL и time-series в InfluxDB, визуализирани през Grafana. Това е **локалният пълен end-to-end вариант** на [Red Hat Globex Architecture](https://www.solutionpatterns.io/solution-pattern-sentiment-analysis/solution-pattern-sentiment-analysis/02-architecture.html).
 
@@ -7,8 +7,8 @@
 - **.NET SDK 10**, Python **3.10+**, Bash, Docker Engine + Docker Compose v2 и `curl`; нужна е връзка към NuGet и Docker image registries за първо изпълнение.
 - Препоръчително: **8 GiB RAM свободни** за локални Kafka, PostgreSQL, InfluxDB, Grafana, .NET приложения. Реалните изисквания варират според хоста.
 - Следните **локални** TCP портове трябва да са свободни: **5080 (API), 9092 (Kafka), 5433 (PostgreSQL), 8086 (InfluxDB), 3300 (Grafana)**.
-- **Работна директория: корен на Module 13.** Файловете са включени: [compose.yaml](../compose.yaml), [SQL schema](../sql/init.sql), [Kafka producer/consumers](../src/GlobexReviews/KafkaTransport.cs), [Postgres/Influx adapters](../src/GlobexReviews/OutputSinks.cs), [Grafana datasource + dashboard](../grafana/provisioning/datasources/influx.yaml), [integration acceptance](../scripts/verify-kafka.sh).
-- Не стартирай локалния Lab 13-A/B API на :5080 едновременно с този вариант.
+- **Работна директория: корен на Module 14.** Файловете са включени: [compose.yaml](../compose.yaml), [SQL schema](../sql/init.sql), [Kafka producer/consumers](../src/GlobexReviews/KafkaTransport.cs), [Postgres/Influx adapters](../src/GlobexReviews/OutputSinks.cs), [Grafana datasource + dashboard](../grafana/provisioning/datasources/influx.yaml), [integration acceptance](../scripts/verify-kafka.sh).
+- Не стартирай локалния Lab 14-A/B API на :5080 едновременно с този вариант.
 - **Не** използвай външни истински customer reviews. Този Docker Compose е за личен lab на `127.0.0.1` — Kafka няма SASL/TLS и **не** е годен за публична мрежа или production.
 
 ### 1.1. Безопасна конфигурация
@@ -41,8 +41,8 @@ docker compose config --quiet
 flowchart LR
     A["POST /reviews"] --> P[".NET Kafka Producer"]
     P --> T[("globex.reviews topic")]
-    T -->|group m13-moderation| M["Moderation Worker"]
-    T -->|group m13-sentiment| S["Sentiment Worker"]
+    T -->|group m14-moderation| M["Moderation Worker"]
+    T -->|group m14-sentiment| S["Sentiment Worker"]
     M --> OK["reviews.moderated topic"]
     M --> NO["reviews.denied topic"]
     M -->|approved only| PG[("PostgreSQL")]
@@ -92,7 +92,7 @@ ASPNETCORE_URLS=http://127.0.0.1:5080 \
   --project src/GlobexReviews/GlobexReviews.csproj
 ```
 
-**Очаквано:** .NET Web API на 5080, две Kafka consumer groups, topics `globex.reviews`, `reviews.moderated`, `reviews.denied` и `reviews.sentiment`. Проектът сам създава **учебните** topics, само ако Kafka Admin API го позволява (в този локален Compose позволява). **Ако не можеш да създаваш topics**, използвай pre-created topics и `KAFKA_MANAGE_TOPICS=false`, описано в Lab 13-E.
+**Очаквано:** .NET Web API на 5080, две Kafka consumer groups, topics `globex.reviews`, `reviews.moderated`, `reviews.denied` и `reviews.sentiment`. Проектът сам създава **учебните** topics, само ако Kafka Admin API го позволява (в този локален Compose позволява). **Ако не можеш да създаваш topics**, използвай pre-created topics и `KAFKA_MANAGE_TOPICS=false`, описано в Lab 14-E.
 
 В терминал 2 от същия корен:
 
@@ -112,10 +112,10 @@ docker compose exec -T kafka \
   /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
 docker compose exec -T kafka \
   /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 \
-  --describe --group m13-moderation
+  --describe --group m14-moderation
 docker compose exec -T kafka \
   /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 \
-  --describe --group m13-sentiment
+  --describe --group m14-sentiment
 ```
 
 **Очаквано:** четири topics и две независими groups с committed offsets. Може да инспектираш sample events:
@@ -162,7 +162,7 @@ python3 tools/generate_reviews.py --base-url http://127.0.0.1:5080 --count 60
 
 Използвай времевия диапазон **Last 1 hour**; възможно е малко забавяне за обработката и dashboard refresh.
 
-**Истински ли е моделът?** Не. В Kafka Lab **съхранението и event transport са реални**, но default sentiment оценката все още е **детерминистичен лексикон**, а не trained ML. В [Lab 13-D](./LAB-04-MODEL-INFERENCE-OBSERVABILITY.md) се упражнява границата към inference service.
+**Истински ли е моделът?** Не. В Kafka Lab **съхранението и event transport са реални**, но default sentiment оценката все още е **детерминистичен лексикон**, а не trained ML. В [Lab 14-D](./LAB-04-MODEL-INFERENCE-OBSERVABILITY.md) се упражнява границата към inference service.
 
 ## 7. Еднокоманден интеграционен тест
 
@@ -194,7 +194,7 @@ bash scripts/verify-kafka.sh
 Първо спри C# foreground приложението с Ctrl+C. След това:
 
 ```bash
-# Само от корена на Module 13
+# Само от корена на Module 14
 docker compose down
 ```
 

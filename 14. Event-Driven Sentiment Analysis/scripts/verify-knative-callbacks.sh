@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Requires the running Docker Compose Kafka/Postgres/Influx stack from Lab 13-C.
-# This tests only the HTTP callback contract; actual KafkaSource/Knative is Lab 13-E.
+# Requires the running Docker Compose Kafka/Postgres/Influx stack from Lab 14-C.
+# This tests only the HTTP callback contract; actual KafkaSource/Knative is Lab 14-E.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 test -f .env || { echo "Run python3 tools/init_env.py and docker compose up first" >&2; exit 1; }
@@ -39,6 +39,6 @@ PY
   if test "$i" -eq 30; then cat "$work/app.log"; exit 1; fi
   sleep 1
 done
-M13_CALLBACK_BASE_URL=http://127.0.0.1:5081 python3 tools/verify_knative_callbacks.py
+M14_CALLBACK_BASE_URL=http://127.0.0.1:5081 python3 tools/verify_knative_callbacks.py
 python3 tools/check_external.py --minimum-approved 3
 echo "PASS Knative-style CloudEvent HTTP callback contract (not live Knative)"

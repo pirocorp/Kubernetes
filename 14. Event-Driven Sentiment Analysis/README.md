@@ -1,4 +1,4 @@
-# Module 13 — Event-Driven Intelligent Applications: Kafka, CloudEvents & Sentiment Analysis
+# Module 14 — Event-Driven Intelligent Applications: Kafka, CloudEvents & Sentiment Analysis
 
 **Учебна цел:** да проектираш, напишеш, стартираш и валидираш **event-driven приложение** с независимо обработване на ревюта, moderation, sentiment scoring, Kafka, PostgreSQL, time-series analytics и OpenShift Serverless/Knative. Всички основни компоненти имат пълен C# source, конкретни настройки, работещи примери, проверки, troubleshooting и cleanup.
 
@@ -18,7 +18,7 @@
 - Да използваш реални `KafkaSource`, `Broker` и `Trigger` resources, ако платформата разрешава Knative Eventing.
 - Да диагностицираш грешки, зависимост от инфраструктура, дублирани събития, недостъпни модели, privacy и cleanup.
 
-**Предварителни знания:** [Kubernetes 00–08](../COURSE-2026.md), [Module 09 — OpenShift](../09.%20OpenShift/README.md); препоръчително [Module 10 — API-First](../10.%20API-First%20Development%20and%20API%20Management/README.md), [Module 11 — API Versioning](../11.%20API%20Versioning%20and%20Lifecycle%20Management/README.md) и [Module 12 — API Management & Service Mesh](../12.%20API%20Management%20and%20Service%20Mesh/README.md). Основните Kafka понятия са обяснени в настоящия урок — не се предполага предварителен Kafka опит.
+**Предварителни знания:** [Kubernetes 00–08](../COURSE-2026.md), [Module 09 — OpenShift](../09.%20OpenShift/README.md); препоръчително [Module 11 — API-First](../11.%20API-First%20Development%20and%20API%20Management/README.md), [Module 12 — API Versioning](../12.%20API%20Versioning%20and%20Lifecycle%20Management/README.md) и [Module 13 — API Management & Service Mesh](../13.%20API%20Management%20and%20Service%20Mesh/README.md). Основните Kafka понятия са обяснени в настоящия урок — не се предполага предварителен Kafka опит.
 
 ## 2. Globex: бизнес задача
 
@@ -71,19 +71,19 @@ flowchart TD
 | **`REVIEWS_MODE=kafka`** | .NET + Docker Compose | Реален Kafka broker, **2 Kafka consumer groups**, PostgreSQL, InfluxDB и Grafana | OpenShift Serverless и trained AI model |
 | **`REVIEWS_MODE=knative`** | Разрешен OpenShift + Knative + Kafka | Реален KafkaSource, Broker и 2 Triggers към C# callbacks | Автоматично provisioned Kafka/DB/AI cluster или enterprise IAM |
 
-**Не** наричай `local` Channel „Kafka“; той е учебен аналог на fan-out. **Не** наричай `demo-lexicon-v1` „AI модел“ — това са прости детерминистични правила. Истинският Kafka/data-stack е наличен в **13-C**, а model HTTP boundary — в **13-D**.
+**Не** наричай `local` Channel „Kafka“; той е учебен аналог на fan-out. **Не** наричай `demo-lexicon-v1` „AI модел“ — това са прости детерминистични правила. Истинският Kafka/data-stack е наличен в **14-C**, а model HTTP boundary — в **14-D**.
 
 ## 4. Практическа програма
 
 | Стъпка | Лабораторно упражнение | Приемане / проверка |
 |---|---|---|
-| **13-A** | [EDA, CloudEvents и C# локален pipeline](./labs/LAB-01-EVENTS-CLOUDEVENTS.md) | Build и 202/400/404; CloudEvents; независими processors |
-| **13-B** | [Moderation и sentiment scoring](./labs/LAB-02-MODERATION-SCORING.md) | Approved/denied, negative ≠ denied, score, idempotency и privacy |
-| **13-C** | [Реален Kafka + PostgreSQL + InfluxDB + Grafana](./labs/LAB-03-KAFKA-STORAGE-DASHBOARD.md) | Четири topics, две groups, SQL записи, Influx series и dashboard |
-| **13-D** | [Model inference boundary и observability](./labs/LAB-04-MODEL-INFERENCE-OBSERVABILITY.md) | Реално HTTP inference към локален fixture и валидиран model response |
-| **13-E** | [OpenShift Serverless/Knative Eventing](./labs/LAB-05-OPENSHIFT-KNATIVE.md) | KafkaSource → Broker → 2 Triggers → C# callbacks; namespace cleanup |
+| **14-A** | [EDA, CloudEvents и C# локален pipeline](./labs/LAB-01-EVENTS-CLOUDEVENTS.md) | Build и 202/400/404; CloudEvents; независими processors |
+| **14-B** | [Moderation и sentiment scoring](./labs/LAB-02-MODERATION-SCORING.md) | Approved/denied, negative ≠ denied, score, idempotency и privacy |
+| **14-C** | [Реален Kafka + PostgreSQL + InfluxDB + Grafana](./labs/LAB-03-KAFKA-STORAGE-DASHBOARD.md) | Четири topics, две groups, SQL записи, Influx series и dashboard |
+| **14-D** | [Model inference boundary и observability](./labs/LAB-04-MODEL-INFERENCE-OBSERVABILITY.md) | Реално HTTP inference към локален fixture и валидиран model response |
+| **14-E** | [OpenShift Serverless/Knative Eventing](./labs/LAB-05-OPENSHIFT-KNATIVE.md) | KafkaSource → Broker → 2 Triggers → C# callbacks; namespace cleanup |
 
-**Последователност:** 13-A → 13-B → 13-C → 13-D → 13-E. Всяко упражнение има собствена секция за prerequisites, старт, команди, очаквани резултати, откази и cleanup. Можеш да започнеш **13-C самостоятелно**, защото неговите Docker/SQL/Grafana файлове са включени в Module 13.
+**Последователност:** 14-A → 14-B → 14-C → 14-D → 14-E. Всяко упражнение има собствена секция за prerequisites, старт, команди, очаквани резултати, откази и cleanup. Можеш да започнеш **14-C самостоятелно**, защото неговите Docker/SQL/Grafana файлове са включени в Module 14.
 
 ## 5. Quick start — без Docker
 
@@ -91,7 +91,7 @@ flowchart TD
 
 ```bash
 git clone https://github.com/pirocorp/Kubernetes.git
-cd "Kubernetes/13. Event-Driven Sentiment Analysis"
+cd "Kubernetes/14. Event-Driven Sentiment Analysis"
 dotnet --version
 python3 --version
 bash scripts/verify-local.sh
@@ -104,14 +104,14 @@ bash scripts/verify-local.sh
 Нужни са Docker Engine + Docker Compose v2, допълнителни свободни ресурси и local TCP портове 5080, 9092, 5433, 8086, 3300.
 
 ```bash
-# От корена на Module 13. Освободи :5080 от предишен ръчен run.
+# От корена на Module 14. Освободи :5080 от предишен ръчен run.
 python3 tools/init_env.py
 bash scripts/verify-kafka.sh
 ```
 
 **Очаквано:** реална C# компилация, Kafka producer + два independent consumer groups, PostgreSQL approved reviews, InfluxDB data points, Grafana containers. **Готова Grafana dashboard:** <http://127.0.0.1:3300>, credentials в локалния `.env`. Не commit-вай `.env`.
 
-**Cleanup:** `docker compose down` запазва volumes; `docker compose down -v` изтрива **само след изрично решение** учебните volumes. Подробни инструкции: [Lab 13-C](./labs/LAB-03-KAFKA-STORAGE-DASHBOARD.md).
+**Cleanup:** `docker compose down` запазва volumes; `docker compose down -v` изтрива **само след изрично решение** учебните volumes. Подробни инструкции: [Lab 14-C](./labs/LAB-03-KAFKA-STORAGE-DASHBOARD.md).
 
 ## 7. Как изглежда CloudEvent?
 
@@ -145,7 +145,7 @@ API връща **HTTP 202** с `reviewId`, а publisher записва стру�
 }
 ```
 
-Това е примерен JSON със символични IDs и дата. Реалните стойности се генерират от приложението. Подробно обяснение на всеки атрибут има в Lab 13-A.
+Това е примерен JSON със символични IDs и дата. Реалните стойности се генерират от приложението. Подробно обяснение на всеки атрибут има в Lab 14-A.
 
 ## 8. Политики за надеждност и безопасност
 
@@ -159,7 +159,7 @@ API връща **HTTP 202** с `reviewId`, а publisher записва стру�
 ## 9. Пълна структура на проекта
 
 ```text
-13. Event-Driven Sentiment Analysis/
+14. Event-Driven Sentiment Analysis/
 ├── README.md
 ├── contracts/review-submitted.json
 ├── examples/reviews.json

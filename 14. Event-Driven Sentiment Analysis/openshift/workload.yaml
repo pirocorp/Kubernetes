@@ -3,15 +3,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: m13-globex-reviews
-  labels: {app: m13-globex-reviews, training: module13}
+  name: m14-globex-reviews
+  labels: {app: m14-globex-reviews, training: module14}
 spec:
   replicas: 1
   selector:
-    matchLabels: {app: m13-globex-reviews}
+    matchLabels: {app: m14-globex-reviews}
   template:
     metadata:
-      labels: {app: m13-globex-reviews, training: module13}
+      labels: {app: m14-globex-reviews, training: module14}
     spec:
       containers:
         - name: reviews
@@ -26,7 +26,7 @@ spec:
             - {name: KAFKA_BOOTSTRAP, value: "KAFKA_BOOTSTRAP_PLACEHOLDER"}
             - name: INGEST_KEY
               valueFrom:
-                secretKeyRef: {name: m13-review-secret, key: INGEST_KEY}
+                secretKeyRef: {name: m14-review-secret, key: INGEST_KEY}
           resources:
             requests: {cpu: 100m, memory: 256Mi}
             limits: {cpu: 1000m, memory: 1Gi}
@@ -47,11 +47,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: m13-globex-reviews
-  labels: {app: m13-globex-reviews, training: module13}
+  name: m14-globex-reviews
+  labels: {app: m14-globex-reviews, training: module14}
 spec:
   type: ClusterIP
-  selector: {app: m13-globex-reviews}
+  selector: {app: m14-globex-reviews}
   ports:
     - {name: http, port: 8080, targetPort: http}
 ---
@@ -59,13 +59,13 @@ spec:
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: m13-globex-reviews
-  labels: {training: module13}
+  name: m14-globex-reviews
+  labels: {training: module14}
 spec:
   path: /reviews
   to:
     kind: Service
-    name: m13-globex-reviews
+    name: m14-globex-reviews
   port: {targetPort: http}
   tls:
     termination: edge
