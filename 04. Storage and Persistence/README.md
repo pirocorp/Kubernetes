@@ -1,29 +1,22 @@
 # Module 04 — Storage and Persistence
 
-> **Integrated edition · Kubernetes 1.37 (2026).** This README now contains the entire current hands-on lesson **and** the untouched original explanation and examples. The historical material remains educational but its retired APIs/CNI/scripts must not be replayed on the modern cluster.
+> **Learning edition (Kubernetes 1.37).** The theory of Docker/Kubernetes volumes, PV/PVC lifecycle, configuration and StatefulSets appears before the current matching exercises. Historical 2021 PV/StatefulSet deployment commands are **replaced** by the reproducible NFS and configuration labs below. Existing original DOCX/ZIP materials remain available as historical sources.
 
-## Recommended learning path
+## Learning path and objectives
 
-1. Use the course-wide [Kubernetes 1.37 roadmap](../README.md) to establish the required environment.
-2. Read the preserved original lecture for conceptual depth, then complete [the integrated labs](#kubernetes-137-integrated-labs) in order with their verification and cleanup steps.
-3. Contrast historical methods with their current counterparts below; retain the principle, not obsolete commands or manifest API versions.
-
-| Preserved original concepts | Integrated current treatment |
-|---|---|
-| Docker volumes, emptyDir, hostPath, NFS | Choose ephemeral, local and network-backed storage correctly |
-| PV, PVC and reclaim lifecycle | Static NFS and Retain behavior, binding and cleanup |
-| ConfigMap and Secret injection | Files and environment configuration, security considerations |
-| StatefulSet and headless Service | Stable identity and persistent storage across replicas |
-| gitRepo historical volume | Modern init-container checkout into emptyDir instead of removed driver |
+Understand how container storage lifetimes differ, how NFS/PersistentVolumes bind to claims, how ConfigMaps/Secrets configure applications, and why StatefulSets provide stable identity. Complete the modern labs using the [course baseline](../README.md), verifying `Retain` behavior rather than assuming deletion erases data.
 
 ## Kubernetes 1.37 integrated labs
 
-> **Supported execution path:** Follow these instructions and modernized repository manifests. Historical lecture commands after this section are a reference, not a deployable 1.37 runbook. The written procedure is statically reviewed, not live-cluster certified.
 
+<!-- MODERN_LAB_BEGIN STORAGE-2026.md 0 -->
 ## Module 04 — Storage and Persistence lab (Kubernetes 1.37)
 
 > **NOTE (2026):** This is the executable entry point for the original Module 04 practice and homework. The original DOCX/ZIP/README material records the 2021 course, including `gitRepo` (disabled since 1.36) and the deprecated PV `Recycle` policy. Use this guide and the revised YAML files instead of replaying those historical commands. Module 02's [SETUP-2026.md](../02.%20Cluster%20Setup%20and%20Management/SETUP-2026.md) provides the baseline Kubernetes 1.37 / containerd / Calico cluster.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN STORAGE-2026.md 1 -->
 ### 1. Prerequisites and safety
 
 - Working 1-control-plane + 2-worker cluster from Module 02; `kubectl` configured for the **lab cluster** and administrative permission to create PVs, Services and workloads.
@@ -40,150 +33,17 @@ kubectl config current-context
 ```
 
 **Expected:** cluster version 1.37.x; cp1 and both workers Ready; you have chosen the correct lab context. A default StorageClass is allowed: our **static** NFS solution explicitly uses `storageClassName: ""` for PVs and PVCs to prevent an accidental match to dynamic provisioning.
+<!-- MODERN_LAB_END -->
 
-### 2. Prepare NFS exports (run on NFS server only)
+> **Reading order:** The optional historical `gitRepo` replacement is numbered *6* in the original lab guide but appears early here because it directly demonstrates the `emptyDir` concept. The NFS and StatefulSet core exercises numbered 2–5 follow below.
 
-**Dedicated disposable lab storage, not production.** The liberal directory mode below is intentional for the teaching exercise; for real deployments use mapped UID/GID, ACLs and the minimum necessary NFS export permissions.
+## Containers and ephemeral data — original concepts
 
-```bash
-sudo apt-get update
-sudo apt-get install -y nfs-kernel-server
-sudo mkdir -p /data/nfs/k8sdata /data/nfs/k8spva /data/nfs/k8spvb /data/nfs/k8spvc /data/nfs/k8spvd
-sudo chmod 0777 /data/nfs/k8sdata /data/nfs/k8spva /data/nfs/k8spvb /data/nfs/k8spvc /data/nfs/k8spvd
+> The Docker examples here teach bind mounts and volumes conceptually. They are **supplementary** and are not the Kubernetes 1.37 homework procedure.
 
-# REPLACE 192.168.56.0/24 with your *Kubernetes node* subnet.
-sudo tee /etc/exports.d/k8s-lab.exports >/dev/null <<'EOF'
-/data/nfs/k8sdata 192.168.56.0/24(rw,sync,no_subtree_check)
-/data/nfs/k8spva  192.168.56.0/24(rw,sync,no_subtree_check)
-/data/nfs/k8spvb  192.168.56.0/24(rw,sync,no_subtree_check)
-/data/nfs/k8spvc  192.168.56.0/24(rw,sync,no_subtree_check)
-/data/nfs/k8spvd  192.168.56.0/24(rw,sync,no_subtree_check)
-EOF
-sudo exportfs -ra
-sudo systemctl enable --now nfs-kernel-server
-sudo exportfs -v
-sudo systemctl is-active nfs-kernel-server
-```
 
-**Expected:** five exports active, including `k8spvd` (the original Module 06 screenshot omitted this path in an earlier step). Allow incoming TCP 2049 only from lab nodes in your NFS server firewall.
-
-### 3. Prepare clients (run on cp1, wk1 and wk2)
-
-```bash
-sudo apt-get update
-sudo apt-get install -y nfs-common
-# REPLACE 192.168.56.50 with the IP of your NFS server, unless DNS already resolves nfs-server.
-echo '192.168.56.50 nfs-server' | sudo tee -a /etc/hosts
-getent hosts nfs-server
-sudo mkdir -p /mnt/k8s-nfs-check
-sudo mount -t nfs -o vers=4.1 nfs-server:/data/nfs/k8spva /mnt/k8s-nfs-check
-mount | grep /mnt/k8s-nfs-check
-sudo umount /mnt/k8s-nfs-check
-```
-
-**Expected:** name resolution works and the test share mounts and unmounts. Perform this on **all nodes**, not only cp1. If mounting fails, investigate TCP 2049, firewall, export CIDR, NFS server status and path permissions before continuing. A successful `ping` alone is insufficient.
-
-### 4. ConfigMap and Secret homework (Problem 1)
-
-From the repository root, navigate to `04. Storage and Persistence/Exercise/Solution/Problem 1 c/`. The following commands create the files required by the original homework and the provided `pod-hw.yaml`; use the **same namespace** for the ConfigMap, Secret and Pod (the example uses `default`).
-
-```bash
-kubectl config set-context --current --namespace=default
-cat >main.conf <<'EOF'
-name=homework
-path=/tmp
-certs=/secret
-EOF
-printf '8080\n' >port.conf
-
-# Replace values with your cluster version and node OS if different.
-kubectl create configmap hwcm --from-literal=k8sver=1.37 --from-literal=k8sos="Ubuntu 24.04" \
-  --from-file=main.conf --from-file=port.conf
-openssl genrsa -out main.key 2048
-openssl req -new -x509 -key main.key -out main.crt -days 30 -subj /CN=www.hw.lab
-kubectl create secret generic hwsec --from-file=main.key --from-file=main.crt
-kubectl apply -f pod-hw.yaml
-kubectl wait --for=condition=Ready pod/pod-hw --timeout=180s
-kubectl describe pod pod-hw
-kubectl exec pod-hw -- ls /config /secret
-kubectl exec pod-hw -- printenv HW_PORT
-```
-
-**Expected:** the Pod is Ready, `/config/main.conf`, `/secret/main.key`, `/secret/main.crt` exist and `HW_PORT=8080`. These lab private keys must never be committed or reused. Clean up before moving on:
-
-```bash
-kubectl delete pod pod-hw --ignore-not-found
-kubectl delete configmap hwcm --ignore-not-found
-kubectl delete secret hwsec --ignore-not-found
-rm -f main.key main.crt main.conf port.conf
-```
-
-### 5. NFS + StatefulSet + frontend homework (Problem 2)
-
-Use `Exercise/Solution/Problem 2/solution.yaml` **from this repository**. It contains **three PVs** (`pvssa`, `pvssb`, `pvssc`), a 3-replica `StatefulSet/pod-be`, headless `Service/facts`, backend `Service/service-be`, 3-replica `Deployment/fe-deploy`, frontend `Service/service-fe`, and ConfigMap. PV reclaim policy is `Retain`, and static storage-class matching is explicit.
-
-```bash
-# From repository root:
-kubectl apply -f "04. Storage and Persistence/Exercise/Solution/Problem 2/solution.yaml"
-kubectl rollout status statefulset/pod-be --timeout=240s
-kubectl rollout status deployment/fe-deploy --timeout=240s
-kubectl get pv,pvc,pods,svc,deploy,statefulset
-kubectl get endpointslices -l kubernetes.io/service-name=service-fe
-```
-
-**Expected:** 3 bound PVCs (one per StatefulSet ordinal), `pod-be-0..2` Ready, 3 frontend Pods Ready, NodePort **30001** on the frontend Service. The `spec.volumeClaimTemplates` in the StatefulSet use 2Gi each and match static PVs. If PVCs are Pending, check `kubectl describe pvc`, `kubectl get pv`, selectors/class, NFS exports and node reachability. PVCs need **no dynamic provisioner**.
-
-From your workstation, open `http://<reachable-node-ip>:30001` (replace the placeholder; ensure the node firewall permits TCP 30001). Verify the frontend can reach the backend and storage persists across Pod restarts.
-
-#### Clean up the lab without erasing NFS data
-
-```bash
-# Remove workloads and namespaced resources first; do NOT delete the PVs yet.
-kubectl delete deployment fe-deploy --ignore-not-found
-kubectl delete statefulset pod-be --ignore-not-found
-kubectl delete service facts service-be service-fe --ignore-not-found
-kubectl delete configmap service-be-map --ignore-not-found
-# StatefulSet PVCs are retained by default; delete them explicitly.
-kubectl get pvc
-kubectl delete pvc facts-data-pod-be-0 facts-data-pod-be-1 facts-data-pod-be-2 --ignore-not-found
-# PVs with Retain now become Released, and NFS data remains.
-kubectl get pv
-```
-
-**Important:** PVC deletion causes PVs with `Retain` to move to **Released**; the NFS data **remains**. A Released PV is not automatically available for another PVC. For another run, confirm/backup or delete the test files on NFS, delete those Released PV **objects**, and re-apply the solution. **Do not delete arbitrary NFS data**. This change avoids the deprecated automatic `Recycle` scrub.
-
-```bash
-# Only after verifying retained lab data and deciding to reclaim the storage:
-kubectl delete pv pvssa pvssb pvssc --ignore-not-found
-# Recreate the original PVs with the same YAML when starting another clean run.
-```
-
-### 6. `gitRepo` alternative
-
-Use [README.md — Git repository files in a Pod](./README.md#git-repository-files-in-a-pod--emptydir--init-container-kubernetes-137), which includes the complete supported init-container YAML, apply, readiness, logging, port-forward and cleanup steps. Do not execute the original `part1/git-pod.yaml` from the historical ZIP.
-
-### Static validation / troubleshooting checklist
-
-- [ ] Correct K8s context and Ready nodes
-- [ ] NFS server shares exported, client can mount NFSv4.1 from every node
-- [ ] Manifest PV storageClassName matches PVC storageClassName (`""`)
-- [ ] StatefulSet PV/PVC counts and capacity match the task
-- [ ] Only one lab occupies TCP NodePort 30001 at a time
-- [ ] Verify actual Pods/Services/PVCs rather than trusting old 2021 screenshots
-- [ ] Clean up PVCs explicitly; understand `Retain` and manual PV reclamation
-
-External references: [Kubernetes volumes](https://kubernetes.io/docs/concepts/storage/volumes/), [PersistentVolume reclaiming](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaiming), [NFS server](https://ubuntu.com/server/docs/service-nfs).
-
----
-
-## Preserved original lecture — historical reference
-
-> **2021 course snapshot.** This original Markdown lecture is preserved byte-for-byte to retain its educational value. For runnable commands, use the modern lab above.
-
-<!-- ORIGINAL_MODULE_README_PRESERVED_START -->
-> **Kubernetes 1.37 lab (2026):** Follow [STORAGE-2026.md](./STORAGE-2026.md) for complete NFS prerequisites, static PV/PVC binding, ConfigMap/Secret homework, commands, expected results and cleanup. Historic Docker/Kubernetes explanations below are retained for context.
-
-# The [Docker Way](https://docs.docker.com/storage/volumes/)
+<!-- PRESERVED_THEORY_BEGIN -->
+## The [Docker Way](https://docs.docker.com/storage/volumes/)
 
 - Bind Mounts are dependent on the OS and file system structure
 - Volumes are managed by Docker
@@ -191,7 +51,7 @@ External references: [Kubernetes volumes](https://kubernetes.io/docs/concepts/st
 
 ![image](https://user-images.githubusercontent.com/34960418/147826579-0d7af643-404c-44e0-9fb4-4c537dfda4d1.png)
 
-## Bind Mounts
+### Bind Mounts
 
 For the usual example, create a ~/html folder. There, we can create an **index.html** file.
 
@@ -227,6 +87,11 @@ Remove the container
 docker container rm web --force
 ```
 
+#
+<!-- PRESERVED_THEORY_END -->
+
+
+<!-- PRESERVED_THEORY_BEGIN -->
 ## Volumes
 
 First, create a volume
@@ -290,7 +155,7 @@ And then remove the volume as well
 docker volume rm demo
 ```
 
-# Volumes
+## Volumes
 
 On-disk files in a container are ephemeral, which presents some problems for non-trivial applications when running in containers. One problem is the loss of files when a container crashes. The kubelet restarts the container but with a clean state. A second problem occurs when sharing files between containers running together in a Pod. The Kubernetes **volume** abstraction solves both of these problems.
 
@@ -300,7 +165,7 @@ At its core, a volume is a directory, possibly with some data in it, which is ac
 
 To use a volume, specify the volumes to provide for the Pod in ```.spec.volumes``` and declare where to mount those volumes into containers in ```.spec.containers[*].volumeMounts```. A process in a container sees a filesystem view composed from the initial contents of the container image, plus volumes (if defined) mounted inside the container. The process sees a root filesystem that initially matches the contents of the container image. Any writes to within that filesystem hierarchy, if allowed, affect what that process views when it performs a subsequent filesystem access. Volumes mount at the specified paths within the image. For each container defined within a Pod, you must independently specify where to mount each volume that the container uses.
 
-## EmptyDir
+### EmptyDir
 
 An **emptyDir** volume is first created when a Pod is assigned to a node, and exists as long as that Pod is running on that node. As the name says, the **emptyDir** volume is initially empty. All containers in the Pod can read and write the same files in the **emptyDir** volume, though that volume can be mounted at the same or different paths in each container. When a Pod is removed from a node for any reason, the data in the **emptyDir** is deleted permanently.
 
@@ -336,59 +201,18 @@ spec:
     # Volume type
     emptyDir: {}
 ```
+<!-- PRESERVED_THEORY_END -->
 
-## Git repository files in a Pod — `emptyDir` + init container (Kubernetes 1.37)
 
-> **NOTE (2026):** The old `gitRepo` volume driver was permanently disabled in Kubernetes **1.36**. It cannot be used on the course's **1.37** cluster. The supported equivalent uses an init container with Git to populate an `emptyDir`, then mounts the same directory in the application container. It clones only at Pod creation, **not** continuously. Original archive `M4-Practice-Storage-and-Persistence (files).zip/part1/git-pod.yaml` is a historical 2021 artifact.
+<!-- MODERN_LAB_BEGIN STORAGE-2026.md 6 -->
+### 6. `gitRepo` alternative
 
-Save as `git-pod-2026.yaml`:
+Use [README.md — Git repository files in a Pod](./README.md#git-repository-files-in-a-pod--emptydir--init-container-kubernetes-137), which includes the complete supported init-container YAML, apply, readiness, logging, port-forward and cleanup steps. Do not execute the original `part1/git-pod.yaml` from the historical ZIP.
+<!-- MODERN_LAB_END -->
 
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pod-git
-  labels:
-    app: notes
-spec:
-  initContainers:
-  - name: clone-repository
-    image: alpine:3.22
-    command: ["/bin/sh", "-ec"]
-    args:
-    - |
-      apk add --no-cache git
-      git clone --depth 1 --branch main https://github.com/shekeriev/k8s-notes.git /work
-    volumeMounts:
-    - name: git-volume
-      mountPath: /work
-  containers:
-  - name: container-git
-    image: php:8.4-apache
-    ports:
-    - containerPort: 80
-    volumeMounts:
-    - name: git-volume
-      mountPath: /var/www/html
-  volumes:
-  - name: git-volume
-    emptyDir: {}
-```
 
-```bash
-kubectl apply -f git-pod-2026.yaml
-kubectl wait --for=condition=Ready pod/pod-git --timeout=180s
-kubectl logs pod-git -c clone-repository
-kubectl exec pod-git -- ls -la /var/www/html
-kubectl port-forward pod/pod-git 8080:80
-# From another terminal: curl http://localhost:8080/
-# Ctrl+C to stop port-forward; clean up:
-kubectl delete -f git-pod-2026.yaml
-```
-
-**Expected:** init container completes, web container is Ready and Git files are visible at `/var/www/html`. Requires outbound HTTPS and access to the public GitHub repository.
-
-## HostPath
+<!-- PRESERVED_THEORY_BEGIN -->
+### HostPath
 
 A **hostPath** volume mounts a file or directory from the host node's filesystem into your Pod. In addition to the required **path** property, you can optionally specify a **type** for a **hostPath** volume.
 
@@ -438,7 +262,7 @@ spec:
 ```
 
 
-## NFS
+### NFS
 
 An **nfs** volume allows an existing NFS (Network File System) share to be mounted into a Pod. Unlike **emptyDir**, which is erased when a Pod is removed, the contents of an **nfs** volume are preserved and the volume is merely unmounted. This means that an NFS volume can be pre-populated with data, and that data can be shared between pods. NFS can be mounted by multiple writers simultaneously.
 
@@ -517,8 +341,59 @@ Clean up
 ```bash
 kubectl delete -f nfs-deployment.yaml
 ```
+<!-- PRESERVED_THEORY_END -->
 
-# Persistent Volumes and Claims
+
+<!-- MODERN_LAB_BEGIN STORAGE-2026.md 2 -->
+### 2. Prepare NFS exports (run on NFS server only)
+
+**Dedicated disposable lab storage, not production.** The liberal directory mode below is intentional for the teaching exercise; for real deployments use mapped UID/GID, ACLs and the minimum necessary NFS export permissions.
+
+```bash
+sudo apt-get update
+sudo apt-get install -y nfs-kernel-server
+sudo mkdir -p /data/nfs/k8sdata /data/nfs/k8spva /data/nfs/k8spvb /data/nfs/k8spvc /data/nfs/k8spvd
+sudo chmod 0777 /data/nfs/k8sdata /data/nfs/k8spva /data/nfs/k8spvb /data/nfs/k8spvc /data/nfs/k8spvd
+
+# REPLACE 192.168.56.0/24 with your *Kubernetes node* subnet.
+sudo tee /etc/exports.d/k8s-lab.exports >/dev/null <<'EOF'
+/data/nfs/k8sdata 192.168.56.0/24(rw,sync,no_subtree_check)
+/data/nfs/k8spva  192.168.56.0/24(rw,sync,no_subtree_check)
+/data/nfs/k8spvb  192.168.56.0/24(rw,sync,no_subtree_check)
+/data/nfs/k8spvc  192.168.56.0/24(rw,sync,no_subtree_check)
+/data/nfs/k8spvd  192.168.56.0/24(rw,sync,no_subtree_check)
+EOF
+sudo exportfs -ra
+sudo systemctl enable --now nfs-kernel-server
+sudo exportfs -v
+sudo systemctl is-active nfs-kernel-server
+```
+
+**Expected:** five exports active, including `k8spvd` (the original Module 06 screenshot omitted this path in an earlier step). Allow incoming TCP 2049 only from lab nodes in your NFS server firewall.
+<!-- MODERN_LAB_END -->
+
+
+<!-- MODERN_LAB_BEGIN STORAGE-2026.md 3 -->
+### 3. Prepare clients (run on cp1, wk1 and wk2)
+
+```bash
+sudo apt-get update
+sudo apt-get install -y nfs-common
+# REPLACE 192.168.56.50 with the IP of your NFS server, unless DNS already resolves nfs-server.
+echo '192.168.56.50 nfs-server' | sudo tee -a /etc/hosts
+getent hosts nfs-server
+sudo mkdir -p /mnt/k8s-nfs-check
+sudo mount -t nfs -o vers=4.1 nfs-server:/data/nfs/k8spva /mnt/k8s-nfs-check
+mount | grep /mnt/k8s-nfs-check
+sudo umount /mnt/k8s-nfs-check
+```
+
+**Expected:** name resolution works and the test share mounts and unmounts. Perform this on **all nodes**, not only cp1. If mounting fails, investigate TCP 2049, firewall, export CIDR, NFS server status and path permissions before continuing. A successful `ping` alone is insufficient.
+<!-- MODERN_LAB_END -->
+
+
+<!-- PRESERVED_THEORY_BEGIN -->
+## Persistent Volumes and Claims
 
 A PersistentVolume (PV) is a piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using Storage Classes. PVs have a lifecycle independent of any individual Pod that uses the PV.
 
@@ -528,7 +403,7 @@ A PersistentVolumeClaim (PVC) is a request for storage by a user. It is similar 
 
 ![image](https://user-images.githubusercontent.com/34960418/145032191-76621524-d189-436c-81b4-f75f1cc40adf.png)
 
-## Lifecycle of a volume and claim
+### Lifecycle of a volume and claim
 
 PVs are resources in the cluster. PVCs are requests for those resources and also act as claim checks to the resource. The interaction between PVs and PVCs follows this lifecycle:
 
@@ -540,7 +415,7 @@ PVs are resources in the cluster. PVCs are requests for those resources and also
   - **Delete** removes both the PV object from Kubernetes, as well as the associated storage asset in the external infrastructure
   - **Recycle (historical only)** attempted automatic scrubbing; deprecated and **not used** in the 2026 lab. Use **Retain** for the static NFS examples, where data is preserved and reclaim is manual.
 
-## Access Modes
+### Access Modes
 
 A PersistentVolume can be mounted on a host in any way supported by the resource provider. For example, NFS can support multiple read/write clients. The access modes are:
 
@@ -548,200 +423,13 @@ A PersistentVolume can be mounted on a host in any way supported by the resource
 - **ReadOnlyMany** - the volume can be mounted as read-only by many nodes.
 - **ReadWriteMany** - the volume can be mounted as read-write by many nodes.
 - **ReadWriteOncePod** - the volume can be mounted as read-write by a single Pod. Use ReadWriteOncePod access mode if you want to ensure that only one pod across whole cluster can read that PVC or write to it.
+<!-- PRESERVED_THEORY_END -->
+
+> **Modernization:** The legacy manual `pvnfs10gb.yaml` walkthrough and the old StatefulSet deployment examples are replaced by the verified file paths and PVC binding checks of **Problem 2** below. The storage concepts above still apply.
 
 
-## Example
-
-Let’s create one **pvnfs10gb.yaml** with the following content
-
-```yaml
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pvnfs10gb
-  labels:
-    purpose: demo
-spec:
-  capacity:
-    storage: 10Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteMany
-  # Deleting PVC will trigger the reclaim policy.
-  persistentVolumeReclaimPolicy: Recycle
-  mountOptions:
-    - nfsvers=4.1
-  nfs:
-    path: /data/nfs/k8sdata
-    server: nfs-server
-```
-
-Save and close the file. Send it to the cluster.
-
-```bash
-kubectl apply -f pvnfs10gb.yaml
-```
-
-Check the list of persistent volumes. Pay attention to the **STATUS** and **CLAIM** fields.
-
-```bash
-kubectl get pv
-```
-
-Describe the one that we created
-
-```bash
-kubectl describe pv pvnfs10gb
-```
-
-In order to use this persistent volume, we must claim it first. Create a pvc10gb.yaml manifest with the following content
-
-```yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: pvc10gb
-# Set of criteria used to bind PVC to PV from available PVs
-spec:
-  accessModes:
-    - ReadWriteMany
-  volumeMode: Filesystem
-  resources:
-    requests:
-      storage: 10Gi
-  selector:
-    matchLabels:
-      purpose: demo
-```
-
-Save and close the file. Send it to the cluster.
-
-```bash
-kubectl apply -f pvc10gb.yaml
-```
-
-Get again the list of persistent volumes.
-
-```bash
-kubectl get pv
-```
-
-Check the list of persistent volumes. Pay attention to the **STATUS** and **CLAIM** fields. Ask for the list of persistent volume claims.
-
-```bash
-kubectl get pvc
-```
-
-And then describe it. We can see that the Used By field is empty.
-
-```bash
-kubectl describe pvc pvc10gb
-```
-
-preparing and launching a deployment pv-deployment.yaml with the following content.
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: notes-deploy
-spec:
-  replicas: 3
-  selector:
-    matchLabels: 
-      app: notes
-  template:
-    metadata:
-      labels:
-        app: notes
-    spec:
-      containers:
-      - name: container-nfs
-        image: shekeriev/k8s-notes
-        volumeMounts:
-        - mountPath: /data
-          name: volume-by-claim
-      volumes:
-      - name: volume-by-claim
-        # Make volume over PVC with claimName pvc10gb
-        persistentVolumeClaim:
-          claimName: pvc10gb
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: svc-vol
-spec:
-  type: NodePort
-  ports:
-  - port: 80
-    nodePort: 30001
-    protocol: TCP
-  selector:
-    app: notes
-```
-
-Save and close the file. Send it to the cluster.
-
-```bash
-kubectl apply -f part1/pv-deployment.yaml
-```
-
-Monitor the pods with
-
-```bash
-kubectl get pods -o wide -w
-```
-
-Once all up and running, press Ctrl+C to stop. Then, check if the claim will be marked as used now.
-
-```bash
-kubectl describe pvc pvc10gb
-```
-
-It should state that it is being used by all three pods that were created by the deployment. Describe one of them to see how it appears.
-
-```bash
-kubectl describe pod notes-deploy-<specific-id>
-```
-
-Explore both the **Volumes** and **Mounts** sections. Now, open a browser tab, and navigate to ```http://<cluster-node-ip>:30001/index.php```. Let’s see what will happen when we delete both the deployment and the claim and then recreate them again.
-  
-```bash
-kubectl delete -f pv-deployment.yaml
-```
-
-And then the claim
-
-```bash
-kubectl delete -f pvc10gb.yaml
-```
-
-Now, create them again. First the claim
-
-```bash
-kubectl apply -f pvc10gb.yaml
-```
-
-And then the deployment
-
-```bash
-kubectl apply -f pv-deployment.yaml
-```
-
-Once all pods are running, open a browser tab, and navigate to ```http://<cluster-node-ip>:30001/index.php```. There be no notes because the Persistent Volume (pvnfs10gb) with persistentVolumeReclaimPolicy is set to Recycle. Thus, when we deleted the persistent volume claim, the persistent volume was recycled (wiped).
-
-
-Clean Up
-
-```bash
-kubectl delete -f part1/pv-deployment.yaml
-kubectl delete -f part1/pvc10gb.yaml
-kubectl delete -f part1/pvnfs10gb.yaml
-```
-
-
-# Environment Variables
+<!-- PRESERVED_THEORY_BEGIN -->
+## Environment Variables
 
 - **Key-value pairs** used to pass data to the containers inside a pod.
 - Created in the manifest via **env** or **envFrom** blocks.
@@ -795,7 +483,7 @@ Clean up
 kubectl delete -f pod-w-env.yaml
 ```
 
-# Configuration Maps
+## Configuration Maps
 
 - Used to store **non-confidential data** in key-value pairs.
 - Pods can consume them as **environment variables**, **command-line arguments**, or as **configuration files in volumes**.
@@ -825,7 +513,7 @@ There are four different ways that you can use a ConfigMap to configure a contai
 - Add a file in read-only volume, for the application to read
 - Write code to run inside the Pod that uses the Kubernetes API to read a ConfigMap
 
-## Using ConfigMaps as files from a Pod
+### Using ConfigMaps as files from a Pod
 
 To consume a ConfigMap in a volume in a Pod:
 
@@ -894,7 +582,7 @@ spec:
       #prefix: CM_ # Use this to prefix variables created from the ConfigMap
 ```
 
-# Secrets
+## Secrets
 
 - Contain a small amount of sensitive data such as a **password**, a **token**, or a **key**.
 - This way confidential data is separated from the application code.
@@ -915,7 +603,7 @@ To use a Secret, a Pod needs to reference the Secret. A Secret can be used with 
 - As container environment variable.
 - By the kubelet when pulling images for the Pod.
 
-## Types of Secret
+### Types of Secret
 
 When creating a Secret, you can specify its type using the type field of a Secret resource, or certain equivalent kubectl command line flags (if available). The type of a Secret is used to facilitate programmatic handling of different kinds of confidential data.
 
@@ -931,7 +619,7 @@ Kubernetes provides several builtin types for some common usage scenarios. These
 | Socket            	| A UNIX socket must exist at the given path                                                                                                                             	|
 | CharDevice        	|                                                                                                                                                                        	|
 
-## Opaque secrets
+### Opaque secrets
 
 **Opaque** is the default Secret type if omitted from a Secret configuration file. When you create a Secret using **kubectl**, you will use the **generic** subcommand to indicate an **Opaque** Secret type. For example, the following command creates an empty Secret of type **Opaque**.
 
@@ -974,9 +662,49 @@ spec:
         name: mysecrets
       prefix: XYZ_
 ```
+<!-- PRESERVED_THEORY_END -->
 
 
-# StatefulSet
+<!-- MODERN_LAB_BEGIN STORAGE-2026.md 4 -->
+### 4. ConfigMap and Secret homework (Problem 1)
+
+From the repository root, navigate to `04. Storage and Persistence/Exercise/Solution/Problem 1 c/`. The following commands create the files required by the original homework and the provided `pod-hw.yaml`; use the **same namespace** for the ConfigMap, Secret and Pod (the example uses `default`).
+
+```bash
+kubectl config set-context --current --namespace=default
+cat >main.conf <<'EOF'
+name=homework
+path=/tmp
+certs=/secret
+EOF
+printf '8080\n' >port.conf
+
+# Replace values with your cluster version and node OS if different.
+kubectl create configmap hwcm --from-literal=k8sver=1.37 --from-literal=k8sos="Ubuntu 24.04" \
+  --from-file=main.conf --from-file=port.conf
+openssl genrsa -out main.key 2048
+openssl req -new -x509 -key main.key -out main.crt -days 30 -subj /CN=www.hw.lab
+kubectl create secret generic hwsec --from-file=main.key --from-file=main.crt
+kubectl apply -f pod-hw.yaml
+kubectl wait --for=condition=Ready pod/pod-hw --timeout=180s
+kubectl describe pod pod-hw
+kubectl exec pod-hw -- ls /config /secret
+kubectl exec pod-hw -- printenv HW_PORT
+```
+
+**Expected:** the Pod is Ready, `/config/main.conf`, `/secret/main.key`, `/secret/main.crt` exist and `HW_PORT=8080`. These lab private keys must never be committed or reused. Clean up before moving on:
+
+```bash
+kubectl delete pod pod-hw --ignore-not-found
+kubectl delete configmap hwcm --ignore-not-found
+kubectl delete secret hwsec --ignore-not-found
+rm -f main.key main.crt main.conf port.conf
+```
+<!-- MODERN_LAB_END -->
+
+
+<!-- PRESERVED_THEORY_BEGIN -->
+## StatefulSet
 
 - Used to manage **stateful applications**.
 - Manage the deployment of a **set of Pods**.
@@ -1010,259 +738,63 @@ Stateful Sets Limitations
 
 
 ![image](https://user-images.githubusercontent.com/34960418/145412355-67d48f68-8078-444e-b5fc-462ae3ec5826.png)
+<!-- PRESERVED_THEORY_END -->
 
-# Example
 
-## Storage Layer
+<!-- MODERN_LAB_BEGIN STORAGE-2026.md 5 -->
+### 5. NFS + StatefulSet + frontend homework (Problem 2)
 
-One of the components that we must handle first is the storage layer. Knowing about persistent volumes and claims will employ them.
-
-```yaml
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pvssa
-  labels:
-    purpose: ssdemo
-spec:
-  capacity:
-    storage: 1Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
-  mountOptions:
-    - nfsvers=4.1
-  nfs:
-    path: /data/nfs/k8spva
-    server: nfs-server    
----    
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pvssb
-  labels:
-    purpose: ssdemo
-spec:
-  capacity:
-    storage: 1Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
-  mountOptions:
-    - nfsvers=4.1
-  nfs:
-    path: /data/nfs/k8spvb
-    server: nfs-server    
----  
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pvssc
-  labels:
-    purpose: ssdemo
-spec:
-  capacity:
-    storage: 1Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Recycle
-  mountOptions:
-    - nfsvers=4.1
-  nfs:
-    path: /data/nfs/k8spvc
-    server: nfs-server
-```
-
-Send all of them to the cluster.
+Use `Exercise/Solution/Problem 2/solution.yaml` **from this repository**. It contains **three PVs** (`pvssa`, `pvssb`, `pvssc`), a 3-replica `StatefulSet/pod-be`, headless `Service/facts`, backend `Service/service-be`, 3-replica `Deployment/fe-deploy`, frontend `Service/service-fe`, and ConfigMap. PV reclaim policy is `Retain`, and static storage-class matching is explicit.
 
 ```bash
-kubectl apply -f pvs.yaml
+# From repository root:
+kubectl apply -f "04. Storage and Persistence/Exercise/Solution/Problem 2/solution.yaml"
+kubectl rollout status statefulset/pod-be --timeout=240s
+kubectl rollout status deployment/fe-deploy --timeout=240s
+kubectl get pv,pvc,pods,svc,deploy,statefulset
+kubectl get endpointslices -l kubernetes.io/service-name=service-fe
 ```
 
-And check that they appear as resources.
+**Expected:** 3 bound PVCs (one per StatefulSet ordinal), `pod-be-0..2` Ready, 3 frontend Pods Ready, NodePort **30001** on the frontend Service. The `spec.volumeClaimTemplates` in the StatefulSet use 2Gi each and match static PVs. If PVCs are Pending, check `kubectl describe pvc`, `kubectl get pv`, selectors/class, NFS exports and node reachability. PVCs need **no dynamic provisioner**.
+
+From your workstation, open `http://<reachable-node-ip>:30001` (replace the placeholder; ensure the node firewall permits TCP 30001). Verify the frontend can reach the backend and storage persists across Pod restarts.
+
+#### Clean up the lab without erasing NFS data
 
 ```bash
+# Remove workloads and namespaced resources first; do NOT delete the PVs yet.
+kubectl delete deployment fe-deploy --ignore-not-found
+kubectl delete statefulset pod-be --ignore-not-found
+kubectl delete service facts service-be service-fe --ignore-not-found
+kubectl delete configmap service-be-map --ignore-not-found
+# StatefulSet PVCs are retained by default; delete them explicitly.
+kubectl get pvc
+kubectl delete pvc facts-data-pod-be-0 facts-data-pod-be-1 facts-data-pod-be-2 --ignore-not-found
+# PVs with Retain now become Released, and NFS data remains.
 kubectl get pv
 ```
 
-## Headless Service
-
-**Headless service** ensures that the pods will be reachable by name. **Headless service** is required for the network identity of the pods.
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: facts
-spec:
-  selector:
-    app: facts
-  # This make service headless. Allow pods to comunicate through their names.
-  clusterIP: None
-  ports:
-  - port: 5000
-    protocol: TCP
-```
-
-Send it to the cluster
+**Important:** PVC deletion causes PVs with `Retain` to move to **Released**; the NFS data **remains**. A Released PV is not automatically available for another PVC. For another run, confirm/backup or delete the test files on NFS, delete those Released PV **objects**, and re-apply the solution. **Do not delete arbitrary NFS data**. This change avoids the deprecated automatic `Recycle` scrub.
 
 ```bash
-kubectl apply -f service.yaml
+# Only after verifying retained lab data and deciding to reclaim the storage:
+kubectl delete pv pvssa pvssb pvssc --ignore-not-found
+# Recreate the original PVs with the same YAML when starting another clean run.
 ```
-
-Check that the resource has been created
-
-```bash
-kubectl get svc
-```
-
-## Pods and Storage
-
-Next step is to ensure that each pod will be created in order and will be linked to its own storage. This is covered by the **StatefulSet** resource. It contains two templates – one for the **pod** and one for the associated storage (a **claim**). **StatefulSet** is managing **Volume Claims**.
-
-```yaml
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: facts
-spec:
-  selector:
-    matchLabels:
-      app: facts
-  serviceName: facts
-  replicas: 2
-  # POD template
-  template:
-    metadata:
-      labels:
-        app: facts
-    spec:
-      terminationGracePeriodSeconds: 10
-      containers:
-      - name: main
-        image: shekeriev/k8s-facts
-        ports:
-        - name: app
-          containerPort: 5000
-        volumeMounts:
-        - name: facts-data
-          mountPath: /data
-  # VolumeClaim template
-  volumeClaimTemplates:
-  - metadata:
-      name: facts-data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi
-```
-
-Send it to the cluster
-
-```bash
-kubectl apply -f ss.yaml
-```
-
-Check what resources we have so far
-
-```bash
-kubectl get pod,svc,statefulset,pv,pvc
-```
-
-## Public (NodePort) Service
-
-Create a standard or public (in this case **NodePort**) service that will expose the pods.
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: factsnp
-spec:
-  selector:
-    app: facts
-  type: NodePort
-  ports:
-  - port: 5000
-    nodePort: 30001
-    protocol: TCP
-```
-
-```bash
-kubectl apply -f np.yaml
-```
-
-Check what resources we have so far. We should have the full set of components now.
-
-```bash
-kubectl get pod,svc,statefulset,pv,pvc
-```
-
-Open a browser tab, and navigate to ```http://<cluster-node-ip>:30001```.
+<!-- MODERN_LAB_END -->
 
 
-## Stress and Scaling
+<!-- MODERN_LAB_BEGIN STORAGE-2026.md 7 -->
+### Static validation / troubleshooting checklist
 
-First, check where are scheduled the pods currently and what claims are assigned to them.
+- [ ] Correct K8s context and Ready nodes
+- [ ] NFS server shares exported, client can mount NFSv4.1 from every node
+- [ ] Manifest PV storageClassName matches PVC storageClassName (`""`)
+- [ ] StatefulSet PV/PVC counts and capacity match the task
+- [ ] Only one lab occupies TCP NodePort 30001 at a time
+- [ ] Verify actual Pods/Services/PVCs rather than trusting old 2021 screenshots
+- [ ] Clean up PVCs explicitly; understand `Retain` and manual PV reclamation
 
-```bash
-kubect get pods,pvc -o wide
-```
+External references: [Kubernetes volumes](https://kubernetes.io/docs/concepts/storage/volumes/), [PersistentVolume reclaiming](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaiming), [NFS server](https://ubuntu.com/server/docs/service-nfs).
+<!-- MODERN_LAB_END -->
 
-Then, to delete the first pod, execute
-
-```bash
-kubectl delete pod facts-0
-```
-
-Now, check again. As we can see, the node may have changed (or not) but the assigned claim is still the same.
-
-```bash
-kubect get pods,pvc -o wide
-```
-
-Let’s return to the browser and see if everything is fine there. Yes, it should be.
-
-
-Now, let’s scale down to just one replica
-
-```bash
-kubectl scale --replicas=1 statefulset/facts
-```
-
-Then, check again what is the situation with the different components. May need to execute it a few times until the scaling finishes. Notice that the **Pod** is deleted but the **PersistentVolumeClaim** is not. 
-
-```bash
-kubectl get pod,svc,statefulset,pv,pvc
-```
-
-Let’s return to the browser and see if everything is fine there. Yes, it should be.
-
-
-Now, let’s scale up to three replicas
-
-```bash
-kubectl scale --replicas=3 statefulset/facts
-```
-
-Then, check again what is the situation with the different components. May need to execute it a few times until the scaling finishes. Notice that the claim to pod assignment does not change – **pod #2** (**facts-1**) is attached to the same claim.
-
-```bash
-kubectl get pod,svc,statefulset,pv,pvc
-```
-
-Let’s return to the browser and see if everything is fine there. Yes, it should be.
-
-
-## Clean Up
-
-```bash
-kubectl delete statefulset.apps/facts
-kubectl delete service/facts service/factsnp
-kubectl delete persistentvolumeclaim facts-data-facts-0 facts-data-facts-1 facts-data-facts-2
-kubectl delete persistentvolume pvssa pvssb pvssc
-```

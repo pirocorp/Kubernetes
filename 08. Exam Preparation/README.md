@@ -1,30 +1,35 @@
 # Module 08 — Exam Preparation
 
-> **Integrated edition · Kubernetes 1.37 (2026).** The modern exercises are now inside the original module's README, with the original lesson retained **verbatim** after the labs. Keep historical documentation for concepts and comparisons; use the modern text for actual commands, versions and validations.
+> **Learning edition (Kubernetes 1.37).** The original exam objectives and historical context introduce the full current practice exam. There is **one** runnable exam here, not a separate current simulation followed by the old three-cluster setup. The original 2021 DOCX/slides/ZIP remain archival references; the independent solutions are under `lab-2026/SOLUTIONS.md` so you can test yourself first.
 
-## Recommended learning path
+## Learning path and objectives
 
-1. Start from the [2026 course roadmap](../README.md) and check your disposable cluster's prerequisites.
-2. Work through the [integrated modern lab](#kubernetes-137-integrated-labs) in this README, following expected results, failure diagnosis and cleanup.
-3. Return to the [preserved original lecture](#preserved-original-lecture--historical-reference), compare approaches, and reinforce your understanding. Historical artifacts are not a substitute for the 1.37 runbook.
+Complete Modules 01–07 and the cluster setup from Module 02 before starting. Run the nine-task, 36-point simulation on **one disposable Calico cluster and three namespaces**. Follow the [course README](../README.md) for environment and cleanup rules; view solutions only after attempting the tasks.
 
-| Concepts and teaching value preserved | Kubernetes 1.37 integration |
-|---|---|
-| Historical exam blueprint and topics | Original slides/DOCX remain available and unchanged |
-| Current Kubernetes 1.37 practice exam | Nine tasks, 36 points, three logical namespaces |
-| Reproducibility and grading | Lab setup YAML, validation matrix, separate reference solutions |
-| Different underlying 2021 topology | No claim of reconstructing the historical three-cluster exam |
+## Historical exam scope and modern equivalent
+
+
+<!-- PRESERVED_THEORY_BEGIN -->
+### Historical exam materials (2021)
+
+The original `M8-Practice-Exam-Preparation-Simulation-Exam.docx` assumes **three independent Debian 10 / Kubernetes 1.21.6 clusters** named Mars, Jupiter and Venus with different older CNI controllers (Flannel, Weave Net and Antrea). The historical accompanying ZIP is **not a complete 1.37 setup** and its solutions must not be applied unchanged. Slides and the DOCX remain intact as source/history.
+
+> **NOTE (2026):** The modern exam **replaces** the execution path while preserving the *skills and themes* of the old exam. It is intentionally not a verbatim conversion of all historical tasks. If you specifically need an exact three-cluster historical reenactment, that is a separate undertaking and should not be confused with the supported 1.37 course.
+<!-- PRESERVED_THEORY_END -->
 
 ## Kubernetes 1.37 integrated labs
 
-> **Execution boundary:** the lab below is the documented modern path, not a verified live-cluster run. Keep the practice questions and their solutions separate where the original exercise requires independent work.
 
+<!-- MODERN_LAB_BEGIN EXAM-2026.md 0 -->
 ## Kubernetes 1.37 — practical simulation exam (2026)
 
 > **Version:** 11 November 2026 · **Static-review status:** full task, setup, reference manifests, validation and cleanup documented; **not live-tested**.
 >
 > **IMPORTANT:** The original `M8-Practice-Exam-Preparation-Simulation-Exam.docx` is a **2021 historical three-cluster exam** (Kubernetes 1.21.6, Debian 10, Flannel/Weave/Antrea). The attached `(files).zip` contains only part of that old exam's setup and solutions; it cannot be honestly presented as a complete 1.37 deployment. The modern, fully described **equivalent practice exam** below instead divides **one disposable 1.37 Calico cluster** into three namespaces named **exam-mars**, **exam-jupiter**, and **exam-venus**. These are logical areas, **not three independent clusters**. The original PDF/DOCX/ZIP are retained for study, not for executing unchanged against 1.37.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN EXAM-2026.md 1 -->
 ### Skills tested and score
 
 | Area | Tasks | Points |
@@ -35,7 +40,10 @@
 | **Total** | **9 tasks** | **36** |
 
 Solutions are deliberately separate in [lab-2026/SOLUTIONS.md](./lab-2026/SOLUTIONS.md). Attempt the tasks without reading them first. Optional extensions add HPA and NFS (from Modules 05/04/06). These are not required for the 36-point exam.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN EXAM-2026.md 2 -->
 ### 0. Preflight and initial provisioning
 
 Requirements: **one new disposable Kubernetes 1.37 cluster** from [Module 02 SETUP-2026.md](../02.%20Cluster%20Setup%20and%20Management/SETUP-2026.md), with Calico 3.33 providing NetworkPolicy enforcement; `kubectl`, Helm v3, internet for pulling pinned images/Helm chart; local `curl`; enough CPU/RAM for several small Pods. Use a context with permission to create all resources in these three dedicated namespaces. Do not reuse another lab's NodePorts or namespaces. Commands below assume the **repository root**.
@@ -75,7 +83,10 @@ kubectl get deploy,pods,svc -n exam-venus
 ```
 
 **Expected initially:** cat, dog, jupiter-api available. `misprobe` Deployment exists but its Pod is **not Ready** due to wrong readiness path; venus-web cannot become Ready until `ConfigMap/venus-index` exists. Do not "fix" those two until their tasks.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN EXAM-2026.md 3 -->
 ### 1. Exam tasks — solve before viewing the key
 
 #### Mars — 12 points
@@ -101,7 +112,10 @@ kubectl get deploy,pods,svc -n exam-venus
 **T302 / 4 pts — scheduled jobs.** Create `CronJob/pulse` in `exam-venus` using `batch/v1`, running every **2 minutes**, printing `exam-venus-pulse` and UTC time. Demonstrate immediately by creating one Job from that CronJob instead of waiting 2 minutes; inspect the Job's logs. Avoid overlapping runs.
 
 **T303 / 4 pts — Helm templating.** Reuse the self-contained Helm chart from Module 07, [`webchart`](../07.%20Templating%20Tools%20and%20Package%20Management/Homework/Solution/Problem%203/webchart/). Validate it with `helm lint` and `helm template`, then install as release **examweb** into `exam-venus`, with **2 replicas**, `NodePort 31000` and greeting **Exam Venus complete**. Confirm page text, local SVG image and generated Kubernetes resources. Cleanup only the Helm release, not the whole namespace yet.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN EXAM-2026.md 4 -->
 ### 2. Validation matrix
 
 | Task | Pass evidence |
@@ -117,12 +131,18 @@ kubectl get deploy,pods,svc -n exam-venus
 | T303 | Helm chart passes lint/template, 2 replicas available, Service NodePort 31000 and HTML+SVG served |
 
 Use `kubectl describe`, `kubectl get endpointslices`, `kubectl logs`, `kubectl rollout status`, and `helm status` to diagnose unexpected output. A live API, image registry, NFS server or external endpoint can still fail; the documentation is **statically** reviewed, not an execution guarantee.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN EXAM-2026.md 5 -->
 ### 3. Optional advanced extensions (not in the 36 points)
 
 - **HPA:** install Metrics Server **v0.9.1** and run the supported `autoscaling/v2` test from [Module 05 ADVANCED-2026.md](../05.%20Advanced%20Concepts/ADVANCED-2026.md#4-horizontal-pod-autoscaler-hpa-practical-lab).
 - **NFS/StatefulSets:** run [Module 04 STORAGE-2026.md](../04.%20Storage%20and%20Persistence/STORAGE-2026.md) or [Module 06 LAB-2026.md](../06.%20Observability%20and%20Troubleshooting/LAB-2026.md). These need a separate NFS machine and should be executed in a **fresh lab** because they use NodePort 30001.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN EXAM-2026.md 6 -->
 ### 4. Cleanup
 
 **Destructive on a dedicated disposable exam lab only**: removes all objects in three exam namespaces, even if you added extra objects.
@@ -136,29 +156,15 @@ kubectl get namespace
 ```
 
 Check that all three exam namespaces are gone. The original historical 2021 simulation and its answer material remain unchanged in the repository.
+<!-- MODERN_LAB_END -->
 
+
+<!-- MODERN_LAB_BEGIN EXAM-2026.md 7 -->
 ### Links
 
 - [Solutions, with exact commands and files](./lab-2026/SOLUTIONS.md)
 - [Starter setup](./lab-2026/setup.yaml)
 - [2021 exam blueprint](../00.%20Resources/M0-Blueprint-Practice-Exam.docx)
 - [Upstream Kubernetes concepts](https://kubernetes.io/docs/home/)
+<!-- MODERN_LAB_END -->
 
----
-
-## Preserved original lecture — historical reference
-
-> **2021 lecture / exam notes.** The content below is preserved byte-for-byte for educational comparison. Follow the integrated 1.37 lab above instead of reusing retired APIs, network plugins, URLs, or old examination environment assumptions.
-
-<!-- ORIGINAL_MODULE_README_PRESERVED_START -->
-# Exam Preparation — Kubernetes 1.37
-
-## Current, self-contained lab (2026)
-
-Follow [EXAM-2026.md](./EXAM-2026.md) for a complete practical exam with prerequisites, **nine tasks**, a complete [setup manifest](./lab-2026/setup.yaml), starter Kustomize files, an independent [solutions guide](./lab-2026/SOLUTIONS.md), pass criteria and cleanup. The test environment uses **three logical namespaces in one disposable Kubernetes 1.37 + Calico cluster** to keep the setup reproducible.
-
-## Historical exam materials (2021)
-
-The original `M8-Practice-Exam-Preparation-Simulation-Exam.docx` assumes **three independent Debian 10 / Kubernetes 1.21.6 clusters** named Mars, Jupiter and Venus with different older CNI controllers (Flannel, Weave Net and Antrea). The historical accompanying ZIP is **not a complete 1.37 setup** and its solutions must not be applied unchanged. Slides and the DOCX remain intact as source/history.
-
-> **NOTE (2026):** The modern exam **replaces** the execution path while preserving the *skills and themes* of the old exam. It is intentionally not a verbatim conversion of all historical tasks. If you specifically need an exact three-cluster historical reenactment, that is a separate undertaking and should not be confused with the supported 1.37 course.
