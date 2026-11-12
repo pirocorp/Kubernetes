@@ -47,6 +47,25 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
     ports: ["127.0.0.1:9092:9092"]
+    volumes: [kafkadata:/tmp/kafka-logs]
+    networks: [internal]
+  kafka-init:
+    image: apache/kafka:4.1.2
+    depends_on: [kafka]
+    entrypoint: ["/bin/bash","-ec"]
+    command: |
+      for attempt in $(seq 1 60); do
+        if /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:19092 --list >/dev/null 2>&1; then
+          break
+        fi
+        if [ "$attempt" -eq 60 ]; then echo "Kafka did not become ready" >&2; exit 1; fi
+        sleep 2
+      done
+      for topic in retailcdc.public.customer retailcdc.public.product retailcdc.public.sale retailcdc.public.line_item; do
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:19092 \
+          --create --if-not-exists --topic "$topic" --partitions 1 --replication-factor 1
+      done
+      echo "All four CDC topics ready before consumers start"
     networks: [internal]
   connect:
     image: quay.io/debezium/connect:3.3
@@ -62,7 +81,9 @@ services:
       VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
       # PostgreSQL logical replication requires wal_level=logical and a slot.
     ports: ["127.0.0.1:8083:8083"]
-    depends_on: [kafka,legacy-db]
+    depends_on:
+      kafka-init: {condition: service_completed_successfully}
+      legacy-db: {condition: service_healthy}
     networks: [internal]
   search:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.10
@@ -94,7 +115,7 @@ services:
     ports: ["127.0.0.1:5085:8080"]
     depends_on:
       cashback-db: {condition: service_healthy}
-      kafka: {condition: service_started}
+      kafka-init: {condition: service_completed_successfully}
       search: {condition: service_started}
     networks: [internal]
 networks:
@@ -103,3 +124,4 @@ volumes:
   legacydata: {}
   cashbackdata: {}
   searchdata: {}
+  kafkadata: {}
