@@ -16,7 +16,7 @@ python3 tools/register_connector.py
 python3 tools/check_infra.py
 ```
 
-**Очаквано:** Connect + Debezium task RUNNING, logical slot, четири CDC topics. Ако Kafka Connect още стартира, регистрационният скрипт чака до 2 минути; при timeout чети Connect logs, вместо да създаваш втори connector със същата slot.
+**Очаквано:** `kafka-init` е завършил успешно и Connect + Debezium task RUNNING, logical slot, четири CDC topics. Topics се създават преди C# consumer да започне subscription. Ако Kafka Connect още стартира, регистрационният скрипт чака до 2 минути; при timeout чети Connect logs, вместо да създаваш втори connector със същата slot.
 
 ## 2. Провери първоначалния snapshot
 
