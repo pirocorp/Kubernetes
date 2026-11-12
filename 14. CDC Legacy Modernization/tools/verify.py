@@ -13,13 +13,17 @@ def request(base, method, path, payload=None):
     req = urllib.request.Request(
         base + path, method=method, data=body,
         headers={"Content-Type": "application/json"} if body else {})
+    def decode(text):
+        if not text: return None
+        try: return json.loads(text)
+        except json.JSONDecodeError: return text
     try:
         with urllib.request.urlopen(req, timeout=6) as response:
             raw = response.read().decode()
-            return response.status, json.loads(raw) if raw else None
+            return response.status, decode(raw)
     except urllib.error.HTTPError as error:
         raw = error.read().decode()
-        return error.code, json.loads(raw) if raw else None
+        return error.code, decode(raw)
 
 def wait_for(description, fetch, predicate, seconds=100):
     deadline = time.monotonic() + seconds
