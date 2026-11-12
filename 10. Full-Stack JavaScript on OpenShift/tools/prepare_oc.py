@@ -19,6 +19,8 @@ documents = {
                        "POSTGRESQL_DATABASE=shorties\nPOSTGRESQL_PASSWORD=" + password + "\n",
     "database.env": "DATABASE_URL=postgresql://shorties:" + password +
                     "@m10-postgres:5432/shorties\n",
+    "postgres-auth.env": "POSTGRESQL_USER=shorties\nPOSTGRESQL_DATABASE=shorties\n"
+                         "POSTGRESQL_PASSWORD=" + password + "\n",
 }
 for name, value in documents.items():
     path = directory / name
@@ -26,4 +28,4 @@ for name, value in documents.items():
     with os.fdopen(fd, "w", encoding="utf-8") as file:
         file.write(value)
     os.chmod(path, 0o600)
-print("Prepared .runtime/postgres.params and .runtime/database.env (0600; no secrets printed)")
+print("Prepared .runtime/postgres.params, database.env and postgres-auth.env (0600; no secrets printed)")
