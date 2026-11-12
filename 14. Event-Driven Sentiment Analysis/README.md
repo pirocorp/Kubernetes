@@ -6,6 +6,8 @@
 
 **Адаптация:** вместо Quarkus използваме **ASP.NET Core 10/C#**, `Confluent.Kafka 2.16.0` и `Npgsql 10.0.3`. Основните архитектурни идеи от Red Hat са запазени: **Globex** customer reviews → Kafka → два независими processing branches → moderated reviews в PostgreSQL и sentiment series в InfluxDB/Grafana. По избор, върху вече подготвен OpenShift cluster, `KafkaSource → Knative Broker → 2 Triggers` замества директното Kafka consumer обработване. <https://www.solutionpatterns.io/solution-pattern-sentiment-analysis/solution-pattern-sentiment-analysis/02-architecture.html>
 
+**Execution profiles:** [OpenShift L/S/P guide](../docs/OPENSHIFT-LAB-PROFILES.md). Local Kafka Lab 14-C is real Kafka, but live Knative KafkaSource/Broker for 14-E requires an operator-enabled Project and seeded lab Kafka topics; check capabilities with `scripts/check-openshift-profile.sh m14-knative`.
+
 ## 1. Какво ще можеш след модула?
 
 - Да различаваш **синхронни HTTP операции** от асинхронно `202 Accepted` и eventual consistency.
