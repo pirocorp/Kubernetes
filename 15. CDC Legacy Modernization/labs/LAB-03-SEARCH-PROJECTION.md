@@ -1,10 +1,10 @@
-# Lab 14-C — Elasticsearch Product Search чрез INSERT/UPDATE/DELETE CDC
+# Lab 15-C — Elasticsearch Product Search чрез INSERT/UPDATE/DELETE CDC
 
 **Цел:** добави full-text търсене към **непроменен legacy каталог**. Направи SQL-backed продуктова операция чрез стария API и докажи, че новият Elasticsearch индекс се синхронизира **само** чрез Debezium → Kafka → C# projection. Оригинал: [Red Hat — CDC Search Context](https://www.solutionpatterns.io/solution-pattern-modernization-cdc/solution-pattern-modernization-cdc/02-architecture.html).
 
 ## 1. Изисквания и старт от чист checkout
 
-Docker + Compose v2, Python 3.10+, Bash, интернет за образите и NuGet. Свободни портове 5084, 5085, 5441/5442, 8083, 9092, 9200 и достатъчна RAM (~10–12 GiB свободна). Работна директория: корен на Module 14. Не е нужно да си изпълнил 14-B: следният блок е **пълна самостоятелна подготовка**:
+Docker + Compose v2, Python 3.10+, Bash, интернет за образите и NuGet. Свободни портове 5084, 5085, 5441/5442, 8083, 9092, 9200 и достатъчна RAM (~10–12 GiB свободна). Работна директория: корен на Module 15. Не е нужно да си изпълнил 15-B: следният блок е **пълна самостоятелна подготовка**:
 
 ```bash
 python3 tools/init_env.py
@@ -92,7 +92,7 @@ bash scripts/verify-cdc.sh
 
 ## 8. Cleanup
 
-Ако продължаваш към cashback Lab 14-D, остави stack-а. Иначе:
+Ако продължаваш към cashback Lab 15-D, остави stack-а. Иначе:
 
 ```bash
 docker compose down

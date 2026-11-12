@@ -1,4 +1,4 @@
-# Lab 14-A — Legacy data ownership, WAL и концепция за CDC
+# Lab 15-A — Legacy data ownership, WAL и концепция за CDC
 
 **Цел:** да разбереш защо не можем просто да променим старата система или да четем директно чуждата DB. Ще компилираш **пълния C# учебен проект**, ще разгледаш SQL schema и ще научиш защо Debezium не изисква промени в legacy business code.
 
@@ -6,7 +6,7 @@
 
 ## 1. Preflight
 
-От корена на Module 14 са нужни .NET **SDK 10**, Python **3.10+**, Bash, интернет за първоначален NuGet restore. **Docker, Kafka и OpenShift не са необходими за този първи lab.**
+От корена на Module 15 са нужни .NET **SDK 10**, Python **3.10+**, Bash, интернет за първоначален NuGet restore. **Docker, Kafka и OpenShift не са необходими за този първи lab.**
 
 ```bash
 pwd
@@ -19,7 +19,7 @@ test -f sql/legacy.sql
 bash scripts/verify-build.sh
 ```
 
-**Очаквано:** `Build succeeded` с target `net10.0`, `PASS Module 14 C# and Python build`. **Важно:** това не изпълнява Postgres, Debezium или Kafka — пълният integration path е в Labs 14-B–D.
+**Очаквано:** `Build succeeded` с target `net10.0`, `PASS Module 15 C# and Python build`. **Важно:** това не изпълнява Postgres, Debezium или Kafka — пълният integration path е в Labs 15-B–D.
 
 ## 2. Legacy app и bounded contexts
 
@@ -78,10 +78,10 @@ grep -n 'CASHBACK_CONNECTION\\|SEARCH_URL\\|Kafka' \
 |---|---|---|
 | NuGet `NU1301` | SDK output, DNS/HTTPS trust | Увери се, че NuGet е разрешен |
 | `NETSDK1045` | `dotnet --version` | Инсталирай SDK 10, не runtime |
-| Missing source file | `pwd` | Влез в корена на Module 14 |
-| Няма Kafka events | Тук **няма broker** | Lab 14-B |
-| Не виждаш search | Elasticsearch не е стартиран | Lab 14-C |
-| Няма Wallet | Cashback DB не е стартирана | Lab 14-D |
+| Missing source file | `pwd` | Влез в корена на Module 15 |
+| Няма Kafka events | Тук **няма broker** | Lab 15-B |
+| Не виждаш search | Elasticsearch не е стартиран | Lab 15-C |
+| Няма Wallet | Cashback DB не е стартирана | Lab 15-D |
 
 ## 7. Cleanup и приемане
 

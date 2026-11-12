@@ -1,4 +1,4 @@
-# Lab 14-D — CDC sale + line_item aggregation и Cashback Wallet
+# Lab 15-D — CDC sale + line_item aggregation и Cashback Wallet
 
 **Цел:** изгради нова бизнес функционалност **в отделна база**, без да променяш legacy приложението. Не само търсене: демонстрираме **customer snapshot**, **продажба с няколко реда**, **асинхронна агрегация**, **процентна cashback политика**, **tier UPDATE** и обработка на дублирани/разместени събития.
 
@@ -6,7 +6,7 @@
 
 ## 1. Предпоставки и автономен старт
 
-Docker Compose v2, Python 3.10+, Bash, същите портове и ресурси като Lab 14-C. **Не** зависи от ръчно работеща предишна сесия. От корена на Module 14:
+Docker Compose v2, Python 3.10+, Bash, същите портове и ресурси като Lab 15-C. **Не** зависи от ръчно работеща предишна сесия. От корена на Module 15:
 
 ```bash
 python3 tools/init_env.py
@@ -130,7 +130,7 @@ docker compose exec -T legacy-db \
 
 ## 9. Cleanup
 
-Ако продължаваш с OpenShift Lab 14-E, Docker stack не е нужен за remote cluster. Локално:
+Ако продължаваш с OpenShift Lab 15-E, Docker stack не е нужен за remote cluster. Локално:
 
 ```bash
 docker compose down

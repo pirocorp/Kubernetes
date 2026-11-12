@@ -1,4 +1,4 @@
-# Module 14 — Modernize a Legacy Stack with Change Data Capture (CDC)
+# Module 15 — Modernize a Legacy Stack with Change Data Capture (CDC)
 
 **Самодостатъчен курс:** PostgreSQL logical WAL → **Debezium** → Apache **Kafka** → ASP.NET Core 10/C# projections → **Elasticsearch Product Search** + **Cashback Wallet в собствена PostgreSQL база**. Основен източник е [Red Hat Solution Pattern — Using Change Data Capture for Stack Modernization](https://www.solutionpatterns.io/solution-pattern-modernization-cdc/solution-pattern-modernization-cdc/index.html). Запазваме **и двата оригинални бизнес сценария**, но адаптираме реализацията от Quarkus/Camel към C#.
 
@@ -67,7 +67,7 @@ Legacy приложение първо записва SQL, после пише E
 | Search | Elasticsearch **8.17.10** | Индекс за Product и full-text search |
 | Modern DB | отделен PostgreSQL **17.6** | Projected customer, sale/item staging, expenses, wallets |
 | Orchestration | Docker Compose v2 | Изолирана локална demo инфраструктура |
-| Cloud | optional OpenShift with preexisting managed DB/Kafka/Search/CDC | Namespace-scoped ASP.NET deployment (Lab 14-E) |
+| Cloud | optional OpenShift with preexisting managed DB/Kafka/Search/CDC | Namespace-scoped ASP.NET deployment (Lab 15-E) |
 
 В оригиналния pattern приложенията са Quarkus/Camel и интеграцията ползва OpenShift/AMQ Streams; **нашият C# код не е буквален порт**. Запазена е топологията и бизнес семантиката, включително customer→sale/line_item→cashback и product→search.
 
@@ -75,21 +75,21 @@ Legacy приложение първо записва SQL, после пише E
 
 | Lab | Практика | Приемане |
 |---|---|---|
-| **14-A** | [Legacy, DB ownership, CDC и анти-патерни](./labs/LAB-01-LEGACY-AND-CDC.md) | Build и inspection на schema, WAL prerequisites |
-| **14-B** | [Debezium, PostgreSQL WAL, snapshot и Kafka](./labs/LAB-02-DEBEZIUM-KAFKA.md) | 4 Kafka topics, active replication slot, connector RUNNING |
-| **14-C** | [Product Search чрез CDC](./labs/LAB-03-SEARCH-PROJECTION.md) | INSERT/UPDATE/DELETE от legacy се появяват/изчезват в Elasticsearch |
-| **14-D** | [Sales → cashback aggregation и wallet](./labs/LAB-04-CASHBACK-WALLET.md) | 2 line items = 5 000 cents → bronze 100 cents; tier gold → 500 cents |
-| **14-E** | [OpenShift deployment, reliability и cleanup](./labs/LAB-05-OPENSHIFT-RUNBOOK.md) | Namespace-scoped images, Services/Secrets, CDC checks, rollback/cleanup |
+| **15-A** | [Legacy, DB ownership, CDC и анти-патерни](./labs/LAB-01-LEGACY-AND-CDC.md) | Build и inspection на schema, WAL prerequisites |
+| **15-B** | [Debezium, PostgreSQL WAL, snapshot и Kafka](./labs/LAB-02-DEBEZIUM-KAFKA.md) | 4 Kafka topics, active replication slot, connector RUNNING |
+| **15-C** | [Product Search чрез CDC](./labs/LAB-03-SEARCH-PROJECTION.md) | INSERT/UPDATE/DELETE от legacy се появяват/изчезват в Elasticsearch |
+| **15-D** | [Sales → cashback aggregation и wallet](./labs/LAB-04-CASHBACK-WALLET.md) | 2 line items = 5 000 cents → bronze 100 cents; tier gold → 500 cents |
+| **15-E** | [OpenShift deployment, reliability и cleanup](./labs/LAB-05-OPENSHIFT-RUNBOOK.md) | Namespace-scoped images, Services/Secrets, CDC checks, rollback/cleanup |
 
-Всяко упражнение започва от ясно описана работна директория и включва точни команди, очаквани резултати, troubleshooting и cleanup. **14-B–D** могат да се изпълнят от чист checkout чрез един общ скрипт, без да зависят от процеси, оставени от предишен lab. 14-E е **условен live-cluster lab** и не инсталира глобални оператори.
+Всяко упражнение започва от ясно описана работна директория и включва точни команди, очаквани резултати, troubleshooting и cleanup. **15-B–D** могат да се изпълнят от чист checkout чрез един общ скрипт, без да зависят от процеси, оставени от предишен lab. 15-E е **условен live-cluster lab** и не инсталира глобални оператори.
 
 ## 6. Quick start — реална локална CDC интеграция
 
-**Изисквания:** Docker Engine + Docker Compose v2, Python 3.10+, Bash, curl, Git, достъп до Docker registries/NuGet за first-run build; препоръчително **поне 10–12 GiB свободна RAM** и свободни портове **5084, 5085, 5441, 5442, 9092, 8083, 9200**. Командата ползва **Docker build** за .NET 10; не е необходим инсталиран локален .NET SDK. Локален SDK 10 е нужен само за самостоятелния build от Lab 14-A.
+**Изисквания:** Docker Engine + Docker Compose v2, Python 3.10+, Bash, curl, Git, достъп до Docker registries/NuGet за first-run build; препоръчително **поне 10–12 GiB свободна RAM** и свободни портове **5084, 5085, 5441, 5442, 9092, 8083, 9200**. Командата ползва **Docker build** за .NET 10; не е необходим инсталиран локален .NET SDK. Локален SDK 10 е нужен само за самостоятелния build от Lab 15-A.
 
 ```bash
 git clone https://github.com/pirocorp/Kubernetes.git
-cd "Kubernetes/14. CDC Legacy Modernization"
+cd "Kubernetes/15. CDC Legacy Modernization"
 python3 tools/init_env.py
 bash scripts/verify-cdc.sh
 ```
@@ -149,7 +149,7 @@ sequenceDiagram
 ## 8. Инструменти и source файлове
 
 ```text
-14. CDC Legacy Modernization/
+15. CDC Legacy Modernization/
 ├── README.md
 ├── .gitignore / .dockerignore
 ├── Dockerfile / compose.yaml

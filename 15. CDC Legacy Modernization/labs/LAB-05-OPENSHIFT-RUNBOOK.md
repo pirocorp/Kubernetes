@@ -1,8 +1,8 @@
-# Lab 14-E — OpenShift: CDC modern workloads, security, observability и recovery
+# Lab 15-E — OpenShift: CDC modern workloads, security, observability и recovery
 
 **Цел:** да разположиш **двете C# роли** в разрешен OpenShift namespace и да ги свържеш с *вече подготвени* managed PostgreSQL, Debezium/Kafka Connect, Kafka и Elasticsearch услуги. Това следва топологията на [Red Hat CDC/OpenShift Pattern](https://www.solutionpatterns.io/solution-pattern-modernization-cdc/solution-pattern-modernization-cdc/02-architecture.html), но **не** изпълнява стария Ansible installer от оригиналния demo.
 
-**Важно разграничение:** самостоятелният **реален end-to-end CDC** lab е 14-B–D чрез Docker Compose, без cluster permissions. OpenShift вариантът е **условен live-cluster lab**: не може да измислим Kafka/Postgres DNS, сертификати, operator licenses или RBAC. Тук има конкретен code/build/deployment път, който се изпълнява **само след изпълнените явни prerequisites**.
+**Важно разграничение:** самостоятелният **реален end-to-end CDC** lab е 15-B–D чрез Docker Compose, без cluster permissions. OpenShift вариантът е **условен live-cluster lab**: не може да измислим Kafka/Postgres DNS, сертификати, operator licenses или RBAC. Тук има конкретен code/build/deployment път, който се изпълнява **само след изпълнените явни prerequisites**.
 
 ## 1. Необходими предпоставки
 
@@ -12,9 +12,9 @@
 - **Cashback PostgreSQL** със schema от [cashback.sql](../sql/cashback.sql) и Elasticsearch HTTP endpoint с разрешен достъп.
 - **Профил на съвместимост:** учебният C# Kafka client използва PLAINTEXT bootstrap и учебният Elasticsearch client — HTTP без API credentials. При стандартен enterprise Kafka SASL/TLS и Elasticsearch HTTPS/auth **трябва да се разработят и конфигурират подходящи security adapters**, преди да използваш този sample. Не изключвай security на служебни ресурси само за тест.
 - Container build nodes достигат Microsoft .NET 10 images и NuGet. Достатъчна image/Pod quota.
-- Bash, Python 3.10+, `oc`. Работна директория = Module 14 root, [Dockerfile](../Dockerfile) и [workloads.yaml](../openshift/workloads.yaml) са включени.
+- Bash, Python 3.10+, `oc`. Работна директория = Module 15 root, [Dockerfile](../Dockerfile) и [workloads.yaml](../openshift/workloads.yaml) са включени.
 
-**Ако липсват managed dependencies, това не е разрешение за инсталиране на cluster-scoped Operators или използване на production PostgreSQL slot.** Направи 14-B–D на локалната Docker Compose среда — тя действително включва всички нужни компоненти.
+**Ако липсват managed dependencies, това не е разрешение за инсталиране на cluster-scoped Operators или използване на production PostgreSQL slot.** Направи 15-B–D на локалната Docker Compose среда — тя действително включва всички нужни компоненти.
 
 ## 2. Preflight: провери клъстера, Project и RBAC
 
@@ -30,22 +30,22 @@ oc auth can-i create secrets
 oc auth can-i create buildconfigs.build.openshift.io
 oc auth can-i create builds.build.openshift.io
 oc auth can-i create imagestreams.image.openshift.io
-oc get deploy,svc,sa,secret,bc,is -l training=module14
+oc get deploy,svc,sa,secret,bc,is -l training=module15
 test -s Dockerfile
 test -s openshift/workloads.yaml
 ```
 
-**Очаквано:** всички `can-i` са `yes`, избран е правилният личен namespace, имената `m14-*` са свободни и quota позволява два C# Pod-а и един build. Не обновявай или изтривай чужд `m14-*` resource.
+**Очаквано:** всички `can-i` са `yes`, избран е правилният личен namespace, имената `m15-*` са свободни и quota позволява два C# Pod-а и един build. Не обновявай или изтривай чужд `m15-*` resource.
 
 ## 3. Build и ImageStream
 
 ```bash
-oc new-build --name=m14-retail-image --binary --strategy=docker
-oc start-build m14-retail-image --from-dir=. --follow --wait
-oc get builds -l buildconfig=m14-retail-image
-M14_IMAGE="$(oc get istag m14-retail-image:latest -o jsonpath='{.image.dockerImageReference}')"
-test -n "$M14_IMAGE" || { echo 'No container image'; false; }
-printf 'Built image reference: %s\n' "$M14_IMAGE"
+oc new-build --name=m15-retail-image --binary --strategy=docker
+oc start-build m15-retail-image --from-dir=. --follow --wait
+oc get builds -l buildconfig=m15-retail-image
+M15_IMAGE="$(oc get istag m15-retail-image:latest -o jsonpath='{.image.dockerImageReference}')"
+test -n "$M15_IMAGE" || { echo 'No container image'; false; }
+printf 'Built image reference: %s\n' "$M15_IMAGE"
 ```
 
 **Очаквано:** Build `Complete`, ImageStream с таг `latest`. При `Forbidden` — отказ заради RBAC; при build fail — `oc logs build/ИМЕ`, Pull access и NuGet network. **Не** заобикаляй SCC с root/privileged containers.
@@ -74,14 +74,14 @@ chmod 600 .runtime/openshift-legacy.env .runtime/openshift-modern.env
 if grep -q 'REPLACE' .runtime/openshift-legacy.env; then
   echo 'Replace the placeholder values in the legacy secret file' >&2
 else
-  oc create secret generic m14-legacy-conn --from-env-file=.runtime/openshift-legacy.env
+  oc create secret generic m15-legacy-conn --from-env-file=.runtime/openshift-legacy.env
 fi
 if grep -q 'REPLACE' .runtime/openshift-modern.env; then
   echo 'Replace the placeholder values in the modern secret file' >&2
 else
-  oc create secret generic m14-modern-conn --from-env-file=.runtime/openshift-modern.env
+  oc create secret generic m15-modern-conn --from-env-file=.runtime/openshift-modern.env
 fi
-oc get secret m14-legacy-conn m14-modern-conn
+oc get secret m15-legacy-conn m15-modern-conn
 ```
 
 **Очаквано:** само собствените Secret обекти са създадени; legacy Pod **не получава cashback DB credentials**, modern Pod **не получава legacy DB credentials**. Това дава реална least-privilege граница на configuration ниво, а в production проверявай и DB роли/network policies.
@@ -89,15 +89,15 @@ oc get secret m14-legacy-conn m14-modern-conn
 ## 5. Namespace-scoped Deployments и ClusterIP Services
 
 ```bash
-sed "s|IMAGE_PLACEHOLDER|$M14_IMAGE|g" openshift/workloads.yaml \
+sed "s|IMAGE_PLACEHOLDER|$M15_IMAGE|g" openshift/workloads.yaml \
   | oc apply --dry-run=client -f -
-sed "s|IMAGE_PLACEHOLDER|$M14_IMAGE|g" openshift/workloads.yaml \
+sed "s|IMAGE_PLACEHOLDER|$M15_IMAGE|g" openshift/workloads.yaml \
   | oc apply -f -
-oc rollout status deployment/m14-legacy --timeout=300s
-oc rollout status deployment/m14-modern --timeout=300s
-oc get deploy,svc,sa -l training=module14
-oc get endpointslice -l kubernetes.io/service-name=m14-legacy
-oc get endpointslice -l kubernetes.io/service-name=m14-modern
+oc rollout status deployment/m15-legacy --timeout=300s
+oc rollout status deployment/m15-modern --timeout=300s
+oc get deploy,svc,sa -l training=module15
+oc get endpointslice -l kubernetes.io/service-name=m15-legacy
+oc get endpointslice -l kubernetes.io/service-name=m15-modern
 ```
 
 **Очаквано:** 2 Ready Deployments с default restricted SCC, non-root containers, 2 ServiceAccounts и 2 ClusterIP Services. **Няма публичен Route** за четене на лични wallet данни и за legacy write endpoints — те се отварят **само чрез временни port-forwards**. `/healthz` е процесен liveness endpoint, **не** доказва CDC или инфраструктурна готовност.
@@ -107,13 +107,13 @@ oc get endpointslice -l kubernetes.io/service-name=m14-modern
 В терминал A:
 
 ```bash
-oc port-forward service/m14-legacy 5084:8080
+oc port-forward service/m15-legacy 5084:8080
 ```
 
 В терминал B:
 
 ```bash
-oc port-forward service/m14-modern 5085:8080
+oc port-forward service/m15-modern 5085:8080
 ```
 
 В терминал C (същия source checkout):
@@ -128,7 +128,7 @@ curl -fsS http://127.0.0.1:5085/wallets/1
 
 **Очаквано:** HTTP 200, seed продукти, търсене по индекс и проектиран customer wallet **само ако** платформените DBs и Kafka connector имат същите synthetic source records и структури. При различни реални данни измени queries според реално разрешените fixtures. **Не** изпълнявай destructive create/delete върху неучебни records.
 
-Пълният `tools/verify.py` изпраща **write операции** и променя customer tier; ползвай го **само** върху изолирания собствен 14-B–D demo dataset, не върху споделена или production база.
+Пълният `tools/verify.py` изпраща **write операции** и променя customer tier; ползвай го **само** върху изолирания собствен 15-B–D demo dataset, не върху споделена или production база.
 
 ## 7. Observability и recovery runbook
 
@@ -152,10 +152,10 @@ curl -fsS http://127.0.0.1:5085/wallets/1
 
 | Симптом | Команда/диагноза | Решение |
 |---|---|---|
-| ImagePullBackOff | `oc describe pod -l app=m14-modern` | Registry permissions / ImageStream reference |
-| CrashLoopBackOff | `oc logs deploy/m14-modern --previous` | Secret env, Kafka / ES / DB connectivity |
+| ImagePullBackOff | `oc describe pod -l app=m15-modern` | Registry permissions / ImageStream reference |
+| CrashLoopBackOff | `oc logs deploy/m15-modern --previous` | Secret env, Kafka / ES / DB connectivity |
 | Deployment Ready, но search празен | Kafka Connect task и ES index health | Не бъркай liveness с full readiness |
-| Wallet 404 | `oc logs deploy/m14-modern` | Customer snapshot/DB data |
+| Wallet 404 | `oc logs deploy/m15-modern` | Customer snapshot/DB data |
 | `Forbidden` за builds/secrets | `oc auth can-i ...` | Не е разрешен live lab — използвай Docker Compose |
 | Kafka SASL/TLS отказ | Broker security config | Нужен C# supported security config, не plaintext workaround |
 | WAL расте | DBA queries за slots и LSN | Ограничи retention и алармирай |
@@ -167,18 +167,18 @@ curl -fsS http://127.0.0.1:5085/wallets/1
 Спри port-forward терминалите (Ctrl+C). В правилния Project:
 
 ```bash
-oc delete deployment/m14-legacy deployment/m14-modern --ignore-not-found
-oc delete service/m14-legacy service/m14-modern --ignore-not-found
-oc delete serviceaccount/m14-legacy-sa serviceaccount/m14-modern-sa --ignore-not-found
-oc delete secret/m14-legacy-conn secret/m14-modern-conn --ignore-not-found
-oc delete buildconfig/m14-retail-image imagestream/m14-retail-image --ignore-not-found
-oc delete builds -l buildconfig=m14-retail-image --ignore-not-found
-oc get deploy,svc,sa,secret,bc,is -l training=module14
-unset M14_IMAGE
+oc delete deployment/m15-legacy deployment/m15-modern --ignore-not-found
+oc delete service/m15-legacy service/m15-modern --ignore-not-found
+oc delete serviceaccount/m15-legacy-sa serviceaccount/m15-modern-sa --ignore-not-found
+oc delete secret/m15-legacy-conn secret/m15-modern-conn --ignore-not-found
+oc delete buildconfig/m15-retail-image imagestream/m15-retail-image --ignore-not-found
+oc delete builds -l buildconfig=m15-retail-image --ignore-not-found
+oc get deploy,svc,sa,secret,bc,is -l training=module15
+unset M15_IMAGE
 ```
 
 Локалните `.runtime/openshift-*.env` файлове остават за преглед, **изтрий само твоите копия**, когато приключиш и няма нужда от тях.
 
 **Не** изтривай чужди Kafka topics, connector, replication slots, managed DBs, Elasticsearch индекси, Operators или Project. Този lab **не ги е създавал**.
 
-**Приемане:** можеш да deploy-неш две C# роли с отделни Secrets, да обясниш защо не се експозват публично и да диагностицираш CDC pipeline-а по всички слоеве. **Същинската end-to-end функционална валидация на реален CDC pipeline** е автоматизирана в Docker Labs 14-B–D; тук се изисква изрично налична и разрешена OpenShift инфраструктура.
+**Приемане:** можеш да deploy-неш две C# роли с отделни Secrets, да обясниш защо не се експозват публично и да диагностицираш CDC pipeline-а по всички слоеве. **Същинската end-to-end функционална валидация на реален CDC pipeline** е автоматизирана в Docker Labs 15-B–D; тук се изисква изрично налична и разрешена OpenShift инфраструктура.

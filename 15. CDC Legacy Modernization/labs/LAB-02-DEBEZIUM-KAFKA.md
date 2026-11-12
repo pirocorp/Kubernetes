@@ -1,4 +1,4 @@
-# Lab 14-B — PostgreSQL WAL → Debezium → Kafka (истински CDC)
+# Lab 15-B — PostgreSQL WAL → Debezium → Kafka (истински CDC)
 
 **Цел:** да активираш *реална* PostgreSQL logical replication и да наблюдаваш началния snapshot и CDC events в Kafka. **Няма polling на таблиците и няма simulated Kafka publisher.**
 
@@ -10,9 +10,9 @@
 - Достъп за pull на `postgres:17.6`, `apache/kafka:4.1.2`, `quay.io/debezium/connect:3.3`, `docker.elastic.co/elasticsearch/elasticsearch:8.17.10` и Microsoft .NET 10 images, NuGet.
 - Поне 10–12 GiB свободна RAM (ориентир), достатъчно дисково място за контейнерите/volumes.
 - Свободни localhost портове `5084/5085/5441/5442/9092/8083/9200`. Никой от тях не трябва да е зает от чужд процес.
-- Работна директория = **корен на Module 14**, с [compose.yaml](../compose.yaml), [legacy.sql](../sql/legacy.sql), [register_connector.py](../tools/register_connector.py).
+- Работна директория = **корен на Module 15**, с [compose.yaml](../compose.yaml), [legacy.sql](../sql/legacy.sql), [register_connector.py](../tools/register_connector.py).
 
-Няма нужда да си изпълнил Lab 14-A, нито да инсталираш локален .NET SDK: build става във Docker. Няма OpenShift или cluster-admin.
+Няма нужда да си изпълнил Lab 15-A, нито да инсталираш локален .NET SDK: build става във Docker. Няма OpenShift или cluster-admin.
 
 ## 2. Стартирай компонентите
 
@@ -50,7 +50,7 @@ python3 tools/register_connector.py
 - `plugin.name=pgoutput` и `snapshot.mode=initial`;
 - `topic.prefix=retailcdc`;
 - `table.include.list=public.customer,public.product,public.sale,public.line_item`;
-- `slot.name=m14_retail_slot` и `publication.name=m14_retail_pub`.
+- `slot.name=m15_retail_slot` и `publication.name=m15_retail_pub`.
 
 **Тези names не са secrets.** Самата DB password не трябва да е hardcoded в repository, shell history, screenshots или публични CI logs.
 
@@ -66,7 +66,7 @@ docker compose exec -T legacy-db psql -U retail -d retail -c \
 python3 tools/check_infra.py
 ```
 
-**Очаквано:** `wal_level=logical`; slot `m14_retail_slot` с plugin `pgoutput`; publication `m14_retail_pub`, четири реални Kafka topics:
+**Очаквано:** `wal_level=logical`; slot `m15_retail_slot` с plugin `pgoutput`; publication `m15_retail_pub`, четири реални Kafka topics:
 `retailcdc.public.customer`, `retailcdc.public.product`, `retailcdc.public.sale`, `retailcdc.public.line_item`.
 
 **Защо следим slot?** При спряна репликация WAL може да се натрупва. В production следи `pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn)`, connector task state/lag, disk pressure и retention policy. Никога не изтривай чужд replication slot без решение на DBA.
@@ -98,7 +98,7 @@ curl -fsS 'http://127.0.0.1:5085/search?q=fern'
 | Симптом | Проверка | Корекция |
 |---|---|---|
 | Kafka topic initializer failed | `docker compose logs kafka-init kafka` | Провери 19092 listener; initializer е [scripts/kafka-init.sh](../scripts/kafka-init.sh) и трябва да завърши успешно преди Debezium/modern |\n| Kafka Connect REST 503/refused | `docker compose logs --tail=100 connect` | Изчакай Connect startup, провери Kafka/hostname |
-| Connector FAILED | `curl http://127.0.0.1:8083/connectors/m14-retail-postgres/status` | Проверка DB credentials, logical WAL, slot, permissions |
+| Connector FAILED | `curl http://127.0.0.1:8083/connectors/m15-retail-postgres/status` | Проверка DB credentials, logical WAL, slot, permissions |
 | `wal_level != logical` | `SHOW wal_level` | Използвай само собствената Docker Compose база; не променяй production DB |
 | Empty topics | `docker compose logs connect` | Snapshot task RUNNING, таблиците са в publication |
 | CDC schema parsing error | `docker compose logs modern` | Провери Debezium connector version и before/after envelope |
@@ -108,7 +108,7 @@ curl -fsS 'http://127.0.0.1:5085/search?q=fern'
 
 ## 8. Cleanup
 
-Ако продължаваш към 14-C/14-D, **не изпълнявай cleanup сега**, защото следващите стъпки използват същия lab stack. За спиране без загуба на данни:
+Ако продължаваш към 15-C/15-D, **не изпълнявай cleanup сега**, защото следващите стъпки използват същия lab stack. За спиране без загуба на данни:
 
 ```bash
 docker compose down

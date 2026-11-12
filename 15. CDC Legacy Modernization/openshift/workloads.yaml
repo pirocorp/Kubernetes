@@ -1,32 +1,32 @@
-# Module 14 namespace-only workloads; no Operators, Kafka clusters, databases or Elasticsearch installed here.
+# Module 15 namespace-only workloads; no Operators, Kafka clusters, databases or Elasticsearch installed here.
 # Replace IMAGE_PLACEHOLDER with the local project's OpenShift ImageStream digest/tag.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: m14-legacy-sa
-  labels: {training: module14}
+  name: m15-legacy-sa
+  labels: {training: module15}
 automountServiceAccountToken: false
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: m14-modern-sa
-  labels: {training: module14}
+  name: m15-modern-sa
+  labels: {training: module15}
 automountServiceAccountToken: false
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: m14-legacy
-  labels: {app: m14-legacy, training: module14}
+  name: m15-legacy
+  labels: {app: m15-legacy, training: module15}
 spec:
   replicas: 1
-  selector: {matchLabels: {app: m14-legacy}}
+  selector: {matchLabels: {app: m15-legacy}}
   template:
     metadata:
-      labels: {app: m14-legacy, training: module14}
+      labels: {app: m15-legacy, training: module15}
     spec:
-      serviceAccountName: m14-legacy-sa
+      serviceAccountName: m15-legacy-sa
       automountServiceAccountToken: false
       containers:
         - name: api
@@ -36,7 +36,7 @@ spec:
             - {name: APP_MODE, value: "legacy"}
             - {name: ASPNETCORE_URLS, value: "http://+:8080"}
             - name: LEGACY_CONNECTION
-              valueFrom: {secretKeyRef: {name: m14-legacy-conn, key: LEGACY_CONNECTION}}
+              valueFrom: {secretKeyRef: {name: m15-legacy-conn, key: LEGACY_CONNECTION}}
           resources:
             requests: {cpu: 50m, memory: 128Mi}
             limits: {cpu: 500m, memory: 512Mi}
@@ -57,16 +57,16 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: m14-modern
-  labels: {app: m14-modern, training: module14}
+  name: m15-modern
+  labels: {app: m15-modern, training: module15}
 spec:
   replicas: 1
-  selector: {matchLabels: {app: m14-modern}}
+  selector: {matchLabels: {app: m15-modern}}
   template:
     metadata:
-      labels: {app: m14-modern, training: module14}
+      labels: {app: m15-modern, training: module15}
     spec:
-      serviceAccountName: m14-modern-sa
+      serviceAccountName: m15-modern-sa
       automountServiceAccountToken: false
       containers:
         - name: api
@@ -75,13 +75,13 @@ spec:
           env:
             - {name: APP_MODE, value: "modern"}
             - {name: ASPNETCORE_URLS, value: "http://+:8080"}
-            - {name: KAFKA_GROUP_ID, value: "m14-projections"}
+            - {name: KAFKA_GROUP_ID, value: "m15-projections"}
             - name: KAFKA_BOOTSTRAP
-              valueFrom: {secretKeyRef: {name: m14-modern-conn, key: KAFKA_BOOTSTRAP}}
+              valueFrom: {secretKeyRef: {name: m15-modern-conn, key: KAFKA_BOOTSTRAP}}
             - name: CASHBACK_CONNECTION
-              valueFrom: {secretKeyRef: {name: m14-modern-conn, key: CASHBACK_CONNECTION}}
+              valueFrom: {secretKeyRef: {name: m15-modern-conn, key: CASHBACK_CONNECTION}}
             - name: SEARCH_URL
-              valueFrom: {secretKeyRef: {name: m14-modern-conn, key: SEARCH_URL}}
+              valueFrom: {secretKeyRef: {name: m15-modern-conn, key: SEARCH_URL}}
           resources:
             requests: {cpu: 100m, memory: 256Mi}
             limits: {cpu: 1000m, memory: 1Gi}
@@ -102,19 +102,19 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: m14-legacy
-  labels: {training: module14}
+  name: m15-legacy
+  labels: {training: module15}
 spec:
   type: ClusterIP
-  selector: {app: m14-legacy}
+  selector: {app: m15-legacy}
   ports: [{name: http, port: 8080, targetPort: http}]
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: m14-modern
-  labels: {training: module14}
+  name: m15-modern
+  labels: {training: module15}
 spec:
   type: ClusterIP
-  selector: {app: m14-modern}
+  selector: {app: m15-modern}
   ports: [{name: http, port: 8080, targetPort: http}]

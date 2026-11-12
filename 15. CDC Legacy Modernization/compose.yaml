@@ -1,4 +1,4 @@
-name: m14-cdc
+name: m15-cdc
 services:
   legacy-db:
     image: postgres:17.6
@@ -62,10 +62,10 @@ services:
     image: quay.io/debezium/connect:3.3
     environment:
       BOOTSTRAP_SERVERS: kafka:19092
-      GROUP_ID: m14-connect
-      CONFIG_STORAGE_TOPIC: m14-connect-configs
-      OFFSET_STORAGE_TOPIC: m14-connect-offsets
-      STATUS_STORAGE_TOPIC: m14-connect-status
+      GROUP_ID: m15-connect
+      CONFIG_STORAGE_TOPIC: m15-connect-configs
+      OFFSET_STORAGE_TOPIC: m15-connect-offsets
+      STATUS_STORAGE_TOPIC: m15-connect-status
       KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       KEY_CONVERTER_SCHEMAS_ENABLE: "false"
@@ -101,7 +101,7 @@ services:
       APP_MODE: modern
       CASHBACK_CONNECTION: "Host=cashback-db;Database=cashback;Username=cashback;Password=${CASHBACK_PASSWORD}"
       KAFKA_BOOTSTRAP: kafka:19092
-      KAFKA_GROUP_ID: m14-projections
+      KAFKA_GROUP_ID: m15-projections
       SEARCH_URL: http://search:9200
     ports: ["127.0.0.1:5085:8080"]
     depends_on:
