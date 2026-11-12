@@ -1,10 +1,10 @@
-# Lab 10-C — ASP.NET Core 10: implement the contract, then verify it
+# Lab 11-C — ASP.NET Core 10: implement the contract, then verify it
 
 **Цел:** прилагаме вече дефинирания OpenAPI договор на C# и проверяваме реалните HTTP отговори. Оригинална идея: [Red Hat API-First Solution Pattern](https://www.solutionpatterns.io/solution-pattern-api-first/api-first/index.html). **Разлика:** вместо Quarkus използваме ASP.NET Core Minimal API.
 
 ## Предпоставки
 
-- [.NET SDK 10](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) с команда `dotnet`, Python 3.10+, Bash и `curl`; работна директория = корен на Module 10.
+- [.NET SDK 10](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) с команда `dotnet`, Python 3.10+, Bash и `curl`; работна директория = корен на Module 11.
 - Свободен TCP port **8080**; локален mock на 8082 не е нужен за този lab.
 - Source: [ProductsApi.csproj](../src/ProductsApi/ProductsApi.csproj), [Program.cs](../src/ProductsApi/Program.cs), [OpenAPI договор](../contract/products-v1.openapi.json), [contract smoke suite](../tools/contract_check.py).
 - Не е нужен NuGet пакет извън framework SDK / `Microsoft.AspNetCore.App` shared runtime. Не са нужни външни DB или cluster.
@@ -24,11 +24,11 @@ dotnet restore src/ProductsApi/ProductsApi.csproj
 dotnet build src/ProductsApi/ProductsApi.csproj --no-restore
 export API_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(24))')"
 test "${#API_KEY}" -ge 16
-ASPNETCORE_URLS=http://127.0.0.1:8080 dotnet run --project src/ProductsApi/ProductsApi.csproj --no-build > /tmp/m10-api.log 2>&1 &
+ASPNETCORE_URLS=http://127.0.0.1:8080 dotnet run --project src/ProductsApi/ProductsApi.csproj --no-build > /tmp/m11-api.log 2>&1 &
 API_PID=$!
 ```
 
-**Продължи в същия Bash терминал** с вече експортирания `API_KEY`. Приложението работи във фон. Ако API не е готово при първия `curl`, провери `cat /tmp/m10-api.log`, направи повторна заявка и потърси порт/SDK/configuration проблема. Не стартирай ново копие върху зает порт.
+**Продължи в същия Bash терминал** с вече експортирания `API_KEY`. Приложението работи във фон. Ако API не е готово при първия `curl`, провери `cat /tmp/m11-api.log`, направи повторна заявка и потърси порт/SDK/configuration проблема. Не стартирай ново копие върху зает порт.
 
 ## 3. Тествай по OpenAPI
 
@@ -60,8 +60,8 @@ curl -sS -H "X-Api-Key: $API_KEY" -H 'Content-Type: application/json' \
 При наличен Docker/Podman:
 
 ```bash
-docker build -f Dockerfile -t m10-products:dev .
-docker run --rm -p 127.0.0.1:18080:8080 --env API_KEY m10-products:dev
+docker build -f Dockerfile -t m11-products:dev .
+docker run --rm -p 127.0.0.1:18080:8080 --env API_KEY m11-products:dev
 ```
 
 Провери в друг терминал `curl -fsS -H "X-Api-Key: $API_KEY" http://127.0.0.1:18080/v1/products`. Не изпълнявай локален Docker build, ако същият порт вече е зает. Image използва .NET 10 SDK за build и ASP.NET Core 10 runtime, слуша на **8080** и не изисква root за работа на приложението.

@@ -1,12 +1,12 @@
-# Lab 10-D — API management: authentication, quotas, analytics
+# Lab 11-D — API management: authentication, quotas, analytics
 
 **Цел:** отделяме **upstream API** от **gateway**, което контролира достъпа, брои заявките и прилага ограничение. В Red Hat това е ролята на **3scale/APIcast**; тук използваме собствен **локален преподавателски proxy**, който **не** е 3scale.
 
 ## Предпоставки
 
-- **.NET SDK 10**, Python 3.10+, Bash и `curl`; локални портове **8080** и **8081** трябва да са свободни. Не се изисква предварително изпълнен Lab 10-C, OpenShift, 3scale или платен лиценз.
-- Работна директория = коренът на Module 10. Реалният upstream проект е [ProductsApi.csproj](../src/ProductsApi/ProductsApi.csproj) с [Program.cs](../src/ProductsApi/Program.cs), а gateway е [tools/gateway.py](../tools/gateway.py).
-- **Не** стартирай втори backend върху port 8080. Ако Lab 10-C още работи, изпълни неговия собствен cleanup (чрез запазения му PID), преди да започнеш този lab.
+- **.NET SDK 10**, Python 3.10+, Bash и `curl`; локални портове **8080** и **8081** трябва да са свободни. Не се изисква предварително изпълнен Lab 11-C, OpenShift, 3scale или платен лиценз.
+- Работна директория = коренът на Module 11. Реалният upstream проект е [ProductsApi.csproj](../src/ProductsApi/ProductsApi.csproj) с [Program.cs](../src/ProductsApi/Program.cs), а gateway е [tools/gateway.py](../tools/gateway.py).
+- **Не** стартирай втори backend върху port 8080. Ако Lab 11-C още работи, изпълни неговия собствен cleanup (чрез запазения му PID), преди да започнеш този lab.
 
 ## 1. Стартирай upstream API и gateway от чиста среда
 

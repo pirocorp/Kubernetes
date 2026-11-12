@@ -3,18 +3,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: m10-products-api
+  name: m11-products-api
   labels:
-    app: m10-products-api
+    app: m11-products-api
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: m10-products-api
+      app: m11-products-api
   template:
     metadata:
       labels:
-        app: m10-products-api
+        app: m11-products-api
     spec:
       containers:
         - name: api
@@ -29,7 +29,7 @@ spec:
             - name: API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: m10-products-key
+                  name: m11-products-key
                   key: API_KEY
           securityContext:
             allowPrivilegeEscalation: false
@@ -62,12 +62,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: m10-products-api
+  name: m11-products-api
   labels:
-    app: m10-products-api
+    app: m11-products-api
 spec:
   selector:
-    app: m10-products-api
+    app: m11-products-api
   type: ClusterIP
   ports:
     - name: http
@@ -77,13 +77,13 @@ spec:
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: m10-products-api
+  name: m11-products-api
   labels:
-    app: m10-products-api
+    app: m11-products-api
 spec:
   to:
     kind: Service
-    name: m10-products-api
+    name: m11-products-api
     weight: 100
   port:
     targetPort: http

@@ -1,4 +1,4 @@
-# Module 10 — API-First Development & API Management
+# Module 11 — API-First Development & API Management
 
 **API-first** означава да дефинираме и договорим HTTP интерфейса **преди** неговата реализация. API договорът позволява на frontend/mobile екипите да работят с mock, на backend екипа — да пише кода, а на платформения екип — да управлява версията, достъпа и експлоатацията независимо от езика на реализация.
 
@@ -39,11 +39,11 @@ flowchart TD
 
 | Стъпка | Упражнение | Краен проверим резултат |
 |---|---|---|
-| **10-A** | [Design-first и API mocking](./labs/LAB-01-DESIGN-MOCK.md) | Версиониран OpenAPI документ и mock от неговите `examples`, преминали HTTP checks |
-| **10-B** | [API Registry & governance](./labs/LAB-02-REGISTRY-GOVERNANCE.md) | Две immutable версии и открит breaking change |
-| **10-C** | [ASP.NET Core API implementation](./labs/LAB-03-ASPNET-IMPLEMENTATION.md) | `dotnet build`, реални 200/401/404/201 responses и contract smoke tests |
-| **10-D** | [API management & security](./labs/LAB-04-API-MANAGEMENT.md) | Gateway 401/200/429, admin-only metrics, разлика от 3scale |
-| **10-E** | [OpenShift integration](./labs/LAB-05-OPENSHIFT-DEPLOY.md) | Docker strategy Build, Deployment, Service, HTTPS Route и contract check, ако средата позволява |
+| **11-A** | [Design-first и API mocking](./labs/LAB-01-DESIGN-MOCK.md) | Версиониран OpenAPI документ и mock от неговите `examples`, преминали HTTP checks |
+| **11-B** | [API Registry & governance](./labs/LAB-02-REGISTRY-GOVERNANCE.md) | Две immutable версии и открит breaking change |
+| **11-C** | [ASP.NET Core API implementation](./labs/LAB-03-ASPNET-IMPLEMENTATION.md) | `dotnet build`, реални 200/401/404/201 responses и contract smoke tests |
+| **11-D** | [API management & security](./labs/LAB-04-API-MANAGEMENT.md) | Gateway 401/200/429, admin-only metrics, разлика от 3scale |
+| **11-E** | [OpenShift integration](./labs/LAB-05-OPENSHIFT-DEPLOY.md) | Docker strategy Build, Deployment, Service, HTTPS Route и contract check, ако средата позволява |
 
 **Препоръка:** изпълнявай A → B → C → D → E. **A–D могат да работят без Kubernetes/OpenShift**; E е отделен платформен lab с истински external prerequisites.
 
@@ -66,7 +66,7 @@ flowchart TD
 
 ```bash
 git clone https://github.com/pirocorp/Kubernetes.git
-cd "Kubernetes/10. API-First Development and API Management"
+cd "Kubernetes/11. API-First Development and API Management"
 git status --short
 python3 --version
 python3 -m json.tool contract/products-v1.openapi.json >/dev/null
@@ -79,7 +79,7 @@ python3 -m json.tool contract/products-v1.openapi.json >/dev/null
 Можеш да провериш **от чиста среда** mock server, истинския C# API, договорите и учебния API gateway **без** OpenShift, 3scale или Apicurio. Нужни са .NET SDK **10**, Python 3.10+ и свободни TCP портове **8080, 8081, 8082**:
 
 ```bash
-# Изпълни от корена на Module 10
+# Изпълни от корена на Module 11
 bash scripts/verify-local.sh
 ```
 
@@ -88,7 +88,7 @@ bash scripts/verify-local.sh
 ## 6. Файлова структура
 
 ```text
-10. API-First Development and API Management/
+11. API-First Development and API Management/
 ├── README.md
 ├── contract/products-v1.openapi.json          # Source of truth
 ├── src/ProductsApi/ProductsApi.csproj
@@ -102,11 +102,11 @@ bash scripts/verify-local.sh
 └── labs/LAB-01..LAB-05                        # Precise, ordered exercises
 ```
 
-## 7. Какво означава „самодостатъчно“ за Module 10?
+## 7. Какво означава „самодостатъчно“ за Module 11?
 
 Всеки lab посочва prerequisites, **действителните файлове**, точни команди, наблюдаеми резултати, troubleshooting, алтернативи при ограничения и cleanup. Локалните упражнения използват основно **Python standard library** и .NET SDK, без registry/account абонаменти или paid services.
 
-**Граници:** API ключът е **учебен**, mock/registry/gateway са локални заместители само на **определени концепции**; няма OIDC, TLS локално, multi-node gateway, production rate limits, реално 3scale или Apicurio deployment. Backend съхранява данни в паметта; няма PostgreSQL/SQL Server. **Не разполагаме с live OpenShift тест**, затова изискванията на конкретния Sandbox са изброени в Lab 10-E вместо да се обещава универсално работещ BuildConfig.
+**Граници:** API ключът е **учебен**, mock/registry/gateway са локални заместители само на **определени концепции**; няма OIDC, TLS локално, multi-node gateway, production rate limits, реално 3scale или Apicurio deployment. Backend съхранява данни в паметта; няма PostgreSQL/SQL Server. **Не разполагаме с live OpenShift тест**, затова изискванията на конкретния Sandbox са изброени в Lab 11-E вместо да се обещава универсално работещ BuildConfig.
 
 Не поставяй истински API keys, access tokens или kubeconfig в Git. Всички примерни данни са синтетични и всички имена/пътища са учебни.
 

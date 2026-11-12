@@ -118,4 +118,4 @@ denied, _ = get("/_metrics")
 assert denied == 401
 print("PASS: API Management 401/200/429 and admin-only metrics")
 PY
-echo "PASS: Module 10 local acceptance suite (mock, actual .NET API, gateway)"
+echo "PASS: Module 11 local acceptance suite (mock, actual .NET API, gateway)"
