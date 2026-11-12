@@ -1,4 +1,4 @@
-# Lab 13-A — Event-Driven Architecture, CloudEvents и асинхронна обработка
+# Lab 14-A — Event-Driven Architecture, CloudEvents и асинхронна обработка
 
 **Учебна цел:** за първи път да създадеш работещ review ingestion API, което **приема** заявка веднага, а moderation и sentiment работят **асинхронно и независимо**. Тази част е изпълнима без Kafka, Docker, GPU, OpenShift, платени акаунти или база данни.
 
@@ -8,7 +8,7 @@
 
 - Познаваш Kubernetes Modules 00–08 (Deployment, Services, pods, consumers) и имаш основни знания за REST/C#.
 - Инсталирани **.NET SDK 10** (не само ASP.NET runtime), **Python 3.10+**, Git, Bash (Linux/macOS/WSL), `curl`.
-- Свободен локален порт **5080**, работна директория — корен на Module 13.
+- Свободен локален порт **5080**, работна директория — корен на Module 14.
 - Всички необходими файлове са включени: [GlobexReviews.csproj](../src/GlobexReviews/GlobexReviews.csproj), [Program.cs](../src/GlobexReviews/Program.cs), [Domain.cs](../src/GlobexReviews/Domain.cs), [LocalChannels.cs](../src/GlobexReviews/LocalChannels.cs), [verify.py](../tools/verify.py).
 - При `dotnet restore` е нужен достъп до NuGet за фиксираните версии на `Confluent.Kafka` и `Npgsql`, **макар локалният режим да не се свързва към Kafka/Postgres**.
 
@@ -47,7 +47,7 @@ sequenceDiagram
     API-->>Client: eventual moderation + sentiment result
 ```
 
-В локалния вариант използваме **два bounded .NET Channels**. Те демонстрират **fan-out**, **backpressure** и **eventual consistency**, но **не са Kafka**: няма broker, durable partitions, replay или независим consumer group на различен node. Именно затова [Lab 13-C](./LAB-03-KAFKA-STORAGE-DASHBOARD.md) въвежда реалния Kafka.
+В локалния вариант използваме **два bounded .NET Channels**. Те демонстрират **fan-out**, **backpressure** и **eventual consistency**, но **не са Kafka**: няма broker, durable partitions, replay или независим consumer group на различен node. Именно затова [Lab 14-C](./LAB-03-KAFKA-STORAGE-DASHBOARD.md) въвежда реалния Kafka.
 
 **Ключова концепция:** `202 Accepted` означава *прието за асинхронна обработка*, **не** „одобрено за публикуване“ и **не** „успешно записано в PostgreSQL“.
 
@@ -134,7 +134,7 @@ curl -fsS http://127.0.0.1:5080/events
 - `/events` съдържа поне `globex.review.submitted`, `globex.review.moderated`, `globex.review.denied` и `globex.review.sentiment`.
 - Порядъкът на събитията от независими workers **не е гарантиран**.
 
-**Важна граница:** в локалния режим review state е **само в паметта** и се губи след рестарт. Използвай Kafka/PostgreSQL/InfluxDB варианта от Lab 13-C за реална брокерна и database демонстрация. Дори там **exactly-once end-to-end** не е автоматично гарантирано.
+**Важна граница:** в локалния режим review state е **само в паметта** и се губи след рестарт. Използвай Kafka/PostgreSQL/InfluxDB варианта от Lab 14-C за реална брокерна и database демонстрация. Дори там **exactly-once end-to-end** не е автоматично гарантирано.
 
 ## 6. Troubleshooting и cleanup
 
@@ -146,7 +146,7 @@ curl -fsS http://127.0.0.1:5080/events
 | POST 400 | Грешна category, текст празен или прекалено дълъг | Сравни със schema в `contracts/review-submitted.json` |
 | Pending за кратко | Workers са asynchronous | Направи GET отново или използвай polling от `verify.py` |
 | 404 при GET /reviews/id | Неправилен reviewId | Използвай UUID от отговора на POST |
-| Не виждаш Kafka messages | Работиш в `REVIEWS_MODE=local` | Това е очаквано; Kafka е в Lab 13-C |
+| Не виждаш Kafka messages | Работиш в `REVIEWS_MODE=local` | Това е очаквано; Kafka е в Lab 14-C |
 
 **Cleanup:** Ctrl+C в foreground терминала. Локалният процес спира и in-memory state се изчиства; не са създавани Kafka topics, Docker volumes или OpenShift ресурси.
 
