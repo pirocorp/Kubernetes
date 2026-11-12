@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - '0[0-8].*/**'
-      - 'COURSE-2026.md'
       - 'README.md'
       - 'scripts/check-integrated-course.py'
       - '.github/workflows/course-modules-00-08.yml'
@@ -14,7 +13,6 @@ on:
       - 'feat/integrate-k8s-137-into-original-modules-00-08'
     paths:
       - '0[0-8].*/**'
-      - 'COURSE-2026.md'
       - 'README.md'
       - 'scripts/check-integrated-course.py'
       - '.github/workflows/course-modules-00-08.yml'
