@@ -24,7 +24,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-**Очаквано:** services `legacy-db`, `cashback-db`, `kafka`, `connect`, `search`, `legacy` и `modern` са стартирани. Не бъркай `running` с `ready`; провери dependencies:
+**Очаквано:** services `legacy-db`, `cashback-db`, `kafka`, `connect`, `search`, `legacy` и `modern` са стартирани; еднократният `kafka-init` е завършил успешно и е създал четирите CDC topics **преди** да стартират Debezium и C# consumer. Kafka log е в persistent named volume, за да не се губят Kafka Connect offsets при обикновен `docker compose down`. Не бъркай `running` с `ready`; провери dependencies:
 
 ```bash
 docker compose exec -T legacy-db pg_isready -U retail -d retail
