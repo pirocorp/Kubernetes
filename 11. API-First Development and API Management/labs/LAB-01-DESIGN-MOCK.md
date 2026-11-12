@@ -1,11 +1,11 @@
-# Lab 10-A — Design-first OpenAPI contract и mock
+# Lab 11-A — Design-first OpenAPI contract и mock
 
 **Цел:** потребителят и разработчикът работят по един API договор, преди да има истински backend. Оригинален източник: [Red Hat API-First Solution Pattern](https://www.solutionpatterns.io/solution-pattern-api-first/api-first/index.html).
 
 ## Предпоставки
 
 - Python **3.10+**, Git, Bash и `curl`. **Не** са нужни OpenShift, Docker, NuGet или платени продукти.
-- Отвори директорията на Module 10 (виж [началната страница](../README.md)). Използваме `contract/products-v1.openapi.json` — **валиден OpenAPI 3.0.3 документ**; JSON е равностоен на YAML като формат за OpenAPI.
+- Отвори директорията на Module 11 (виж [началната страница](../README.md)). Използваме `contract/products-v1.openapi.json` — **валиден OpenAPI 3.0.3 документ**; JSON е равностоен на YAML като формат за OpenAPI.
 - Нужни са свободни локални портове **8082** (mock), по-късно 8080 (реално API) и 8081 (gateway). Командите са за Bash.
 
 ## 1. Прочети договора
@@ -33,11 +33,11 @@ PY
 ```bash
 export API_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(24))')"
 test "${#API_KEY}" -ge 16
-python3 tools/mock_server.py > /tmp/m10-mock.log 2>&1 &
+python3 tools/mock_server.py > /tmp/m11-mock.log 2>&1 &
 MOCK_PID=$!
 ```
 
-**Продължи в същия Bash терминал**, за да използваш същия `API_KEY`. Mock процесът остава във фон. Проверка при отказ: `cat /tmp/m10-mock.log`. Ако порт 8082 вече е зает, спри собствения предишен mock, вместо да стартираш второ копие.
+**Продължи в същия Bash терминал**, за да използваш същия `API_KEY`. Mock процесът остава във фон. Проверка при отказ: `cat /tmp/m11-mock.log`. Ако порт 8082 вече е зает, спри собствения предишен mock, вместо да стартираш второ копие.
 
 ```bash
 curl -fsS http://127.0.0.1:8082/healthz

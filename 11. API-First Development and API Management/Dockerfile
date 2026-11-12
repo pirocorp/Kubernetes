@@ -1,4 +1,4 @@
-# Run from Module 10 root: docker build -t m10-products:dev .
+# Run from Module 11 root: docker build -t m11-products:dev .
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY src/ProductsApi/ProductsApi.csproj src/ProductsApi/

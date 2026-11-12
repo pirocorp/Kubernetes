@@ -1,11 +1,11 @@
-name: Course modules 10-11 local verification
+name: Course modules 11-11 local verification
 
 on:
   pull_request:
     paths:
-      - "10. API-First Development and API Management/**"
-      - "11. API Versioning and Lifecycle Management/**"
-      - ".github/workflows/course-modules-10-11.yml"
+      - "11. API-First Development and API Management/**"
+      - "12. API Versioning and Lifecycle Management/**"
+      - ".github/workflows/course-modules-11-12.yml"
   workflow_dispatch:
 
 permissions:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   module-10:
-    name: Module 10 contract, C# and API management
+    name: Module 11 contract, C# and API management
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -26,10 +26,10 @@ jobs:
           python-version: "3.12"
       - name: Execute complete local acceptance suite
         shell: bash
-        run: bash "10. API-First Development and API Management/scripts/verify-local.sh"
+        run: bash "11. API-First Development and API Management/scripts/verify-local.sh"
 
   module-11:
-    name: Module 11 contract versions, C# and lifecycle
+    name: Module 12 contract versions, C# and lifecycle
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -42,4 +42,4 @@ jobs:
           python-version: "3.12"
       - name: Execute complete local acceptance suite
         shell: bash
-        run: bash "11. API Versioning and Lifecycle Management/scripts/verify-local.sh"
+        run: bash "12. API Versioning and Lifecycle Management/scripts/verify-local.sh"

@@ -1,10 +1,10 @@
-name: Module 14 CDC real integration acceptance
+name: Module 15 CDC real integration acceptance
 
 on:
   pull_request:
     paths:
-      - "14. CDC Legacy Modernization/**"
-      - ".github/workflows/course-module-14.yml"
+      - "15. CDC Legacy Modernization/**"
+      - ".github/workflows/course-module-15.yml"
   workflow_dispatch:
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Build and check source
-        run: bash "14. CDC Legacy Modernization/scripts/verify-build.sh"
+        run: bash "15. CDC Legacy Modernization/scripts/verify-build.sh"
 
   real-cdc:
     name: Real PostgreSQL WAL / Debezium / Kafka / Elasticsearch / cashback
@@ -36,18 +36,18 @@ jobs:
         with:
           python-version: "3.12"
       - name: Build and run complete CDC pipeline
-        run: bash "14. CDC Legacy Modernization/scripts/verify-cdc.sh"
+        run: bash "15. CDC Legacy Modernization/scripts/verify-cdc.sh"
       - name: Inspect logs on failure
         if: failure()
-        working-directory: "14. CDC Legacy Modernization"
+        working-directory: "15. CDC Legacy Modernization"
         run: |
           docker compose ps || true
           docker compose exec -T cashback-db psql -U cashback -d cashback -c "SELECT COUNT(*) AS sales FROM sale_stage" || true
           docker compose exec -T cashback-db psql -U cashback -d cashback -c "SELECT COUNT(*) AS line_items FROM item_stage" || true
           docker compose exec -T cashback-db psql -U cashback -d cashback -c "SELECT COUNT(*) AS expenses FROM expenses" || true
-          docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:19092 --describe --group m14-projections || true
+          docker compose exec -T kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:19092 --describe --group m15-projections || true
           docker compose logs --tail=75 kafka-init connect modern kafka || true
       - name: Remove CI demo containers and data
         if: always()
-        working-directory: "14. CDC Legacy Modernization"
+        working-directory: "15. CDC Legacy Modernization"
         run: docker compose down -v --remove-orphans || true

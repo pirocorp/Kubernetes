@@ -1,10 +1,10 @@
-# Lab 10-B — API Registry, governance и versioning
+# Lab 11-B — API Registry, governance и versioning
 
 **Цел:** versioned API contract, immutable publication и откриване на breaking changes. Оригинал: [Red Hat API-First Solution Pattern](https://www.solutionpatterns.io/solution-pattern-api-first/api-first/index.html).
 
 ## Предпоставки
 
-Python 3.10+, Bash, Git и **съществуващият** `contract/products-v1.openapi.json`. Отвори корена на Module 10. Не се изисква външен Apicurio или OpenShift.
+Python 3.10+, Bash, Git и **съществуващият** `contract/products-v1.openapi.json`. Отвори корена на Module 11. Не се изисква външен Apicurio или OpenShift.
 
 ## 1. Публикувай версия 1.0.0 в локалния учебен registry
 
@@ -18,7 +18,7 @@ find .registry/products -type f -maxdepth 3 -print
 
 ## 2. Създай обратно съвместима версия
 
-Създай временен договор `/tmp/m10-v2-compatible.openapi.json`: новата версия добавя **незадължително** поле `description` към `Product`, без да премахва операции.
+Създай временен договор `/tmp/m11-v2-compatible.openapi.json`: новата версия добавя **незадължително** поле `description` към `Product`, без да премахва операции.
 
 ```bash
 python3 - <<'PY'
@@ -26,11 +26,11 @@ import json
 doc = json.load(open('contract/products-v1.openapi.json'))
 doc['info']['version'] = '1.1.0'
 doc['components']['schemas']['Product']['properties']['description'] = {'type': 'string'}
-with open('/tmp/m10-v2-compatible.openapi.json', 'w') as f:
+with open('/tmp/m11-v2-compatible.openapi.json', 'w') as f:
     json.dump(doc, f, indent=2)
 PY
-python3 tools/registry.py check contract/products-v1.openapi.json /tmp/m10-v2-compatible.openapi.json
-python3 tools/registry.py publish /tmp/m10-v2-compatible.openapi.json
+python3 tools/registry.py check contract/products-v1.openapi.json /tmp/m11-v2-compatible.openapi.json
+python3 tools/registry.py publish /tmp/m11-v2-compatible.openapi.json
 python3 tools/registry.py list
 ```
 
@@ -44,10 +44,10 @@ import json
 doc = json.load(open('contract/products-v1.openapi.json'))
 doc['info']['version'] = '2.0.0'
 del doc['paths']['/v1/products/{id}']
-with open('/tmp/m10-v2-breaking.openapi.json', 'w') as f:
+with open('/tmp/m11-v2-breaking.openapi.json', 'w') as f:
     json.dump(doc, f, indent=2)
 PY
-if python3 tools/registry.py check contract/products-v1.openapi.json /tmp/m10-v2-breaking.openapi.json; then
+if python3 tools/registry.py check contract/products-v1.openapi.json /tmp/m11-v2-breaking.openapi.json; then
   echo 'FAIL: checker accepted removed GET endpoint'
 else
   echo 'PASS: breaking change rejected'
@@ -69,8 +69,8 @@ fi
 ## Cleanup
 
 ```bash
-rm -f /tmp/m10-v2-compatible.openapi.json /tmp/m10-v2-breaking.openapi.json
-# Само от корена на Module 10, след проверка на pwd:
+rm -f /tmp/m11-v2-compatible.openapi.json /tmp/m11-v2-breaking.openapi.json
+# Само от корена на Module 11, след проверка на pwd:
 test -f contract/products-v1.openapi.json && test -d .registry && rm -r -- .registry
 ```
 
