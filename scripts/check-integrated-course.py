@@ -17,7 +17,7 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_COMMIT = "fcdbdecbc21edd51a64257bdc7760926b73a2598"
 ROOT_LEGACY_SOURCE_COMMIT = "063ef92b3f09b3dc6f97a908db52390fec08ba65"
-ROOT_LEGACY_MARKER = "<!-- HISTORICAL_ROOT_README_PRESERVED_START -->\n"
+ROOT_LEGACY_MARKER = "<!-- ORIGINAL_ROOT_README_PRESERVED_START -->\n"
 MARKER = "<!-- ORIGINAL_MODULE_README_PRESERVED_START -->\n"
 MODULES = {
     "01. Core Concepts": ("Readme.md", ["CORE-2026.md"]),
@@ -113,13 +113,14 @@ def run() -> int:
         failures.extend(check_links(path, modern))
     # The root README is now the only course guide.
     root = current("README.md")
-    archived = current("README-LEGACY-FOUNDATIONS.md")
     original_root = source("README.md", ROOT_LEGACY_SOURCE_COMMIT)
     root_headings = list(re.finditer(r"(?m)^# Kubernetes$", original_root))
     if len(root_headings) != 1:
         failures.append("historical root source lacks a unique level-one Kubernetes heading")
-    elif archived.count(ROOT_LEGACY_MARKER) != 1 or archived.split(ROOT_LEGACY_MARKER, 1)[1] != original_root[root_headings[0].start():]:
-        failures.append("original root README lecture was not preserved verbatim")
+    elif root.count(ROOT_LEGACY_MARKER) != 1 or root.split(ROOT_LEGACY_MARKER, 1)[1] != original_root[root_headings[0].start():]:
+        failures.append("original root README lecture was not preserved verbatim in the root README")
+    if (ROOT / "README-LEGACY-FOUNDATIONS.md").exists():
+        failures.append("separate README-LEGACY-FOUNDATIONS.md still exists; keep the lecture in root README instead")
     if (ROOT / "COURSE-2026.md").exists():
         failures.append("COURSE-2026.md still exists: the root README should be the single course guide")
     modules = re.findall(r"^\| (\d\d) — ", root, flags=re.MULTILINE)
@@ -130,16 +131,16 @@ def run() -> int:
             continue
         if "COURSE-2026.md" in path_obj.read_text(encoding="utf-8"):
             failures.append(f"{path_obj.relative_to(ROOT)}: stale reference to deleted COURSE-2026.md")
-    for path in ("README.md", "README-LEGACY-FOUNDATIONS.md", "00. Resources/README.md"):
+    for path in ("README.md", "00. Resources/README.md"):
         text = current(path)
         links = list(markdown_links(text))
         link_count += len(links)
-        # Both the current course hub and archived original are validated.
+        # The current course hub includes its fully preserved original lecture.
         failures.extend(check_links(path, text))
     print(f"Integrated chapters audited: {len(MODULES)}")
     print("Original 2021 lecture and full 2026 guides compared against", SOURCE_COMMIT[:12])
     print("Course hub: 16 module links and no stale COURSE-2026.md references")
-    print("Legacy root lecture: checked against", ROOT_LEGACY_SOURCE_COMMIT[:12])
+    print("Original foundational lecture: preserved in root README against", ROOT_LEGACY_SOURCE_COMMIT[:12])
     print(f"Local Markdown links checked in supported material: {link_count}")
     if failures:
         for failure in failures:
