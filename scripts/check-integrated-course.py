@@ -115,10 +115,10 @@ def run() -> int:
     root = current("README.md")
     archived = current("README-LEGACY-FOUNDATIONS.md")
     original_root = source("README.md", ROOT_LEGACY_SOURCE_COMMIT)
-    old_heading = "# Kubernetes\n"
-    if original_root.count(old_heading) != 1:
-        failures.append("historical root source lacks a unique course heading")
-    elif archived.count(ROOT_LEGACY_MARKER) != 1 or archived.split(ROOT_LEGACY_MARKER, 1)[1] != original_root[original_root.index(old_heading):]:
+    root_headings = list(re.finditer(r"(?m)^# Kubernetes$", original_root))
+    if len(root_headings) != 1:
+        failures.append("historical root source lacks a unique level-one Kubernetes heading")
+    elif archived.count(ROOT_LEGACY_MARKER) != 1 or archived.split(ROOT_LEGACY_MARKER, 1)[1] != original_root[root_headings[0].start():]:
         failures.append("original root README lecture was not preserved verbatim")
     if (ROOT / "COURSE-2026.md").exists():
         failures.append("COURSE-2026.md still exists: the root README should be the single course guide")
