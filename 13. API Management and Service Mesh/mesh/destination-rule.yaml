@@ -1,12 +1,12 @@
-# Apply ONLY after successful Istio sidecar injection for Module 12 pods.
+# Apply ONLY after successful Istio sidecar injection for Module 13 pods.
 apiVersion: networking.istio.io/v1
 kind: DestinationRule
 metadata:
-  name: m12-agency
+  name: m13-agency
   labels:
-    training: module12
+    training: module13
 spec:
-  host: m12-agency
+  host: m13-agency
   subsets:
     - name: v1
       labels: {version: v1}

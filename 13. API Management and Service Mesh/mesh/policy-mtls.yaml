@@ -3,28 +3,28 @@
 apiVersion: security.istio.io/v1
 kind: PeerAuthentication
 metadata:
-  name: m12-agency-strict
-  labels: {training: module12}
+  name: m13-agency-strict
+  labels: {training: module13}
 spec:
   selector:
-    matchLabels: {app: m12-agency}
+    matchLabels: {app: m13-agency}
   mtls:
     mode: STRICT
 ---
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
-  name: m12-agency-allow-clients
-  labels: {training: module12}
+  name: m13-agency-allow-clients
+  labels: {training: module13}
 spec:
   selector:
-    matchLabels: {app: m12-agency}
+    matchLabels: {app: m13-agency}
   action: ALLOW
   rules:
     - from:
         - source:
             # No namespace prefix => local namespace, Istio's serviceAccounts syntax.
-            serviceAccounts: [m12-portal-sa, m12-partner-sa]
+            serviceAccounts: [m13-portal-sa, m13-partner-sa]
       to:
         - operation:
             methods: [GET]

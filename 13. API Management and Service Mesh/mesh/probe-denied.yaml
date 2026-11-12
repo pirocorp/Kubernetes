@@ -2,19 +2,19 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: m12-probe-sa
-  labels: {training: module12}
+  name: m13-probe-sa
+  labels: {training: module13}
 ---
 apiVersion: v1
 kind: Pod
 metadata:
-  name: m12-probe-denied
+  name: m13-probe-denied
   labels:
-    app: m12-probe-denied
-    training: module12
+    app: m13-probe-denied
+    training: module13
     sidecar.istio.io/inject: "true"
 spec:
-  serviceAccountName: m12-probe-sa
+  serviceAccountName: m13-probe-sa
   restartPolicy: Never
   containers:
     - name: curl

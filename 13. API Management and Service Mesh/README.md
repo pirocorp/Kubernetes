@@ -1,4 +1,4 @@
-# Module 12 — Comprehensive Service Architecture: API Management + Service Mesh
+# Module 13 — Comprehensive Service Architecture: API Management + Service Mesh
 
 **API Management и Service Mesh са допълващи се инфраструктурни слоеве.** Първият управлява публикуването и използването на API-та от партньори и други организационни домейни. Вторият управлява service-to-service комуникацията, workload identities, трафика и observability **вътре** в microservices платформа.
 
@@ -8,7 +8,7 @@
 
 ## 1. Учебни цели
 
-След Module 12 ще можеш да:
+След Module 13 ще можеш да:
 - Разграничиш North–South (партньорски/client access) от East–West (microservice-to-microservice) трафик.
 - Разпознаваш 3scale API Product, Backend, APIcast, Application Plan, API key, usage analytics и Developer Portal.
 - Разграничиш Istio control plane от Envoy data plane, Sidecar injection и Service Mesh security.
@@ -18,7 +18,7 @@
 - Приложиш (при наличен mesh) Istio `DestinationRule`, `VirtualService`, `PeerAuthentication STRICT` и `AuthorizationPolicy`.
 - Разпознаеш опасните/остарели части от стар Red Hat walkthrough и да планираш поддържана enterprise интеграция.
 
-**Предварителни знания:** [Modules 00–08 — Kubernetes](../COURSE-2026.md) (Services, Deployments, RBAC, probes, ConfigMaps/Secrets, ingress), [Module 09 — OpenShift](../09.%20OpenShift/README.md), [Module 10 — API-First](../10.%20API-First%20Development%20and%20API%20Management/README.md), [Module 11 — API Versioning](../11.%20API%20Versioning%20and%20Lifecycle%20Management/README.md). **Първи опит с Istio и 3scale не е необходим.**
+**Предварителни знания:** [Modules 00–08 — Kubernetes](../COURSE-2026.md) (Services, Deployments, RBAC, probes, ConfigMaps/Secrets, ingress), [Module 09 — OpenShift](../09.%20OpenShift/README.md), [Module 11 — API-First](../11.%20API-First%20Development%20and%20API%20Management/README.md), [Module 12 — API Versioning](../12.%20API%20Versioning%20and%20Lifecycle%20Management/README.md). **Първи опит с Istio и 3scale не е необходим.**
 
 ## 2. Историята на Travelz
 
@@ -53,13 +53,13 @@ flowchart TB
 
 ### Какво е реално в нашите упражнения?
 
-| Компонент | Локален път (12-A–C) | OpenShift път (12-D–E) |
+| Компонент | Локален път (13-A–C) | OpenShift път (13-D–E) |
 |---|---|---|
 | Travel Agency/Portal | Реален ASP.NET Core 10 API | Реални Deployments и Services |
 | Partner API access | Python demo gateway — **не 3scale** | Същият gateway, Route с edge TLS — **не 3scale** |
 | Canary traffic | Python routing **simulation** 80/20 | Истински Istio VirtualService/DestinationRule, само с mesh |
 | Resilience | Детерминистичен GET retry/fallback | Istio retry/timeout policy, без гаранция за cross-version failover |
-| Security | Loopback-only, учебни keys | Secrets, ServiceAccounts; mTLS STRICT/AuthorizationPolicy само в 12-E |
+| Security | Loopback-only, учебни keys | Secrets, ServiceAccounts; mTLS STRICT/AuthorizationPolicy само в 13-E |
 | Observability | In-memory counters, correlation ID | Logs, реален sidecar; Kiali/Prometheus само ако са предоставени |
 
 ## 4. Обяснение на основните понятия
@@ -82,13 +82,13 @@ flowchart TB
 
 | Упражнение | Какво изграждаш | Резултат |
 |---|---|---|
-| **12-A** | [Travelz microservices и Portal → Agency](./labs/LAB-01-TRAVELZ-MICROSERVICES.md) | .NET build; пет local health endpoints; v1/v2 и correlation |
-| **12-B** | [Partner API Management / North–South](./labs/LAB-02-PARTNER-API-MANAGEMENT.md) | Red/Blue keys, различни quotas, 401/200/429, metrics |
-| **12-C** | [East–West routing & resilience](./labs/LAB-03-TRAFFIC-CANARY-RESILIENCE.md) | Локално 80/20, retry/fallback и observability; изрично симулация |
-| **12-D** | [OpenShift Travelz & Partner gateway](./labs/LAB-04-OPENSHIFT-DEPLOY.md) | C# images, Python gateway image, 4 Deployments, 5 Services, HTTPS Route |
-| **12-E** | [Real Istio Service Mesh](./labs/LAB-05-REAL-ISTIO-MESH.md) | Envoy proxies, VirtualService, DestinationRule, STRICT mTLS, authorization, canary/rollback |
+| **13-A** | [Travelz microservices и Portal → Agency](./labs/LAB-01-TRAVELZ-MICROSERVICES.md) | .NET build; пет local health endpoints; v1/v2 и correlation |
+| **13-B** | [Partner API Management / North–South](./labs/LAB-02-PARTNER-API-MANAGEMENT.md) | Red/Blue keys, различни quotas, 401/200/429, metrics |
+| **13-C** | [East–West routing & resilience](./labs/LAB-03-TRAFFIC-CANARY-RESILIENCE.md) | Локално 80/20, retry/fallback и observability; изрично симулация |
+| **13-D** | [OpenShift Travelz & Partner gateway](./labs/LAB-04-OPENSHIFT-DEPLOY.md) | C# images, Python gateway image, 4 Deployments, 5 Services, HTTPS Route |
+| **13-E** | [Real Istio Service Mesh](./labs/LAB-05-REAL-ISTIO-MESH.md) | Envoy proxies, VirtualService, DestinationRule, STRICT mTLS, authorization, canary/rollback |
 
-**Изпълнявай 12-A → 12-B → 12-C → 12-D → 12-E.** A–C работят на лична машина без Docker, OpenShift, 3scale или платени продукти; нужен е .NET SDK 10. D изисква Sandbox с достатъчни права и registry; E изисква **вече инсталиран и работещ Istio mesh**. Ако D или E са недостъпни по инфраструктурни причини, не ги отбелязвай като изпълнени.
+**Изпълнявай 13-A → 13-B → 13-C → 13-D → 13-E.** A–C работят на лична машина без Docker, OpenShift, 3scale или платени продукти; нужен е .NET SDK 10. D изисква Sandbox с достатъчни права и registry; E изисква **вече инсталиран и работещ Istio mesh**. Ако D или E са недостъпни по инфраструктурни причини, не ги отбелязвай като изпълнени.
 
 ## 6. Първи стъпки
 
@@ -96,7 +96,7 @@ flowchart TB
 
 ```bash
 git clone https://github.com/pirocorp/Kubernetes.git
-cd "Kubernetes/12. API Management and Service Mesh"
+cd "Kubernetes/13. API Management and Service Mesh"
 dotnet --version
 python3 --version
 python3 tools/keys.py check-ports
@@ -116,16 +116,16 @@ bash scripts/stop.sh
 Преди да преминеш към OpenShift/Istio можеш да изпълниш **всички локални acceptance проверки наведнъж**, без липсващи файлове или външни API услуги:
 
 ```bash
-# От корена на Module 12; .NET SDK 10, Python 3.10+, свободни портове 5100–5300
+# От корена на Module 13; .NET SDK 10, Python 3.10+, свободни портове 5100–5300
 bash scripts/verify-local.sh
 ```
 
-Скриптът изгражда реалния C# проект, стартира пет локални процеса, проверява health, Portal → Agency, 80/20, един безопасен GET fallback, Red/Blue quota 401/200/429 и admin metrics, след което спира **собствените** процеси. Изходен код: [scripts/verify-local.sh](./scripts/verify-local.sh). Запазените учебни credentials в `.runtime/keys.env` са локални (mode 0600) и не се commit-ват. **Локалният тест не доказва изпълнение на истински Istio/3scale** — тези цели остават в 12-D/12-E при налична среда.
+Скриптът изгражда реалния C# проект, стартира пет локални процеса, проверява health, Portal → Agency, 80/20, един безопасен GET fallback, Red/Blue quota 401/200/429 и admin metrics, след което спира **собствените** процеси. Изходен код: [scripts/verify-local.sh](./scripts/verify-local.sh). Запазените учебни credentials в `.runtime/keys.env` са локални (mode 0600) и не се commit-ват. **Локалният тест не доказва изпълнение на истински Istio/3scale** — тези цели остават в 13-D/13-E при налична среда.
 
 ## 7. Файлова структура
 
 ```text
-12. API Management and Service Mesh/
+13. API Management and Service Mesh/
 ├── README.md
 ├── contracts/travelz-partner-v1.openapi.json
 ├── src/Travelz/Travelz.csproj

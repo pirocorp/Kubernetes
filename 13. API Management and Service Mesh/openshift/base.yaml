@@ -1,47 +1,47 @@
-# OpenShift base resources for Module 12 — JSON-derived, standard readable YAML.
+# OpenShift base resources for Module 13 — JSON-derived, standard readable YAML.
 apiVersion: "v1"
 kind: "ServiceAccount"
 metadata:
-  name: "m12-agency-sa"
+  name: "m13-agency-sa"
   labels:
-    training: "module12"
+    training: "module13"
 ---
 apiVersion: "v1"
 kind: "ServiceAccount"
 metadata:
-  name: "m12-portal-sa"
+  name: "m13-portal-sa"
   labels:
-    training: "module12"
+    training: "module13"
 ---
 apiVersion: "v1"
 kind: "ServiceAccount"
 metadata:
-  name: "m12-partner-sa"
+  name: "m13-partner-sa"
   labels:
-    training: "module12"
+    training: "module13"
 ---
 apiVersion: "apps/v1"
 kind: "Deployment"
 metadata:
-  name: "m12-agency-v1"
+  name: "m13-agency-v1"
   labels:
-    training: "module12"
-    app: "m12-agency"
+    training: "module13"
+    app: "m13-agency"
     version: "v1"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: "m12-agency"
+      app: "m13-agency"
       version: "v1"
   template:
     metadata:
       labels:
-        app: "m12-agency"
+        app: "m13-agency"
         version: "v1"
-        training: "module12"
+        training: "module13"
     spec:
-      serviceAccountName: "m12-agency-sa"
+      serviceAccountName: "m13-agency-sa"
       containers:
         -
           name: "app"
@@ -89,25 +89,25 @@ spec:
 apiVersion: "apps/v1"
 kind: "Deployment"
 metadata:
-  name: "m12-agency-v2"
+  name: "m13-agency-v2"
   labels:
-    training: "module12"
-    app: "m12-agency"
+    training: "module13"
+    app: "m13-agency"
     version: "v2"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: "m12-agency"
+      app: "m13-agency"
       version: "v2"
   template:
     metadata:
       labels:
-        app: "m12-agency"
+        app: "m13-agency"
         version: "v2"
-        training: "module12"
+        training: "module13"
     spec:
-      serviceAccountName: "m12-agency-sa"
+      serviceAccountName: "m13-agency-sa"
       containers:
         -
           name: "app"
@@ -155,22 +155,22 @@ spec:
 apiVersion: "apps/v1"
 kind: "Deployment"
 metadata:
-  name: "m12-portal"
+  name: "m13-portal"
   labels:
-    training: "module12"
-    app: "m12-portal"
+    training: "module13"
+    app: "m13-portal"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: "m12-portal"
+      app: "m13-portal"
   template:
     metadata:
       labels:
-        app: "m12-portal"
-        training: "module12"
+        app: "m13-portal"
+        training: "module13"
     spec:
-      serviceAccountName: "m12-portal-sa"
+      serviceAccountName: "m13-portal-sa"
       containers:
         -
           name: "app"
@@ -189,7 +189,7 @@ spec:
               value: "http://+:8080"
             -
               name: "AGENCY_URL"
-              value: "http://m12-agency-v1:8080"
+              value: "http://m13-agency-v1:8080"
           readinessProbe:
             httpGet:
               path: "/healthz"
@@ -221,22 +221,22 @@ spec:
 apiVersion: "apps/v1"
 kind: "Deployment"
 metadata:
-  name: "m12-partner"
+  name: "m13-partner"
   labels:
-    training: "module12"
-    app: "m12-partner"
+    training: "module13"
+    app: "m13-partner"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: "m12-partner"
+      app: "m13-partner"
   template:
     metadata:
       labels:
-        app: "m12-partner"
-        training: "module12"
+        app: "m13-partner"
+        training: "module13"
     spec:
-      serviceAccountName: "m12-partner-sa"
+      serviceAccountName: "m13-partner-sa"
       containers:
         -
           name: "app"
@@ -255,24 +255,24 @@ spec:
               value: "8080"
             -
               name: "AGENCY_V2_URL"
-              value: "http://m12-agency-v2:8080"
+              value: "http://m13-agency-v2:8080"
             -
               name: "PARTNER_RED_KEY"
               valueFrom:
                 secretKeyRef:
-                  name: "m12-partner-keys"
+                  name: "m13-partner-keys"
                   key: "PARTNER_RED_KEY"
             -
               name: "PARTNER_BLUE_KEY"
               valueFrom:
                 secretKeyRef:
-                  name: "m12-partner-keys"
+                  name: "m13-partner-keys"
                   key: "PARTNER_BLUE_KEY"
             -
               name: "ADMIN_KEY"
               valueFrom:
                 secretKeyRef:
-                  name: "m12-partner-keys"
+                  name: "m13-partner-keys"
                   key: "ADMIN_KEY"
           readinessProbe:
             httpGet:
@@ -305,13 +305,13 @@ spec:
 apiVersion: "v1"
 kind: "Service"
 metadata:
-  name: "m12-agency"
+  name: "m13-agency"
   labels:
-    training: "module12"
+    training: "module13"
 spec:
   type: "ClusterIP"
   selector:
-    app: "m12-agency"
+    app: "m13-agency"
   ports:
     -
       name: "http"
@@ -321,13 +321,13 @@ spec:
 apiVersion: "v1"
 kind: "Service"
 metadata:
-  name: "m12-agency-v1"
+  name: "m13-agency-v1"
   labels:
-    training: "module12"
+    training: "module13"
 spec:
   type: "ClusterIP"
   selector:
-    app: "m12-agency"
+    app: "m13-agency"
     version: "v1"
   ports:
     -
@@ -338,13 +338,13 @@ spec:
 apiVersion: "v1"
 kind: "Service"
 metadata:
-  name: "m12-agency-v2"
+  name: "m13-agency-v2"
   labels:
-    training: "module12"
+    training: "module13"
 spec:
   type: "ClusterIP"
   selector:
-    app: "m12-agency"
+    app: "m13-agency"
     version: "v2"
   ports:
     -
@@ -355,13 +355,13 @@ spec:
 apiVersion: "v1"
 kind: "Service"
 metadata:
-  name: "m12-portal"
+  name: "m13-portal"
   labels:
-    training: "module12"
+    training: "module13"
 spec:
   type: "ClusterIP"
   selector:
-    app: "m12-portal"
+    app: "m13-portal"
   ports:
     -
       name: "http"
@@ -371,13 +371,13 @@ spec:
 apiVersion: "v1"
 kind: "Service"
 metadata:
-  name: "m12-partner"
+  name: "m13-partner"
   labels:
-    training: "module12"
+    training: "module13"
 spec:
   type: "ClusterIP"
   selector:
-    app: "m12-partner"
+    app: "m13-partner"
   ports:
     -
       name: "http"
@@ -387,13 +387,13 @@ spec:
 apiVersion: "route.openshift.io/v1"
 kind: "Route"
 metadata:
-  name: "m12-partner"
+  name: "m13-partner"
   labels:
-    training: "module12"
+    training: "module13"
 spec:
   to:
     kind: "Service"
-    name: "m12-partner"
+    name: "m13-partner"
   port:
     targetPort: "http"
   tls:
