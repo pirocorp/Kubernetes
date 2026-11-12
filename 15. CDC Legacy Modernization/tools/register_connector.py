@@ -11,7 +11,7 @@ if len(PASSWORD) < 16:
     raise SystemExit("Source .env first (PG_PASSWORD missing)")
 
 configuration = {
-    "name": "m14-retail-postgres",
+    "name": "m15-retail-postgres",
     "config": {
         "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
         "plugin.name": "pgoutput",
@@ -22,8 +22,8 @@ configuration = {
         "database.dbname": "retail",
         "topic.prefix": "retailcdc",
         "table.include.list": "public.customer,public.product,public.sale,public.line_item",
-        "slot.name": "m14_retail_slot",
-        "publication.name": "m14_retail_pub",
+        "slot.name": "m15_retail_slot",
+        "publication.name": "m15_retail_pub",
         "publication.autocreate.mode": "filtered",
         "snapshot.mode": "initial",
         "tombstones.on.delete": "true",
@@ -57,7 +57,7 @@ else:
     raise SystemExit("Kafka Connect not ready on localhost:8083; inspect docker compose logs connect")
 
 if configuration["name"] in connectors:
-    print("Retaining existing m14-retail-postgres connector (not overwriting user config)")
+    print("Retaining existing m15-retail-postgres connector (not overwriting user config)")
 else:
     code, body = request("/connectors", "POST", configuration)
     if code not in (200, 201):
@@ -65,7 +65,7 @@ else:
     print("Debezium connector registered")
 
 for attempt in range(60):
-    status, body = request("/connectors/m14-retail-postgres/status")
+    status, body = request("/connectors/m15-retail-postgres/status")
     if status == 200:
         connector_state = body.get("connector", {}).get("state")
         tasks = [task.get("state") for task in body.get("tasks", [])]

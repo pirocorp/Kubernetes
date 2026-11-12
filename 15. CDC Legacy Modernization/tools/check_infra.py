@@ -9,7 +9,7 @@ def compose(*args):
     return cmd.stdout.strip()
 
 with urllib.request.urlopen(
-    "http://127.0.0.1:8083/connectors/m14-retail-postgres/status", timeout=10
+    "http://127.0.0.1:8083/connectors/m15-retail-postgres/status", timeout=10
 ) as res:
     status = json.load(res)
 assert status["connector"]["state"] == "RUNNING", status
@@ -17,8 +17,8 @@ assert len(status["tasks"]) == 1 and status["tasks"][0]["state"] == "RUNNING", s
 print("PASS real Debezium Connect source task")
 
 slot = compose("legacy-db", "psql", "-U", "retail", "-d", "retail", "-Atc",
-               "SELECT slot_name || ':' || plugin FROM pg_replication_slots WHERE slot_name='m14_retail_slot'")
-assert "m14_retail_slot:pgoutput" in slot, slot
+               "SELECT slot_name || ':' || plugin FROM pg_replication_slots WHERE slot_name='m15_retail_slot'")
+assert "m15_retail_slot:pgoutput" in slot, slot
 print("PASS PostgreSQL logical replication slot pgoutput")
 
 topics = compose("kafka", "/opt/kafka/bin/kafka-topics.sh",
