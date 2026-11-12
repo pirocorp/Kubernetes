@@ -1,4 +1,4 @@
-# docker build -t m12-travelz:dev .
+# docker build -t m13-travelz:dev .
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY src/Travelz/Travelz.csproj src/Travelz/

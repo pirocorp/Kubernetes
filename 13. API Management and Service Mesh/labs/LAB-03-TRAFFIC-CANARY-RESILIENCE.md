@@ -1,12 +1,12 @@
-# Lab 12-C — East–West: canary routing, fallback и observability
+# Lab 13-C — East–West: canary routing, fallback и observability
 
 **Цел:** да разбереш как мрежовият слой може да разпределя вътрешния service-to-service трафик и да реагира на отказ, без да променя Portal source code. Оригинал: [Red Hat — Service Mesh Traffic Management, Kiali and Canary](https://www.solutionpatterns.io/solution-pattern-apim-servicemesh/comprehensive-service-architecture/03-demo.html).
 
-**Това упражнение използва `tools/mesh_sim.py` като локален routing simulator. Той НЕ е реален Istio sidecar или Service Mesh.** Истинските `VirtualService`, `DestinationRule` и mTLS policies се изпълняват в [Lab 12-E](./LAB-05-REAL-ISTIO-MESH.md).
+**Това упражнение използва `tools/mesh_sim.py` като локален routing simulator. Той НЕ е реален Istio sidecar или Service Mesh.** Истинските `VirtualService`, `DestinationRule` и mTLS policies се изпълняват в [Lab 13-E](./LAB-05-REAL-ISTIO-MESH.md).
 
 ## 1. Предпоставки и start
 
-Нужни са .NET SDK 10, Python 3.10+, Bash и същите пет локални порта. Корен на Module 12:
+Нужни са .NET SDK 10, Python 3.10+, Bash и същите пет локални порта. Корен на Module 13:
 
 ```bash
 bash scripts/stop.sh

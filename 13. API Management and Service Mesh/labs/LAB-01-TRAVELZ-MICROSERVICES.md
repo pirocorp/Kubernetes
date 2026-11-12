@@ -1,4 +1,4 @@
-# Lab 12-A — Travelz: microservices и service-to-service комуникация
+# Lab 13-A — Travelz: microservices и service-to-service комуникация
 
 **Цел:** да изградиш реални ASP.NET Core 10 приложения за Travelz — **Travel Agency v1**, **Travel Agency v2** и **Travel Portal** — и да проследиш заявката от portal към вътрешния service. Това е подготовката за Service Mesh, **без** да твърдим, че локалният HTTP трафик е защитен с mTLS.
 
@@ -8,7 +8,7 @@
 
 - Ubuntu/macOS/WSL с Bash, **.NET SDK 10**, Python **3.10+** и curl.
 - Нужни са свободни loopback портове **5100, 5101, 5102, 5200, 5300**. Всички се проверяват предварително.
-- Изпълнявай командите от **корена на Module 12**, а не от root на Kubernetes repository.
+- Изпълнявай командите от **корена на Module 13**, а не от root на Kubernetes repository.
 - Файлове: [C# app](../src/Travelz/Program.cs), [project](../src/Travelz/Travelz.csproj), [start.sh](../scripts/start.sh), [stop.sh](../scripts/stop.sh), [verify.py](../tools/verify.py).
 
 ```bash
@@ -58,7 +58,7 @@ python3 tools/verify.py basic
 
 **Очаквано:** Agency v1 дава `"version":"v1"`, Agency v2 — `"version":"v2"` и `"insuranceIncluded":true`. Portal връща `channel=travel-portal`, `quote` и **един и същ correlationId** от portal до Agency. Синтетичните стойности са в EUR, не са реални оферти.
 
-В локалния пример Portal ходи към routing simulator на :5200, който избира v1/v2. За **истински** Kubernetes cluster DNS и mesh се преминава към Labs 12-D и 12-E.
+В локалния пример Portal ходи към routing simulator на :5200, който избира v1/v2. За **истински** Kubernetes cluster DNS и mesh се преминава към Labs 13-D и 13-E.
 
 ## 5. Защо това още НЕ е Service Mesh?
 

@@ -18,7 +18,7 @@
 
 ### Scenario 1 — Разрастване на Travelz Online
 
-Travel Portal е консуматор, Travel Agency предоставя quote услуги. Istio sidecar proxy свързва workloads в mesh, отговорен за routing, service identity, mutual TLS, access policy и telemetry. В [Lab 12-E](../labs/LAB-05-REAL-ISTIO-MESH.md) използваме `VirtualService` (80/20), `DestinationRule`, `PeerAuthentication STRICT` и `AuthorizationPolicy`, без да променяме C# бизнес логиката.
+Travel Portal е консуматор, Travel Agency предоставя quote услуги. Istio sidecar proxy свързва workloads в mesh, отговорен за routing, service identity, mutual TLS, access policy и telemetry. В [Lab 13-E](../labs/LAB-05-REAL-ISTIO-MESH.md) използваме `VirtualService` (80/20), `DestinationRule`, `PeerAuthentication STRICT` и `AuthorizationPolicy`, без да променяме C# бизнес логиката.
 
 ### Scenario 2 — Отваряне към external partners
 
@@ -28,7 +28,7 @@ Travel Portal е консуматор, Travel Agency предоставя quote 
 
 ### Scenario 3 — North–South security и business plans
 
-3scale Product/Backend, Application Plans, Client credentials, developer registration и API analytics могат да осигурят договорни квоти и проследяване по партньор. В [Lab 12-B](../labs/LAB-02-PARTNER-API-MANAGEMENT.md) имаме **локална учебна** key authentication + counters + rate limits, но няма реални 3scale Accounts, plan creation, invoicing или signup.
+3scale Product/Backend, Application Plans, Client credentials, developer registration и API analytics могат да осигурят договорни квоти и проследяване по партньор. В [Lab 13-B](../labs/LAB-02-PARTNER-API-MANAGEMENT.md) имаме **локална учебна** key authentication + counters + rate limits, но няма реални 3scale Accounts, plan creation, invoicing или signup.
 
 За продукционен onboarding се нуждаеш от организационна политика и разрешена 3scale среда. Не използвай фиксираните демонстрационни credentials от историческите walkthrough материали.
 
@@ -70,6 +70,6 @@ Travel Portal е консуматор, Travel Agency предоставя quote 
 
 ## 5. Какво не може да бъде универсално самодостатъчно
 
-3scale Product IDs, APIcast configuration, real partner keys, Istio control-plane revisions, gateway certificates, namespace membership и operator permissions **се предоставят от реалната организация**. Не може да се измислят работещи стойности в обучението. Затова Labs 12-A–12-C са напълно локални; 12-D и 12-E са **изпълними само при декларираните инфраструктурни prerequisites**.
+3scale Product IDs, APIcast configuration, real partner keys, Istio control-plane revisions, gateway certificates, namespace membership и operator permissions **се предоставят от реалната организация**. Не може да се измислят работещи стойности в обучението. Затова Labs 13-A–13-C са напълно локални; 13-D и 13-E са **изпълними само при декларираните инфраструктурни prerequisites**.
 
 **Оригинални източници:** [Introduction](https://www.solutionpatterns.io/solution-pattern-apim-servicemesh/comprehensive-service-architecture/index.html) · [Architecture](https://www.solutionpatterns.io/solution-pattern-apim-servicemesh/comprehensive-service-architecture/02-architecture.html) · [Walkthrough](https://www.solutionpatterns.io/solution-pattern-apim-servicemesh/comprehensive-service-architecture/03-demo.html).

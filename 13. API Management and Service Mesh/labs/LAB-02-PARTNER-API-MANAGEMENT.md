@@ -1,15 +1,15 @@
-# Lab 12-B — North–South: партньори, API ключове, quotas и analytics
+# Lab 13-B — North–South: партньори, API ключове, quotas и analytics
 
 **Цел:** Travelz предоставя контролирани API-та на външните **Red Company** и **Blue Company**. Различаваме business API management от вътрешното service-to-service управление. Оригинален сценарий: [Red Hat — Engaging with Partners / North-South](https://www.solutionpatterns.io/solution-pattern-apim-servicemesh/comprehensive-service-architecture/03-demo.html).
 
 ## 1. Предпоставки
 
-- .NET SDK 10, Python 3.10+, Bash, работна директория = Module 12 root.
+- .NET SDK 10, Python 3.10+, Bash, работна директория = Module 13 root.
 - Отворени портове 5100–5300; ако има стари процеси от предишния lab, ги спри по описания начин.
 - Кодът е включен: [partner_gateway.py](../tools/partner_gateway.py), [partner_client.py](../tools/partner_client.py), [partner_metrics.py](../tools/partner_metrics.py), [verify.py](../tools/verify.py). **Не** се изискват 3scale, Operator, 3scale license или OpenShift.
 
 ```bash
-# Ако Lab 12-A още работи, първо го спри, за да изчистим in-memory rate-limit counters.
+# Ако Lab 13-A още работи, първо го спри, за да изчистим in-memory rate-limit counters.
 bash scripts/stop.sh
 bash scripts/start.sh
 set -a
@@ -61,7 +61,7 @@ python3 tools/partner_client.py --partner blue --count 1 --base-url http://127.0
 | Различни условия на ползване | Application Plans | Различни фиксирани лимити |
 | Authorization | Credential/Policy validation | `X-Partner-Key` |
 | Usage monitoring | Methods/Metrics/Analytics | In-memory counters |
-| Developer discovery | Developer Portal + OpenAPI | Документацията на Module 12 |
+| Developer discovery | Developer Portal + OpenAPI | Документацията на Module 13 |
 
 Red Hat оригиналът включва реални partner приложения, 3scale portal и self-signup. **Тези UI/акаунтни процеси не се симулират**: реалната платформа изисква инсталиран и конфигуриран 3scale, различни application credentials и собствена governance политика. В [архитектурната справка](../docs/ENTERPRISE-3SCALE-MESH.md) е описан enterprise вариантът.
 
@@ -73,7 +73,7 @@ Red Hat оригиналът включва реални partner приложе�
 | Red дава 429 по-рано | Лимитът не се нулира между тестовете | Изчакай 15 сек или рестартирай учебния gateway |
 | Partner API 502 | v2 Agency не работи | `cat .runtime/agency-v2.log`, `cat .runtime/gateway.log` |
 | Admin metrics 401 | Няма `ADMIN_KEY` | Зареди го чрез `source .runtime/keys.env` |
-| Невалиден HTTPS certificate | Този lab е само на 127.0.0.1 HTTP | В Lab 12-D се тества edge TLS Route |
+| Невалиден HTTPS certificate | Този lab е само на 127.0.0.1 HTTP | В Lab 13-D се тества edge TLS Route |
 
 ## 6. Cleanup
 
@@ -82,6 +82,6 @@ unset PARTNER_RED_KEY PARTNER_BLUE_KEY ADMIN_KEY
 bash scripts/stop.sh
 ```
 
-Не изтривай ключовете, ако ще изпълняваш Labs 12-C/D. Когато приключиш, изтрий **само** собствения `.runtime/keys.env`. Няма Kubernetes ресурси.
+Не изтривай ключовете, ако ще изпълняваш Labs 13-C/D. Когато приключиш, изтрий **само** собствения `.runtime/keys.env`. Няма Kubernetes ресурси.
 
 **Приемане:** наблюдавани 401/200/429, Red и Blue имат различен лимит, v2 е единственият partner backend, metrics са защитени с admin key.
